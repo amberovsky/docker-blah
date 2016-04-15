@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -e
+
+apt-get install -y curl
+curl -sL https://deb.nodesource.com/setup_5.x | bash -
+apt-get purge -y curl
+
+apt-get install -y nodejs
+npm update npm
+
+npm install -g \
+    body-parser@1.15.0 \
+    cookie-parser@1.4.1 \
+    dockerode@2.2.10 \
+    express@4.13.4 \
+    express-session@1.13.0 \
+    fs@0.0.2 \
+    sqlite3@3.1.3 \
+    swig@1.4.2 \
+    connect-redis@3.0.2

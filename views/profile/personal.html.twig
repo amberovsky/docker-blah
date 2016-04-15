@@ -1,0 +1,94 @@
+{% extends '../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-user"></span>&nbsp;Personal</h1>
+    <form class="form-horizontal" method="post" action="/profile/personal">
+        {% if error_profile || success_profile %}
+            <div class="form-group form-group-sm">
+                <div class="col-sm-offset-2 col-sm-6">
+                    {% if error_profile %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error_profile }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ success_profile }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm">
+            <label for="name" class="col-sm-3 control-label">Name</label>
+            <div class="col-sm-5">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.docker_blah.user.getName() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="login" class="col-sm-3 control-label">Login</label>
+            <div class="col-sm-5">
+                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.docker_blah.user.getLogin() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Role</label>
+            <div class="col-sm-5">
+                <p class="form-control-static">{{ app.docker_blah.userManager.getRoleCaption(request.docker_blah.user) }}</p>
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <div class="col-sm-offset-3 col-sm-2">
+                <button type="submit" name="action" class="btn btn-success" value="personal"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update</button>
+            </div>
+        </div>
+    </form>
+    <hr />
+    <form class="form-horizontal" method="post" action="/profile/personal">
+        {% if error_password || success_password %}
+            <div class="form-group form-group-sm">
+                <div class="col-sm-offset-2 col-sm-6">
+                    {% if error_password %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error_password }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ success_password }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm">
+            <label for="password" class="col-sm-3 control-label">Current password</label>
+            <div class="col-sm-5">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Current password" value="" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="new_password1" class="col-sm-3 control-label">New password</label>
+            <div class="col-sm-5">
+                <input type="password" class="form-control" id="new_password1" name="new_password1" placeholder="New password" value="" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="new_password2" class="col-sm-3 control-label">Retype new password</label>
+            <div class="col-sm-5">
+                <input type="password" class="form-control" id="new_password2" name="new_password2" placeholder="Retype new password" value="" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <div class="col-sm-offset-3 col-sm-2">
+                <button type="submit" name="action" class="btn btn-primary" value="password"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Change password</button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends '../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-cubes"></span>&nbsp;List of projects you have access to</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        {% for project in projects %}
+            <tr>
+                <td>{{ project.project.getId() }}</td>
+                <td>{{ project.project.getName() }}</td>
+                <td>{{ app.docker_blah.projectManager.getRoleCaption(project.role) }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

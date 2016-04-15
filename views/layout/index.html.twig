@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Docker-blah</title>
+    <link rel="stylesheet" href="/public/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/public/css/dashboard.css">
+    <link rel="stylesheet" href="/public/css/docker-blah.css">
+    <link rel="stylesheet" href="/public/font-awesome-4.5.0/css/font-awesome.min.css">
+    <link rel='shortcut icon' href='/public/favicon.ico' type='image/x-icon' />
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><span class="fa fa-ship"></span>&nbsp;docker-blah</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="dropdown {% if (action|match('projects\.(.*)') != null) %}active"{% endif %}">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% if request.docker_blah.project %}Project: {{ request.docker_blah.project.getName() }} {% else %}Select project{% endif %}&nbsp;<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        {% for project in app.docker_blah.projectManager.getAll() %}
+                            <li><a href="/project/{{ project.getId() }}/">{{ project.getName() }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                {% if request.docker_blah.user.getRole() == 1 %}
+                    <li {% if (action|match('admin\.(.*)') != null) %}class="active"{% endif %}><a href="/admin/projects"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
+                {% endif %}
+
+                <li {% if (action|match('profile\.(.*)') != null) %}class="active"{% endif %}><a href="/profile/personal"><span class="fa fa-user"></span>&nbsp;Profile</a></li>
+                <li {% if (action|match('help\.(.*)') != null) %}class="active"{% endif %}><a href="/help"><span class="fa fa-question-circle"></span>&nbsp;Help</a></li>
+                <li><a href="/logout"><span class="fa fa-sign-out"></span>&nbsp;Logout ({{ request.docker_blah.user.getLogin() }})</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            {%  block sidebar %}{% endblock %}
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+<script src="/public/js/jquery-2.2.2.js"></script>
+<script src="/public/bootstrap/js/bootstrap.min.js"></script>
+</body>
+</html>
