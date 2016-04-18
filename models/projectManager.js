@@ -13,6 +13,8 @@ class ProjectManager {
         app.createConstant(this, 'ROLE_ADMIN', 1);
         app.createConstant(this, 'ROLE_USER', 2);
 
+        app.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
+
         var self = this;
         this.sqlite3.each("SELECT id, name FROM project", function(err, row) {
             var project = new Project(row.id, row.name);
@@ -24,6 +26,10 @@ class ProjectManager {
             }, callback)
         });
     };
+
+    create() {
+        return new Project(-1, '');
+    }
 
     getRoleCaption(role) {
         switch(role) {
@@ -53,15 +59,99 @@ class ProjectManager {
     }
 
     getById(id) {
-        return this.projects[id];
+        return this.projects.hasOwnProperty(id) ? this.projects[id] : null;
     }
 
     getAll() {
         return this.projects;
     }
+    
+    getByName(name, currentProjectId) {
+        for (var index in this.projects) {
+            if ((this.projects[index].getName() === name) && (this.projects[index].getId() !== currentProjectId)) {
+                return this.projects[index];
+            }
+        }
+
+        return null;
+    }
 
     isUserAdmin() {
         return true;
+    }
+    
+    add(project, callback) {
+        var self = this;
+        this.sqlite3.run(
+            'INSERT INTO project (name) VALUES (?)',
+            [
+                project.getName()
+            ], function(error) {
+                if (error === null) {
+                    project.setId(this.lastID);
+                    self.projects[project.getId()] = project;
+                    callback(false);
+                } else {
+                    console.log(error);
+                    callback(true);
+                }
+            }
+        );
+    }
+    
+    update(project, callback) {
+        var self = this;
+
+        this.sqlite3.run(
+            'UPDATE project SET name = ? WHERE id = ?',
+            [
+                project.getName(),
+                project.getId()
+            ], function(error) {
+                if (error === null) {
+                    if (this.changes === 0) {
+                        console.log('No rows were updated');
+                        callback(true)
+                    } else {
+                        self.projects[project.getId()] = project;
+                        callback(false);
+                    }
+                } else {
+                    console.log(error);
+                    callback(true);
+                }
+            }
+        );
+    }
+    
+    deleteUserFromAllProjects(userId, callback) {
+        var self = this;
+
+        this.sqlite3.run(
+            'DELETE FROM project_user WHERE user_id = ?',
+            [
+                userId
+            ],
+            function(error) {
+                if (error === null) {
+                    if (this.changes === 0) {
+                        console.log('No rows were deleted');
+                        callback(true);
+                    } else {
+                        for (var projectId in self.projectUser) {
+                            if (self.projectUser[projectId].hasOwnProperty(userId)) {
+                                delete self.projectUser[projectId][userId];
+                            }
+                        }
+
+                        callback(false);
+                    }
+                } else {
+                    console.log(error);
+                    callback(true);
+                }
+            }
+        )
     }
     
     getUserRoleInProject(userId, projectId) {
@@ -72,6 +162,41 @@ class ProjectManager {
         return this.projectUser[projectId].hasOwnProperty(userId)
             ? this.projectUser[projectId][userId]
             : -1;
+    }
+    
+    setUserRoleInProject(userId, roles, callback) {
+        if (Object.keys(roles).length == 0) {
+            return callback(false);
+        }
+
+        var
+            self = this,
+            addComma = false,
+            query = 'INSERT OR REPLACE INTO project_user (project_id, user_id, role) VALUES ';
+
+        for (var projectId in roles) {
+            if (addComma) {
+                query += ', ';
+            } else {
+                addComma = true;
+            }
+
+            query += '(' + projectId + ', ' + userId + ', ' + roles[projectId] + ')';
+        }
+        
+        this.sqlite3.run(query, [], function(error) {
+            if (error === null) {
+                for (var projectId in roles) {
+                    self.projectUser[projectId] = self.projectUser[projectId] || {};
+                    self.projectUser[projectId][userId] = roles[projectId];
+                }
+
+                callback(false);
+            } else {
+                console.log(error);
+                callback(true);
+            }
+        });
     }
 
     getAllForUser(user) {

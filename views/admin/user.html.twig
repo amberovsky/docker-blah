@@ -6,18 +6,18 @@
 
 {% block content %}
     <h1 class="page-header">
-        <span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Cancel and go back</a>&nbsp;&nbsp;
+        <span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
         {% if (subaction == 'create') %}
             Create a user
         {% else %}
             Edit user #{{ user.getId() }}
         {% endif %}
     </h1>
-    <form class="form-horizontal" method="post" action="/admin/users/{% if (subaction == 'create') %}create{% else %}{{ user.getId() }}{% endif %}">
-        {% if error || success %}
+    <form class="form-horizontal" method="post" action="/admin/users/{% if (subaction == 'create') %}create{% else %}{{ user.getId() }}{% endif %}/">
+        {% if (error || success) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-6">
-                    {% if error %}
+                    {% if (error) %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             {{ error }}
@@ -56,7 +56,7 @@
         <div class="form-group form-group-sm">
             <label for="password" class="col-sm-1 control-label">Password</label>
             <div class="col-sm-3">
-                <input type="password" class="form-control" id="password" name="password" placeholder="Type new password to change" value="" />
+                <input type="password" class="form-control" id="password" name="password" placeholder="{% if (subaction == 'create') %}Password{% else %}Type new password to change{% endif %}" value="" />
             </div>
         </div>
         <br />
@@ -87,7 +87,6 @@
                     {% else %}
                         <span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update
                     {% endif %}
-
                 </button>
             </div>
         </div>

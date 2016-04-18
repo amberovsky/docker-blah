@@ -98,7 +98,6 @@ app.use(function (request, response, next) {
             request.session.reset();
             return response.redirect('/');
         } else {
-            request.user = user;
             request.docker_blah.user = user;
         }
         next();
@@ -132,12 +131,18 @@ app.use(function (request, response, next) {
 //     });
 // });
 
-fs.readdirSync('./controllers').forEach(function (file) {
-    if (file.substr(-3) == '.js') {
-        route = require('./controllers/' + file);
-        route.controller(app);
-    }
-});
+(function readControllers(dir) {
+    fs.readdirSync(dir).forEach(function (file) {
+        file = dir + '/' + file;
+        var stat = fs.statSync(file);
+        if (stat && stat.isDirectory()) {
+            readControllers(file)
+        } else {
+            route = require(file);
+            route.controller(app);
+        }
+    });
+})(__dirname + '/controllers');
 
 var sqlite3 = require('sqlite3').verbose();
 var file = './data/docker-blah.db';

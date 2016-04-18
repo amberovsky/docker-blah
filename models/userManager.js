@@ -22,11 +22,12 @@ class UserManager {
         app.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
     };
 
-    createNewUser() {
+    create() {
         return new User(-1, '', '', '', this.ROLE_USER);
     }
 
-    addNewUser(user, callback) {
+    add(user, callback) {
+        var self = this;
         this.sqlite3.run(
             'INSERT INTO user (name, login, password_hash, role) VALUES (?, ?, ?, ?)',
             [
@@ -38,9 +39,10 @@ class UserManager {
                 if (error === null) {
                     user.setId(this.lastID);
                     self.users[user.getId()] = user;
+                    callback(false);
                 } else {
                     console.log(error);
-                    callback(false);
+                    callback(true);
                 }
             }
         );
@@ -75,12 +77,12 @@ class UserManager {
     }
 
     isRoleValid(role) {
-        return (role == this.ROLE_SUPER) || (role == this.ROLE_ADMIN) || (role == this.ROLE_USER);
+        return (role === this.ROLE_SUPER) || (role === this.ROLE_ADMIN) || (role === this.ROLE_USER);
     }
 
-    getByLogin(login) {
+    getByLogin(login, currentUserId) {
         for (var index in this.users) {
-            if (this.users[index].getLogin() == login) {
+            if ((this.users[index].getLogin() === login) && (this.users[index].getId() !== currentUserId)) {
                 return this.users[index];
             }
         }
@@ -99,7 +101,6 @@ class UserManager {
     update(user, callback) {
         var self = this;
 
-        console.log(user.getId());
         this.sqlite3.run(
             'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ? WHERE id = ?',
             [
@@ -111,18 +112,44 @@ class UserManager {
             ], function(error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        console.log('No row was updated');
-                        callback(false)
+                        console.log('No rows were updated');
+                        callback(true)
                     } else {
                         self.users[user.getId()] = user;
-                        callback(true);
+                        callback(false);
                     }
                 } else {
                     console.log(error);
-                    callback(false);
+                    callback(true);
                 }
             }
         );
+    }
+
+    deleteUser(userId, callback) {
+        var self = this;
+
+        this.sqlite3.run(
+            'DELETE FROM user WHERE id = ?',
+            [
+                userId
+            ],
+            function(error) {
+                if (error === null) {
+                    if (this.changes === 0) {
+                        console.log('No rows were deleted');
+                        callback(true);
+                    } else {
+                        delete self.users[userId];
+
+                        callback(false);
+                    }
+                } else {
+                    console.log(error);
+                    callback(true);
+                }
+            }
+        )
     }
 }
 

@@ -1,6 +1,6 @@
 module.exports.controller = function (app) {
 
-    app.get('/profile/personal', function (request, response) {
+    app.get('/profile/personal/', function (request, response) {
         response.render('profile/personal.html.twig', {
             action: 'profile.personal'
         });
@@ -26,7 +26,7 @@ module.exports.controller = function (app) {
                 ' characters.';
         }
 
-        request.user
+        request.docker_blah.user
             .setName(name)
             .setLogin(login);
 
@@ -63,16 +63,18 @@ module.exports.controller = function (app) {
             return 'New passwords do not match.';
         }
 
-        if (!app.docker_blah.authManager.checkPasswordMatch(request.user.getPasswordHash(), currentPassword)) {
+        if (
+            !app.docker_blah.authManager.checkPasswordMatch(request.docker_blah.user.getPasswordHash(), currentPassword)
+        ) {
             return 'Wrong current password';
         }
 
-        request.user.setPasswordHash(app.docker_blah.authManager.hashPassword(newPassword));
+        request.docker_blah.user.setPasswordHash(app.docker_blah.authManager.hashPassword(newPassword));
 
         return true;
     }
 
-    app.post('/profile/personal', function(request, response) {
+    app.post('/profile/personal/', function(request, response) {
         const   ACTION_PERSONAL = 'personal';
         const   ACTION_PASSWORD = 'password';
 
@@ -85,10 +87,10 @@ module.exports.controller = function (app) {
             });
         }
         
-        var currentUser = request.user;
+        var currentUser = request.docker_blah.user;
 
         if (action === ACTION_PERSONAL) {
-            var validation = validateActionPersonalUpdate(request, request.user);
+            var validation = validateActionPersonalUpdate(request, request.docker_blah.user);
             if (validation !== true) {
                 return response.render('profile/personal.html.twig', {
                     action: 'profile.personal',
@@ -96,17 +98,17 @@ module.exports.controller = function (app) {
                 });
             }
 
-            app.docker_blah.userManager.update(request.user, function (result) {
-                if (result === true) {
+            app.docker_blah.userManager.update(request.docker_blah.user, function (error) {
+                if (!error) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
                         success_profile: 'Profile was updated.'
                     });
                 } else {
-                    request.user = currentUser;
+                    request.docker_blah.user = currentUser;
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
-                        error_profile: 'Got error during update. Contact your system adminstrator.'
+                        error_profile: 'Got error during update. Contact your system administrator.'
                     });
                 }
             });
@@ -119,17 +121,18 @@ module.exports.controller = function (app) {
                     error_password: validation
                 });
             }
-            app.docker_blah.userManager.update(request.user, function (result) {
-                if (result === true) {
+            
+            app.docker_blah.userManager.update(request.docker_blah.user, function (error) {
+                if (!error) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
                         success_password: 'Password was changed.'
                     });
                 } else {
-                    request.user = currentUser;
+                    request.docker_blah.user = currentUser;
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
-                        error_password: 'Got error during update. Contact your system adminstrator.'
+                        error_password: 'Got error during update. Contact your system administrator.'
                     });
                 }
             });
@@ -142,10 +145,10 @@ module.exports.controller = function (app) {
         }
     });
     
-    app.get('/profile/projects', function (request, response) {
+    app.get('/profile/projects/', function (request, response) {
         response.render('profile/projects.html.twig', {
             action: 'profile.projects',
-            projects: app.docker_blah.projectManager.getAllForUser(request.user)
+            projects: app.docker_blah.projectManager.getAllForUser(request.docker_blah.user)
         });
     });
 

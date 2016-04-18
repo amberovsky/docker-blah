@@ -5,9 +5,26 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/create" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users</h1>
-    <form method="post" action="/admin/users">
-        <div class="form-group form-group-sm">
+    <h1 class="page-header"><span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ Object.keys(users).length }}</h1>
+    <form method="post" action="/admin/users/">
+        {% if (error || success) %}
+            <div class="form-group row">
+                <div class="col-sm-8">
+                    {% if (error) %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ success }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group row">
             <div class="col-sm-2">
                 <label class="control-label" for="role">System role:</label>
                 <select class="form-control" id="role" name="role">
@@ -35,18 +52,19 @@
                     {% endfor %}
                 </select>
             </div>
-            <br>
-            <div class="col-sm-2">
-                <button type="submit" id="filter" class="btn btn-success" name="filter">Filter</button>&nbsp;&nbsp;
-                <a href="/admin/users" class="btn btn-primary" role="button">Reset</a>
-            </div>
-            <div class="col-sm-1">
-
+            <div class="col-sm-3">
+                <div class="col-sm-6">
+                    <label class="control-label" for="filter">&nbsp;</label>
+                    <button type="submit" id="filter" name="filter" class="form-control btn btn-success"><span class="fa fa-filter"></span>&nbsp;&nbsp;Filter</button>
+                </div>
+                <div class="col-sm-6">
+                    <label class="control-label" for="reset">&nbsp;</label>
+                    <a href="/admin/users/" id="reset" name="reset" class="btn btn-primary form-control" role="button"><span class="fa fa-undo"></span>&nbsp;&nbsp;Reset</a>
+                </div>
             </div>
         </div>
     </form>
-    <br /><br /><br />
-
+    <br />
     <table class="table table-striped table-vcenter">
         <thead>
         <tr>
@@ -54,8 +72,7 @@
             <th>Name</th>
             <th>Login</th>
             <th>Projects</th>
-            <th>Edit?</th>
-            <th>Delete?</th>
+            <th>Actions</th>
         </tr>
         </thead>
         {% for user in users %}
@@ -68,8 +85,10 @@
                         {{ project.project.getName() }}<br>
                     {% endfor %}
                 </td>
-                <td><a href="/admin/users/{{ user.getId() }}" class="btn btn-primary" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a></td>
-                <td><a href="/admin/users/{{ user.getId() }}" class="btn btn-danger" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a></td>
+                <td>
+                    <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                    <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                </td>
             </tr>
         {% endfor %}
     </table>

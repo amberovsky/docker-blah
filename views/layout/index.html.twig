@@ -35,12 +35,12 @@
 
             <ul class="nav navbar-nav navbar-right">
                 {% if request.docker_blah.user.getRole() == 1 %}
-                    <li {% if (action|match('admin\.(.*)') != null) %}class="active"{% endif %}><a href="/admin/projects"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
+                    <li {% if (action|match('admin\.(.*)') != null) %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
                 {% endif %}
 
-                <li {% if (action|match('profile\.(.*)') != null) %}class="active"{% endif %}><a href="/profile/personal"><span class="fa fa-user"></span>&nbsp;Profile</a></li>
-                <li {% if (action|match('help\.(.*)') != null) %}class="active"{% endif %}><a href="/help"><span class="fa fa-question-circle"></span>&nbsp;Help</a></li>
-                <li><a href="/logout"><span class="fa fa-sign-out"></span>&nbsp;Logout ({{ request.docker_blah.user.getLogin() }})</a></li>
+                <li {% if (action|match('profile\.(.*)') != null) %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user"></span>&nbsp;Profile</a></li>
+                <li {% if (action|match('help\.(.*)') != null) %}class="active"{% endif %}><a href="/help/"><span class="fa fa-question-circle"></span>&nbsp;Help</a></li>
+                <li><a href="/logout/"><span class="fa fa-sign-out"></span>&nbsp;Logout ({{ request.docker_blah.user.getLogin() }})</a></li>
             </ul>
         </div>
     </div>
