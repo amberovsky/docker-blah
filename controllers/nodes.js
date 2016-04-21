@@ -1,7 +1,22 @@
-module.exports.controller = function (app) {
-    app.get('/project/:projectId/node/', function (request, response) {
+"use strict";
+
+/**
+ * nodes.js - action with nodes inside project // TODO possible move to project
+ *
+ * /project/:projectId/nodes/*
+ *
+ * (C) Anton Zagorskii aka amberovsky
+ */
+
+/**
+ * @param {Application} application - application
+ */
+module.exports.controller = function (application) {
+
+    application.getExpress().get('/project/:projectId/node/', function (request, response) {
         response.render('nodes/index.html.twig', {
-            nodes: app.getNodesByProjectId(request.params.projectId)
+            nodes: {}
         });
-    })
+    });
+    
 };

@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ Object.keys(users).length }}</h1>
+    <h1 class="page-header"><span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ usersCount }}</h1>
     <form method="post" action="/admin/users/">
-        {% if (error || success) %}
+        {% if (error or success) %}
             <div class="form-group row">
                 <div class="col-sm-8">
                     {% if (error) %}
@@ -29,7 +29,7 @@
                 <label class="control-label" for="role">System role:</label>
                 <select class="form-control" id="role" name="role">
                     <option value="-1">ALL</option>
-                    {% for role, id in app.docker_blah.userManager.getRoles() %}
+                    {% for role, id in application.getDockerBlah().getUserManager().getRoles() %}
                         <option value="{{ id }}" {% if (selectedRole == id) %}selected{% endif %}>{{ role }}</option>
                     {% endfor %}
                 </select>
@@ -38,7 +38,7 @@
                 <label class="control-label" for="project">Project:</label>
                 <select class="form-control" id="project" name="project">
                     <option value="-1">ALL</option>
-                    {% for project in app.docker_blah.projectManager.getAll() %}
+                    {% for project in application.getDockerBlah().getProjectManager().getAll() %}
                         <option value="{{ project.getId() }}" {% if (selectedProject == project.getId()) %}selected{% endif %}>{{ project.getName() }}</option>
                     {% endfor %}
                 </select>
@@ -47,7 +47,7 @@
                 <label class="control-label" for="project_role">Project role:</label>
                 <select class="form-control" id="project_role" name="project_role">
                     <option value="-1">ALL</option>
-                    {% for role, id in app.docker_blah.projectManager.getRoles() %}
+                    {% for role, id in application.getDockerBlah().getProjectManager().getRoles() %}
                         <option value="{{ id }}" {% if (selectedProjectRole == id) %}selected{% endif %}>{{ role }}</option>
                     {% endfor %}
                 </select>
@@ -75,13 +75,13 @@
             <th>Actions</th>
         </tr>
         </thead>
-        {% for user in users %}
+        {% for _, user in users %}
             <tr>
                 <td>{{ user.getId() }}</td>
                 <td>{{ user.getName() }}</td>
                 <td>{{ user.getLogin() }}</td>
                 <td>
-                    {% for project in app.docker_blah.projectManager.getAllForUser(user) %}
+                    {% for project in application.getDockerBlah().getProjectManager().getAllForUser(user) %}
                         {{ project.project.getName() }}<br>
                     {% endfor %}
                 </td>

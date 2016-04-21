@@ -1,120 +1,50 @@
-module.exports.controller = function(app) {
+"use strict";
 
-    app.all('/admin/users/:userId/*', function(request, response, next) {
-        request.userId = parseInt(request.params.userId);
-        request.user = Number.isNaN(request.userId)
-            ? null
-            : app.docker_blah.userManager.getById(request.userId);
+/**
+ * users.js - admin actions about users
+ * 
+ * /admin/users/*
+ *
+ * (C) Anton Zagorskii aka amberovsky
+ */
 
-        next();
-    });
+/**
+ * @param {Application} application - application
+ */
+module.exports.controller = function(application) {
 
-    app.get('/admin/users/create/', function (request, response) {
+    var dockerBlah = application.getDockerBlah();
+
+    application.getExpress().get('/admin/users/create/', function (request, response) {
         response.render('admin/user.html.twig', {
             action: 'admin.users',
-            user: app.docker_blah.userManager.create(),
+            user: dockerBlah.getUserManager().create(),
             subaction: 'create'
         });
     });
 
-    function validateUserActionCreateNewOrUpdateUser(request, user, roles, isUpdate) {
-        var
-            name = request.body.name,
-            login = request.body.login,
-            password = request.body.password,
-            role = request.body.role,
-            passwordHash = '';
-
-        if (
-            (typeof name === 'undefined') ||
-            (typeof login === 'undefined') ||
-            (typeof name === 'undefined') ||
-            (typeof role === 'undefined')
-        ) {
-            return 'Not enough data in the request.';
-        }
-
-        name = name.trim();
-        login = login.trim();
-        password = password.trim();
-        role = parseInt(role, 10);
-
-        if (
-            (name.length < app.docker_blah.userManager.MIN_TEXT_FIELD_LENGTH) ||
-            (login.length < app.docker_blah.userManager.MIN_TEXT_FIELD_LENGTH)
-        ) {
-            return 'Name and login should be at least ' + app.docker_blah.userManager.MIN_TEXT_FIELD_LENGTH +
-                ' characters.';
-        }
-
-        if (!isUpdate || (password.length > 0)) {
-            if (password.length < app.docker_blah.userManager.MIN_TEXT_FIELD_LENGTH) {
-                return 'Password should be at least ' + app.docker_blah.userManager.MIN_TEXT_FIELD_LENGTH +
-                    ' characters.';
-            }
-
-            passwordHash = app.docker_blah.authManager.hashPassword(password);
-        } else {
-            passwordHash = user.getPasswordHash();
-        }
-
-        if (app.docker_blah.userManager.getByLogin(login, (isUpdate === true) ? user.getId() : -1) !== null) {
-            return 'User with login [' + login + '] already exists.';
-        }
-
-        if (Number.isNaN(role) && !app.docker_blah.userManager.isRoleValid(role)) {
-            return 'New role is invalid.';
-        }
-
-        var projects = app.docker_blah.projectManager.getAll();
-
-        for (var projectId in projects) {
-            var roleInProject = request.body['role_' + projectId];
-
-            if (typeof roleInProject !== 'undefined') {
-                roleInProject = parseInt(roleInProject, 10);
-
-                if (roleInProject !== -1) {
-                    if (!app.docker_blah.projectManager.isRoleValid(roleInProject)) {
-                        return 'Role for project [' + projects[projectId].getName() + '] is invalid.';
-                    }
-
-                    roles[projectId] = roleInProject;
-                }
-            }
-        }
-
-        user
-            .setName(name)
-            .setLogin(login)
-            .setRole(role)
-            .setPasswordHash(passwordHash);
-
-        return true;
-    };
-
-    app.post('/admin/users/create/', function (request, response) {
+    application.getExpress().post('/admin/users/create/', function (request, response) {
         var
             roles = {},
-            user = app.docker_blah.userManager.create(),
+            user = dockerBlah.getUserManager().create(),
             validation = validateUserActionCreateNewOrUpdateUser(request, user, roles, false);
 
         if (validation !== true) {
             return response.render('admin/user.html.twig', {
                 action: 'admin.users',
-                user: app.docker_blah.userManager.create(),
+                user: dockerBlah.getUserManager().create(),
                 subaction: 'create',
                 error: validation
             });
         }
 
-        app.docker_blah.userManager.add(user, function(error) {
-            if (!error) {
-                app.docker_blah.projectManager.setUserRoleInProject(user.getId(), roles, function (error) {
-                    if (!error) {
+        dockerBlah.getUserManager().add(user, function(error) {
+            if (error === null) {
+                dockerBlah.getProjectManager().setUserRoleInProject(user.getId(), roles, function (error) {
+                    if (error === null) {
                         return response.render('admin/user.html.twig', {
                             action: 'admin.users',
-                            user: app.docker_blah.userManager.create(),
+                            user: dockerBlah.getUserManager().create(),
                             subaction: 'create',
                             success: 'User [' + user.getLogin() + '] was created.'
                         });
@@ -138,11 +68,109 @@ module.exports.controller = function(app) {
         });
     });
 
-    app.post('/admin/users/:userId/', function (request, response) {
+    application.getExpress().all('/admin/users/:userId/*', function(request, response, next) {
+        request.userId = parseInt(request.params.userId);
+        request.user = Number.isNaN(request.userId)
+            ? null
+            : dockerBlah.getUserManager().getById(request.userId);
+
+        next();
+    });
+
+    /**
+     * Validate request for create new user or update existing
+     *
+     * @param {Object} request - express request
+     * @param {User} user - new/existing user
+     * @param {Object} roles - will be populated new with new roles in each project for given user, projectId x role
+     * @param {boolean} isUpdate - is it update operation or create new
+     *
+     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     */
+    function validateUserActionCreateNewOrUpdateUser(request, user, roles, isUpdate) {
+        var
+            name = request.body.name,
+            login = request.body.login,
+            password = request.body.password,
+            role = request.body.role,
+            passwordHash = '';
+
+        if (
+            (typeof name === 'undefined') ||
+            (typeof login === 'undefined') ||
+            (typeof name === 'undefined') ||
+            (typeof role === 'undefined')
+        ) {
+            return 'Not enough data in the request.';
+        }
+
+        name = name.trim();
+        login = login.trim();
+        password = password.trim();
+        role = parseInt(role, 10);
+
+        if (
+            (name.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
+            (login.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH)
+        ) {
+            return 'Name and login should be at least ' + dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH +
+                ' characters.';
+        }
+
+        if (!isUpdate || (password.length > 0)) {
+            if (password.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH) {
+                return 'Password should be at least ' + dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH +
+                    ' characters.';
+            }
+
+            passwordHash = dockerBlah.getAuth().hashPassword(password);
+        } else {
+            passwordHash = user.getPasswordHash();
+        }
+
+        if (dockerBlah.getUserManager().getByLogin(login, (isUpdate === true) ? user.getId() : -1) !== null) {
+            return 'User with login [' + login + '] already exists.';
+        }
+
+        if (Number.isNaN(role) && !dockerBlah.getUserManager().isRoleValid(role)) {
+            return 'New role is invalid.';
+        }
+
+        var projects = dockerBlah.getProjectManager().getAll();
+
+        for (var projectId in projects) {
+            var roleInProject = request.body['role_' + projectId];
+
+            if (typeof roleInProject !== 'undefined') {
+                roleInProject = parseInt(roleInProject, 10);
+
+                if (roleInProject !== -1) {
+                    if (!dockerBlah.getProjectManager().isRoleValid(roleInProject)) {
+                        return 'Role for project [' + projects[projectId].getName() + '] is invalid.';
+                    }
+
+                    roles[projectId] = roleInProject;
+                }
+            }
+        }
+
+        user
+            .setName(name)
+            .setLogin(login)
+            .setRole(role)
+            .setPasswordHash(passwordHash);
+
+        return true;
+    };
+
+    application.getExpress().post('/admin/users/:userId/', function (request, response) {
+        var users = dockerBlah.getUserManager().getAll();
+
         if (request.user === null) {
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
-                users: app.docker_blah.userManager.getAll(),
+                users: users,
+                usersCount: Object.keys(users).length,
                 error: 'User with given ID doesn\'t exist'
             });
         }
@@ -154,16 +182,17 @@ module.exports.controller = function(app) {
         if (validation !== true) {
             return response.render('admin/user.html.twig', {
                 action: 'admin.users',
-                users: app.docker_blah.userManager.getAll(),
+                users: users,
+                usersCount: Object.keys(users).length,
                 subaction: 'edit',
                 error: validation
             });
         }
 
-        app.docker_blah.userManager.update(request.user, function(error) {
-            if (!error) {
-                app.docker_blah.projectManager.setUserRoleInProject(request.user.getId(), roles, function(error) {
-                    if (!error) {
+        dockerBlah.getUserManager().update(request.user, function(error) {
+            if (error === null) {
+                dockerBlah.getProjectManager().setUserRoleInProject(request.user.getId(), roles, function(error) {
+                    if (error === null) {
                         return response.render('admin/user.html.twig', {
                             action: 'admin.users',
                             user: request.user,
@@ -190,11 +219,14 @@ module.exports.controller = function(app) {
         });
     });
 
-    app.get('/admin/users/:userId/', function (request, response) {
+    application.getExpress().get('/admin/users/:userId/', function (request, response) {
         if (request.user === null) {
+            var users = dockerBlah.getUserManager().getAll();
+
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
-                users: app.docker_blah.userManager.getAll(),
+                users: users,
+                usersCount: Object.keys(users).length,
                 error: 'User with given ID doesn\'t exist'
             });
         }
@@ -206,14 +238,17 @@ module.exports.controller = function(app) {
         });
     });
 
-    app.get('/admin/users/', function (request, response) {
+    application.getExpress().get('/admin/users/', function (request, response) {
+        var users = dockerBlah.getUserManager().getAll();
+
         response.render('admin/users.html.twig', {
             action: 'admin.users',
-            users: app.docker_blah.userManager.getAll()
+            users: users,
+            usersCount: Object.keys(users).length
         });
     });
 
-    app.post('/admin/users/', function (request, response) {
+    application.getExpress().post('/admin/users/', function (request, response) {
         var
             role = request.body.role,
             project = request.body.project,
@@ -225,7 +260,7 @@ module.exports.controller = function(app) {
 
         var users = {};
 
-        var allUsers = app.docker_blah.userManager.getAll();
+        var allUsers = dockerBlah.getUserManager().getAll();
         for (var index in allUsers) {
             var
                 add = true,
@@ -237,15 +272,15 @@ module.exports.controller = function(app) {
 
             if (add) {
                 if (project != -1) {
-                    add = (app.docker_blah.projectManager.getUserRoleInProject(user.getId(), project) != -1);
+                    add = (dockerBlah.getProjectManager().getUserRoleInProject(user.getId(), project) != -1);
 
                     if (add && (projectRole != -1)) {
-                        add = (app.docker_blah.projectManager.getUserRoleInProject(user.getId(), project) == projectRole);
+                        add = (dockerBlah.getProjectManager().getUserRoleInProject(user.getId(), project) == projectRole);
                     }
                 } else if (projectRole != -1) {
                     var
                         found = false,
-                        allUserProjects = app.docker_blah.projectManager.getAllForUser(user);
+                        allUserProjects = dockerBlah.getProjectManager().getAllForUser(user);
                     for (var index in allUserProjects) {
                         if (allUserProjects[index].role == projectRole) {
                             found  = true;
@@ -267,17 +302,21 @@ module.exports.controller = function(app) {
         response.render('admin/users.html.twig', {
             action: 'admin.users',
             users: users,
+            usersCount: Object.keys(users).length,
             selectedRole: role,
             selectedProject: project,
             selectedProjectRole: projectRole
         });
     });
 
-    app.get('/admin/users/:userId/delete/', function (request, response) {
+    application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
         if (request.user === null) {
+            var users = dockerBlah.getUserManager().getAll();
+
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
-                users: app.docker_blah.userManager.getAll(),
+                users: users,
+                usersCount: Object.keys(users).length,
                 error: 'User with given ID doesn\'t exist'
             });
         }
@@ -287,28 +326,35 @@ module.exports.controller = function(app) {
         });
     });
 
-    app.post('/admin/users/:userId/delete/', function (request, response) {
+    application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
         if (request.user === null) {
+            var users = dockerBlah.getUserManager().getAll();
+
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
-                users: app.docker_blah.userManager.getAll(),
+                users: users,
+                usersCount: Object.keys(users).length,
                 error: 'User with given ID doesn\'t exist'
             });
         }
 
-        app.docker_blah.projectManager.deleteUserFromAllProjects(request.user.getId(), function(error) {
-            if (!error) {
-                app.docker_blah.userManager.deleteUser(request.user.getId(), function(error) {
-                    if (!error) {
+        dockerBlah.getProjectManager().deleteUserFromAllProjects(request.user.getId(), function(error) {
+            var users = dockerBlah.getUserManager().getAll();
+
+            if (error === null) {
+                dockerBlah.getUserManager().deleteUser(request.user.getId(), function(error) {
+                    if (error === null) {
                         return response.render('admin/users.html.twig', {
                             action: 'admin.users',
-                            users: app.docker_blah.userManager.getAll(),
+                            users: users,
+                            usersCount: Object.keys(users).length,
                             success: 'User [' + request.user.getName() + '] was deleted.'
                         });
                     } else {
                         return response.render('admin/users.html.twig', {
                             action: 'admin.users',
-                            users: app.docker_blah.userManager.getAll(),
+                            users: users,
+                            usersCount: Object.keys(users).length,
                             error: 'Got error during delete. Contact your system administrator.'
                         });
                     }
@@ -316,7 +362,8 @@ module.exports.controller = function(app) {
             } else {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
-                    users: app.docker_blah.userManager.getAll(),
+                    users: users,
+                    usersCount: Object.keys(users).length,
                     error: 'Got error during delete. Contact your system administrator.'
                 });
             }

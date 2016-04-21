@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="/public/css/docker-blah.css">
     <link rel="stylesheet" href="/public/font-awesome-4.5.0/css/font-awesome.min.css">
     <link rel='shortcut icon' href='/public/favicon.ico' type='image/x-icon' />
+    <script src="/public/js/jquery-2.2.2.js"></script>
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -23,10 +26,10 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="dropdown {% if (action|match('projects\.(.*)') != null) %}active"{% endif %}">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% if request.docker_blah.project %}Project: {{ request.docker_blah.project.getName() }} {% else %}Select project{% endif %}&nbsp;<span class="caret"></span></a>
+                <li class="dropdown {% if action|match('projects\.(.*)') %}active"{% endif %}">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% if request.project %}Project: {{ request.project.getName() }} {% else %}Select a project{% endif %}&nbsp;<span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        {% for project in app.docker_blah.projectManager.getAll() %}
+                        {% for _, project in application.getDockerBlah().getProjectManager().getAll() %}
                             <li><a href="/project/{{ project.getId() }}/">{{ project.getName() }}</a></li>
                         {% endfor %}
                     </ul>
@@ -34,13 +37,13 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
-                {% if request.docker_blah.user.getRole() == 1 %}
-                    <li {% if (action|match('admin\.(.*)') != null) %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
+                {% if (request.currentUser.getRole() == 1) %}
+                    <li {% if action|match('admin\.(.*)') %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
                 {% endif %}
 
-                <li {% if (action|match('profile\.(.*)') != null) %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user"></span>&nbsp;Profile</a></li>
-                <li {% if (action|match('help\.(.*)') != null) %}class="active"{% endif %}><a href="/help/"><span class="fa fa-question-circle"></span>&nbsp;Help</a></li>
-                <li><a href="/logout/"><span class="fa fa-sign-out"></span>&nbsp;Logout ({{ request.docker_blah.user.getLogin() }})</a></li>
+                <li {% if action|match('profile\.(.*)') %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user"></span>&nbsp;Profile</a></li>
+                <li {% if action|match('help\.(.*)') %}class="active"{% endif %}><a href="/help/"><span class="fa fa-question-circle"></span>&nbsp;Help</a></li>
+                <li><a href="/logout/"><span class="fa fa-sign-out"></span>&nbsp;Logout ({{ request.currentUser.getLogin() }})</a></li>
             </ul>
         </div>
     </div>
@@ -56,7 +59,6 @@
         </div>
     </div>
 </div>
-<script src="/public/js/jquery-2.2.2.js"></script>
 <script src="/public/bootstrap/js/bootstrap.min.js"></script>
 </body>
 </html>

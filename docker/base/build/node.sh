@@ -17,5 +17,7 @@ npm install -g \
     express-session@1.13.0 \
     fs@0.0.2 \
     sqlite3@3.1.3 \
-    swig@1.4.2 \
-    connect-redis@3.0.2
+    nunjucks@2.4.2 \
+    connect-redis@3.0.2 \
+    morgan@1.7.0 \
+    winston@2.2.0

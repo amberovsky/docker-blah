@@ -14,18 +14,13 @@
         {% endif %}
     </h1>
     <form class="form-horizontal" method="post" action="/admin/projects/{% if (subaction == 'create') %}create{% else %}{{ project.getId() }}{% endif %}/">
-        {% if (error || success) %}
+        {% if (error or success) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-6">
                     {% if (error) %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             {{ error }}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-success alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            {{ success }}
                         </div>
                     {% endif %}
                 </div>

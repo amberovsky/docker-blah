@@ -5,13 +5,13 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete project #{{ request.user.getId() }}</h1>
-    <form class="form-horizontal" method="post" action="/admin/users/{{ request.user.getId() }}/delete/">
-        <h4>Are you sure you want to delete the user {{ request.user.getName() }}?</h4>
+    <h1 class="page-header"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete project #{{ request.project.getId() }}</h1>
+    <form class="form-horizontal" method="post" action="/admin/projects/{{ request.project.getId() }}/delete/">
+        <h4>Are you sure you want to delete the project [{{ request.project.getName() }}]?</h4>
         <div class="form-group">
             <div class="col-sm-3">
                 <button type="submit" name="action" id="action" class="btn btn-success" value="Yes"><span class="fa fa-frown-o"></span>&nbsp;&nbsp;Yes</button>&nbsp;&nbsp;
-                <a href="/admin/users/" class="btn btn-danger" role="button"><span class="fa fa-smile-o"></span>&nbsp;&nbsp;No</a>
+                <a href="/admin/projects/" class="btn btn-danger" role="button"><span class="fa fa-smile-o"></span>&nbsp;&nbsp;No</a>
             </div>
         </div>
     </form>

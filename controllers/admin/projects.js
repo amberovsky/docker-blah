@@ -1,32 +1,31 @@
-module.exports.controller = function (app) {
+"use strict";
 
-    app.all('/admin/projects/:projectId/*', function (request, response, next) {
-        request.projectId = parseInt(request.params.projectId);
-        request.project = Number.isNaN(request.projectId)
-            ? null
-            : app.docker_blah.projectManager.getById(request.projectId);
+/**
+ * projects.js - admin actions about projects
+ * 
+ * /admin/projects/*
+ *
+ * (C) Anton Zagorskii aka amberovsky
+ */
 
-        next();
-    });
+/**
+ * @param {Application} application - application
+ */
+module.exports.controller = function (application) {
+    
+    var dockerBlah = application.getDockerBlah();
 
-    app.get('/admin/projects/', function (request, response) {
-        response.render('admin/projects.html.twig', {
-            action: 'admin.projects',
-            projects: app.docker_blah.projectManager.getAll()
-        });
-    });
-
-    app.get('/admin/projects/create/', function (request, response) {
+    application.getExpress().get('/admin/projects/create/', function (request, response) {
         response.render('admin/project.html.twig', {
             action: 'admin.projects',
-            project: app.docker_blah.projectManager.create(),
+            project: dockerBlah.getProjectManager().create(),
             subaction: 'create'
         });
     });
 
-    app.post('/admin/projects/create/', function (request, response) {
+    application.getExpress().post('/admin/projects/create/', function (request, response) {
         var
-            project = app.docker_blah.projectManager.create(),
+            project = dockerBlah.getProjectManager().create(),
             validation = validateProjectActionCreateNewOrUpdateProject(request, project, false);
 
         if (validation !== true) {
@@ -38,8 +37,8 @@ module.exports.controller = function (app) {
             });
         }
 
-        app.docker_blah.projectManager.add(project, function (error) {
-            if (error) {
+        dockerBlah.getProjectManager().add(project, function (error) {
+            if (error !== null) {
                 response.render('admin/project.html.twig', {
                     action: 'admin.projects',
                     project: project,
@@ -47,21 +46,45 @@ module.exports.controller = function (app) {
                     subaction: 'create'
                 });
             } else {
-                response.render('admin/project.html.twig', {
+                var projects = dockerBlah.getProjectManager().getAll();
+
+                response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
-                    project: project,
-                    subaction: 'create',
+                    projects: projects,
+                    projectsCount: Object.keys(projects).length,
                     success: 'Project [' + project.getName() + '] was created.'
                 });
             }
         });
     });
 
-    app.get('/admin/projects/:projectId/', function (request, response) {
+    application.getExpress().all('/admin/projects/:projectId/*', function (request, response, next) {
+        request.projectId = parseInt(request.params.projectId);
+        request.project = Number.isNaN(request.projectId)
+            ? null
+            : dockerBlah.getProjectManager().getById(request.projectId);
+
+        next();
+    });
+
+    application.getExpress().get('/admin/projects/', function (request, response) {
+        var projects = dockerBlah.getProjectManager().getAll();
+        
+        response.render('admin/projects.html.twig', {
+            action: 'admin.projects',
+            projects: projects,
+            projectsCount: Object.keys(projects).length
+        });
+    });
+
+    application.getExpress().get('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
+            var projects = dockerBlah.getProjectManager().getAll();
+
             return response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
-                projects: app.docker_blah.projectManager.getAll(),
+                projects: projects,
+                projectsCount: Object.keys(projects).length,
                 error: 'Project with given ID doesn\'t exist'
             });
         }
@@ -72,6 +95,15 @@ module.exports.controller = function (app) {
         });
     });
 
+    /**
+     * Validate request for create new project or update existing
+     * 
+     * @param {Object} request - express request
+     * @param {Project} project - new/existing project
+     * @param {boolean} isUpdate - is it update operation or create new
+     * 
+     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     */
     function validateProjectActionCreateNewOrUpdateProject(request, project, isUpdate) {
         var name = request.body.name;
 
@@ -81,25 +113,28 @@ module.exports.controller = function (app) {
 
         name = name.trim();
 
-        if (name.length < app.docker_blah.projectManager.MIN_TEXT_FIELD_LENGTH) {
-            return 'Name should be at least ' + app.docker_blah.projectManager.MIN_TEXT_FIELD_LENGTH +
+        if (name.length < dockerBlah.getProjectManager().MIN_TEXT_FIELD_LENGTH) {
+            return 'Name should be at least ' + dockerBlah.getProjectManager().MIN_TEXT_FIELD_LENGTH +
                 ' characters.';
         }
 
-        if (app.docker_blah.projectManager.getByName(name, (isUpdate === true) ? project.getId() : -1) !== null) {
+        if (dockerBlah.getProjectManager().getByName(name, (isUpdate === true) ? project.getId() : -1) !== null) {
             return 'Project with name [' + name + '] already exists.';
         }
 
         project.setName(name);
 
         return true;
-    }
+    };
 
-    app.post('/admin/projects/:projectId/', function (request, response) {
+    application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
+            var projects = dockerBlah.getProjectManager().getAll();
+
             return response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
-                projects: app.docker_blah.projectManager.getAll(),
+                projects: projects,
+                projectsCount: Object.keys(projects).length,
                 error: 'Project with given ID doesn\'t exist'
             });
         }
@@ -109,18 +144,20 @@ module.exports.controller = function (app) {
         if (validation !== true) {
             return response.render('admin/project.html.twig', {
                 action: 'admin.projects',
-                project: app.docker_blah.projectManager.getAll(),
+                project: request.project,
                 subaction: 'edit',
                 error: validation
             });
         }
 
-        app.docker_blah.projectManager.update(request.project, function (error) {
-            if (!error) {
-                return response.render('admin/project.html.twig', {
+        application.getDockerBlah().getProjectManager().update(request.project, function (error) {
+            if (error === null) {
+                var projects = dockerBlah.getProjectManager().getAll();
+
+                return response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
-                    project: request.project,
-                    subaction: 'edit',
+                    projects: projects,
+                    projectsCount: Object.keys(projects).length,
                     success: 'Project [' + request.project.getName() + '] info was updated.'
                 });
             } else {
@@ -133,5 +170,55 @@ module.exports.controller = function (app) {
             }
         });
     });
-    
+
+    application.getExpress().get('/admin/projects/:projectId/delete/', function (request, response) {
+        if (request.project === null) {
+            var projects = dockerBlah.getProjectManager().getAll();
+
+            return response.render('admin/projects.html.twig', {
+                action: 'admin.projects',
+                projects: projects,
+                projectsCount: Object.keys(projects).length,
+                error: 'Project with given ID doesn\'t exist'
+            });
+        }
+
+        response.render('admin/project.delete.html.twig', {
+            action: 'admin.projects'
+        });
+    });
+
+    application.getExpress().post('/admin/projects/:projectId/delete/', function (request, response) {
+        if (request.project === null) {
+            var projects = dockerBlah.getProjectManager().getAll();
+
+            return response.render('admin/projects.html.twig', {
+                action: 'admin.projects',
+                projects: projects,
+                projectsCount: Object.keys(projects).length,
+                error: 'Project with given ID doesn\'t exist'
+            });
+        }
+
+        application.getDockerBlah().getProjectManager().deleteProject(request.project.getId(), function(error) {
+            if (error === null) {
+                var projects = dockerBlah.getProjectManager().getAll();
+
+                return response.render('admin/projects.html.twig', {
+                    action: 'admin.projects',
+                    projects: projects,
+                    projectsCount: Object.keys(projects).length,
+                    success: 'Project [' + request.project.getName() + '] was deleted.'
+                });
+            } else {
+                return response.render('admin/projects.html.twig', {
+                    action: 'admin.projects',
+                    projects: projects,
+                    projectsCount: Object.keys(projects).length,
+                    error: 'Got error during update. Contact your system administrator.'
+                });
+            }
+        });
+    });
+
 };

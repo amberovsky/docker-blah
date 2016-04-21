@@ -14,7 +14,7 @@
         {% endif %}
     </h1>
     <form class="form-horizontal" method="post" action="/admin/users/{% if (subaction == 'create') %}create{% else %}{{ user.getId() }}{% endif %}/">
-        {% if (error || success) %}
+        {% if (error or success) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-6">
                     {% if (error) %}
@@ -47,7 +47,7 @@
             <label for="role" class="col-sm-1 control-label">Role</label>
             <div class="col-sm-3">
                 <select class="form-control" id="role" name="role">
-                    {% for role, id in app.docker_blah.userManager.getRoles() %}
+                    {% for role, id in application.getDockerBlah().getUserManager().getRoles() %}
                         <option value="{{ id }}" {% if (user.getRole() == id) %}selected{% endif %}>{{ role }}</option>
                     {% endfor %}
                 </select>
@@ -60,7 +60,7 @@
             </div>
         </div>
         <br />
-        {% for project in app.docker_blah.projectManager.getAll() %}
+        {% for project in application.getDockerBlah().getProjectManager().getAll() %}
             <div class="form-group form-group-sm">
                 <label class="col-sm-1 control-label">Project</label>
                 <div class="col-sm-2">
@@ -69,9 +69,9 @@
                 <label for="role_{{ project.getId() }}" class="col-sm-1 control-label">Role</label>
                 <div class="col-sm-2">
                     <select class="form-control" id="role_{{ project.getId() }}" name="role_{{ project.getId() }}">
-                        {%  set userRoleInProject = app.docker_blah.projectManager.getUserRoleInProject(user.getId(), project.getId()) %}
+                        {%  set userRoleInProject = application.getDockerBlah().getProjectManager().getUserRoleInProject(user.getId(), project.getId()) %}
                         <option value="-1">NONE</option>
-                        {% for role, id in app.docker_blah.projectManager.getRoles() %}
+                        {% for role, id in application.getDockerBlah().getProjectManager().getRoles() %}
                             <option value="{{ id }}" {% if (userRoleInProject == id) %}selected{% endif %}>{{ role }}</option>
                         {% endfor %}
                     </select>

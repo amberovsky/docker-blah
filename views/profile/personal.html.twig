@@ -7,7 +7,7 @@
 {% block content %}
     <h1 class="page-header"><span class="fa fa-user"></span>&nbsp;&nbsp;Personal</h1>
     <form class="form-horizontal" method="post" action="/profile/personal/">
-        {% if error_profile || success_profile %}
+        {% if (error_profile or success_profile) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-offset-2 col-sm-6">
                     {% if error_profile %}
@@ -27,19 +27,19 @@
         <div class="form-group form-group-sm">
             <label for="name" class="col-sm-3 control-label">Name</label>
             <div class="col-sm-5">
-                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.docker_blah.user.getName() }}" required />
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.currentUser.getName() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
             <label for="login" class="col-sm-3 control-label">Login</label>
             <div class="col-sm-5">
-                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.docker_blah.user.getLogin() }}" required />
+                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.currentUser.getLogin() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Role</label>
             <div class="col-sm-5">
-                <p class="form-control-static">{{ app.docker_blah.userManager.getRoleCaption(request.docker_blah.user) }}</p>
+                <p class="form-control-static">{{ application.getDockerBlah().getUserManager().getRoleCaption(request.currentUser) }}</p>
             </div>
         </div>
         <div class="form-group form-group-sm">
@@ -50,7 +50,7 @@
     </form>
     <hr />
     <form class="form-horizontal" method="post" action="/profile/personal/">
-        {% if error_password || success_password %}
+        {% if (error_password or success_password) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-offset-2 col-sm-6">
                     {% if error_password %}
