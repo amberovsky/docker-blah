@@ -80,8 +80,8 @@ class Application {
 
         // set default variables in templates
         this.express.use(function(request, response, next) {
-            env.addGlobal('application', self);
-            env.addGlobal('request', request);
+            environemnt.addGlobal('application', self);
+            environemnt.addGlobal('request', request);
 
             next();
         });
@@ -100,14 +100,14 @@ class Application {
                     password = request.body.password;
 
                 if ((typeof login == 'undefined') || (typeof password == 'undefined')) {
-                    response.render('layout/auth.html.twig', {error: 'wrong login or password'});
+                    response.render('layout/auth.html.twig', { error: 'wrong login or password' });
                     return;
                 }
 
                 var authResult = self.getDockerBlah().getAuth().auth(login, password);
 
-                if ((authResult === null) || (authResult <= 0)) {
-                    return response.render('layout/auth.html.twig', {error: 'wrong login or password'});
+                if (authResult <= 0) {
+                    return response.render('layout/auth.html.twig', { error: 'wrong login or password' });
                 } else {
                     request.session.userId = authResult;
                 }
@@ -118,7 +118,7 @@ class Application {
 
         // middleware for all requests - check auth
         this.express.use(function (request, response, next) {
-            if (typeof request.session.userId == 'undefined') {
+            if (typeof request.session.userId === 'undefined') {
                 response.render('layout/auth.html.twig');
             } else {
                 var user = self.getDockerBlah().getUserManager().getById(request.session.userId);

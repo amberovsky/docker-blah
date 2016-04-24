@@ -38,6 +38,7 @@ class ProjectManager {
         /** @property {number} MIN_TEXT_FIELD_LENGTH - @constant minimum length for Project text properties */
         application.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
 
+        this.application = application;
         this.sqlite3 = application.getSqlite3();
         this.projects = {};
         this.projectUser = {};
@@ -153,7 +154,19 @@ class ProjectManager {
      * @returns {boolean} true, if given user has admin role in given project, false otherwise
      */
     isUserAdmin(project, user) {
-        return (this.projectUser[project.getId()][user.getId()] === this.ROLE_ADMIN);
+        if (
+            this.application.getDockerBlah().getUserManager().isUserSuper(user) ||
+            this.application.getDockerBlah().getUserManager().isUserAdmin(user)
+        ) {
+            return true;
+        }
+
+        return (
+            !this.projectUser.hasOwnProperty(project.getId()) ||
+            !this.projectUser[project.getId()].hasOwnProperty(user.getId())
+        )
+        ? false
+        : (this.projectUser[project.getId()][user.getId()] === this.ROLE_ADMIN);
     };
 
     /**

@@ -38,7 +38,7 @@
                 <label class="control-label" for="project">Project:</label>
                 <select class="form-control" id="project" name="project">
                     <option value="-1">ALL</option>
-                    {% for project in application.getDockerBlah().getProjectManager().getAll() %}
+                    {% for _, project in application.getDockerBlah().getProjectManager().getAll() %}
                         <option value="{{ project.getId() }}" {% if (selectedProject == project.getId()) %}selected{% endif %}>{{ project.getName() }}</option>
                     {% endfor %}
                 </select>

@@ -13,6 +13,9 @@
  */
 module.exports.controller = function (application) {
 
+    /**
+     * View all nodes
+     */
     application.getExpress().get('/project/:projectId/node/', function (request, response) {
         response.render('nodes/index.html.twig', {
             nodes: {}

@@ -15,6 +15,9 @@ module.exports.controller = function(application) {
 
     var dockerBlah = application.getDockerBlah();
 
+    /**
+     * Create a user - page
+     */
     application.getExpress().get('/admin/users/create/', function (request, response) {
         response.render('admin/user.html.twig', {
             action: 'admin.users',
@@ -23,6 +26,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * Create a user - handler
+     */
     application.getExpress().post('/admin/users/create/', function (request, response) {
         var
             roles = {},
@@ -68,6 +74,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * Middleware to preload user if there is a userId in the url
+     */
     application.getExpress().all('/admin/users/:userId/*', function(request, response, next) {
         request.userId = parseInt(request.params.userId);
         request.user = Number.isNaN(request.userId)
@@ -163,6 +172,9 @@ module.exports.controller = function(application) {
         return true;
     };
 
+    /**
+     * Update user info
+     */
     application.getExpress().post('/admin/users/:userId/', function (request, response) {
         var users = dockerBlah.getUserManager().getAll();
 
@@ -219,6 +231,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * View user
+     */
     application.getExpress().get('/admin/users/:userId/', function (request, response) {
         if (request.user === null) {
             var users = dockerBlah.getUserManager().getAll();
@@ -238,6 +253,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * View all users
+     */
     application.getExpress().get('/admin/users/', function (request, response) {
         var users = dockerBlah.getUserManager().getAll();
 
@@ -248,6 +266,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * View all users with given filters
+     */
     application.getExpress().post('/admin/users/', function (request, response) {
         var
             role = request.body.role,
@@ -309,6 +330,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * Delete user - page
+     */
     application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
         if (request.user === null) {
             var users = dockerBlah.getUserManager().getAll();
@@ -326,6 +350,9 @@ module.exports.controller = function(application) {
         });
     });
 
+    /**
+     * Delete user - handler
+     */
     application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
         if (request.user === null) {
             var users = dockerBlah.getUserManager().getAll();

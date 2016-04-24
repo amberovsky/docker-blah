@@ -15,12 +15,22 @@ module.exports.controller = function (application) {
     
     var dockerBlah = application.getDockerBlah();
 
+    /**
+     * View profile - page
+     */
     application.getExpress().get('/profile/personal/', function (request, response) {
         response.render('profile/personal.html.twig', {
             action: 'profile.personal'
         });
     });
 
+    /**
+     * Validate request for update user personal data
+     * 
+     * @param {Object} request - express request
+     *
+     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     */
     function validateActionPersonalUpdate(request) {
         var
             name = request.body.name,
@@ -48,6 +58,13 @@ module.exports.controller = function (application) {
         return true;
     };
 
+    /**
+     * Validate request for update user password
+     *
+     * @param {Object} request - express request
+     *
+     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     */
     function validateActionPasswordUpdate(request) {
         var
             currentPassword = request.body.password,
@@ -89,6 +106,9 @@ module.exports.controller = function (application) {
         return true;
     };
 
+    /**
+     * View profile - handler
+     */
     application.getExpress().post('/profile/personal/', function(request, response) {
         const   ACTION_PERSONAL = 'personal';
         const   ACTION_PASSWORD = 'password';
@@ -161,6 +181,9 @@ module.exports.controller = function (application) {
         }
     });
 
+    /**
+     * View projects
+     */
     application.getExpress().get('/profile/projects/', function (request, response) {
         response.render('profile/projects.html.twig', {
             action: 'profile.projects',

@@ -15,6 +15,9 @@ module.exports.controller = function (application) {
     
     var dockerBlah = application.getDockerBlah();
 
+    /**
+     * Create a new project - page
+     */
     application.getExpress().get('/admin/projects/create/', function (request, response) {
         response.render('admin/project.html.twig', {
             action: 'admin.projects',
@@ -23,6 +26,9 @@ module.exports.controller = function (application) {
         });
     });
 
+    /**
+     * Create a new project - handler
+     */
     application.getExpress().post('/admin/projects/create/', function (request, response) {
         var
             project = dockerBlah.getProjectManager().create(),
@@ -58,6 +64,9 @@ module.exports.controller = function (application) {
         });
     });
 
+    /**
+     * Middleware to preload project if there is a projectId in the url
+     */
     application.getExpress().all('/admin/projects/:projectId/*', function (request, response, next) {
         request.projectId = parseInt(request.params.projectId);
         request.project = Number.isNaN(request.projectId)
@@ -67,6 +76,9 @@ module.exports.controller = function (application) {
         next();
     });
 
+    /**
+     * View all projects
+     */
     application.getExpress().get('/admin/projects/', function (request, response) {
         var projects = dockerBlah.getProjectManager().getAll();
         
@@ -77,6 +89,9 @@ module.exports.controller = function (application) {
         });
     });
 
+    /**
+     * View project
+     */
     application.getExpress().get('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
             var projects = dockerBlah.getProjectManager().getAll();
@@ -127,6 +142,9 @@ module.exports.controller = function (application) {
         return true;
     };
 
+    /**
+     * Update project info
+     */
     application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
             var projects = dockerBlah.getProjectManager().getAll();
@@ -171,6 +189,9 @@ module.exports.controller = function (application) {
         });
     });
 
+    /**
+     * Delete project - page
+     */
     application.getExpress().get('/admin/projects/:projectId/delete/', function (request, response) {
         if (request.project === null) {
             var projects = dockerBlah.getProjectManager().getAll();
@@ -188,6 +209,9 @@ module.exports.controller = function (application) {
         });
     });
 
+    /**
+     * Delete project - handler
+     */
     application.getExpress().post('/admin/projects/:projectId/delete/', function (request, response) {
         if (request.project === null) {
             var projects = dockerBlah.getProjectManager().getAll();

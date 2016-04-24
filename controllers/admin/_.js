@@ -11,6 +11,9 @@
  */
 module.exports.controller = function (application) {
 
+    /**
+     * Middleware to check permissions for /admin/* section
+     */
     application.getExpress().all('/admin/*', function(request, response, next) {
         if (
             (!application.getDockerBlah().getUserManager().isUserAdmin(request.currentUser)) &&
