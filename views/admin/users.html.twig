@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+
     <h1 class="page-header"><span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ usersCount }}</h1>
     <form method="post" action="/admin/users/">
         {% if (error or success) %}
@@ -24,8 +25,8 @@
                 </div>
             </div>
         {% endif %}
-        <div class="form-group row">
-            <div class="col-sm-2">
+        <div class="form-group form-group-sm row">
+            <div class="col-md-2 col-sm-4">
                 <label class="control-label" for="role">System role:</label>
                 <select class="form-control" id="role" name="role">
                     <option value="-1">ALL</option>
@@ -34,7 +35,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-sm-2">
+            <div class="col-md-2 col-sm-4">
                 <label class="control-label" for="project">Project:</label>
                 <select class="form-control" id="project" name="project">
                     <option value="-1">ALL</option>
@@ -43,7 +44,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-sm-2">
+            <div class="col-md-2 col-sm-4">
                 <label class="control-label" for="project_role">Project role:</label>
                 <select class="form-control" id="project_role" name="project_role">
                     <option value="-1">ALL</option>
@@ -52,7 +53,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-sm-3">
+            <div class="col-lg-3 col-md-4 col-sm-12">
                 <div class="col-sm-6">
                     <label class="control-label" for="filter">&nbsp;</label>
                     <button type="submit" id="filter" name="filter" class="form-control btn btn-success"><span class="fa fa-filter"></span>&nbsp;&nbsp;Filter</button>
@@ -71,8 +72,8 @@
             <th>ID</th>
             <th>Name</th>
             <th>Login</th>
-            <th>Projects</th>
-            <th>Actions</th>
+            <th class="text-center">Projects</th>
+            <th class="text-center">Actions</th>
         </tr>
         </thead>
         {% for _, user in users %}
@@ -80,14 +81,14 @@
                 <td>{{ user.getId() }}</td>
                 <td>{{ user.getName() }}</td>
                 <td>{{ user.getLogin() }}</td>
-                <td>
+                <td class="text-center">
                     {% for project in application.getDockerBlah().getProjectManager().getAllForUser(user) %}
                         {{ project.project.getName() }}<br>
                     {% endfor %}
                 </td>
-                <td>
-                    <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
-                    <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                <td class="text-center">
+                    <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                    <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
                 </td>
             </tr>
         {% endfor %}
