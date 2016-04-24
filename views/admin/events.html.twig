@@ -18,10 +18,13 @@
     </div>
 
     <ul class="nav nav-tabs">
-        <li role="presentation"><a href="#">HTTP</a></li>
-        <li role="presentation" class="active"><a href="#">SYSTEM</a></li>
+        <li role="presentation" {% if (subaction == 'http') %}class="active"{% endif %}><a href="/admin/events/http/">HTTP</a></li>
+        <li role="presentation" {% if (subaction == 'system') %}class="active"{% endif %}><a href="/admin/events/system/">SYSTEM</a></li>
     </ul>
 
     <br />
-    <textarea class="form-control" rows="100"></textarea>
+    <textarea class="form-control" style="font-family:monospace; color: green; background-color: black;" rows="100">aDSadsaSDasd
+    aSDasdaSDASHDFJKASHFKJASHGDFKJAHSGDFKJH
+    asdfjaslkdjfhalksjdhflkasjhdf
+    aslkdhdfaksjhdfgkjashgdfkjahsgdf</textarea>
 {% endblock %}

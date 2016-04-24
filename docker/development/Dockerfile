@@ -1,4 +1,4 @@
-FROM pumpkin-development/docker-blah/base:0.0.1
+FROM amberovsky/docker-blah-base:0.0.1
 
 MAINTAINER Anton Zagorskii <amberovsky@gmail.com>
 

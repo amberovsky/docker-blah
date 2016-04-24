@@ -195,7 +195,6 @@ class Application {
         });
     };
 
-
     /**
      * @returns {Object}
      */
@@ -215,6 +214,13 @@ class Application {
      */
     getSqlite3() {
         return this.sqlite3;
+    }
+
+    /**
+     * @returns {string} path to event files
+     */
+    getEventsDirectory() {
+        return __dirname + '/../logs/';
     }
 
     /**

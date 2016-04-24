@@ -14,15 +14,6 @@
 module.exports.controller = function (application) {
 
     /**
-     * View all events
-     */
-    application.getExpress().get('/admin/events/', function (request, response) {
-        response.render('admin/events.html.twig', {
-            action: 'admin.events'
-        });
-    });
-
-    /**
      * View all settings
      */
     application.getExpress().get('/admin/settings', function (request, response) {
