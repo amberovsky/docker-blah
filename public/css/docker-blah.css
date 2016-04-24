@@ -1,3 +1,7 @@
 .table-vcenter td {
     vertical-align: middle!important;
 }
+
+.checkbox-label-p45 {
+    padding-left: 45px !important;
+}
