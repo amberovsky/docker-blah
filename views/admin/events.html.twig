@@ -6,15 +6,14 @@
 
 {% block content %}
     <h1 class="page-header"><span class="fa fa-list-alt"></span>&nbsp;&nbsp;Events</h1>
-    <div class="form-group form-group-sm row">
-        <div class="col-sm-3">
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" data-toggle="toggle" data-size="mini">
-                    Auto refresh
-                </label>
-            </div>
+    <div class="pull-right form-inline">
+        <div class="checkbox checkbox-slider--b-flat checkbox-slider-info">
+            <label>
+                <input type="checkbox" ><span style="padding-left: 45px;">Auto refresh</span>
+            </label>
         </div>
+        <button class="btn btn-sm btn-primary"><span class="fa fa-trash"></span>&nbsp;&nbsp;Clear</button>
+        <button class="btn btn-sm btn-primary"><span class="fa fa-download"></span>&nbsp;&nbsp;Download</button>
     </div>
 
     <ul class="nav nav-tabs">
