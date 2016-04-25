@@ -14,19 +14,19 @@ class UserManager {
     /**
      * Callback to be used for all database operations
      *
-     * @callback DatabaseOperationCallback
+     * @callback UserOperationCallback
      *
-     * @param {Boolean} isError - indicates was there an error during database operation (true) or null otherwise
+     * @param {(null|User)} user - user after applied operation or null if no user with given criteria
+     * @param {(null|string)} error - error message
      */
-
 
     /**
      * @constructor
      *
      * @param {Application} application - application
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {NextCallback} next - next callback
      */
-    constructor(application, callback) {
+    constructor(application, next) {
         /** @property {number} ROLE_SUPER - @constant for SUPER role */
         application.createConstant(this, 'ROLE_SUPER', 1);
 
@@ -45,14 +45,14 @@ class UserManager {
         this.users = {};
 
         var self = this;
-        this.sqlite3.each("SELECT id, name, login, password_hash, role FROM user", function(error, row) {
+        this.sqlite3.each("SELECT id, name, login, password_hash, role FROM user", function (error, row) {
             if (error === null) {
                 var user = new User(row.id, row.name, row.login, row.password_hash, row.role);
                 self.users[user.getId()] = user;
             } else {
-                console.log(error);
+                application.handleErrorDuringStartup(error);
             }
-        }, callback);
+        }, next);
     };
 
     /**
@@ -70,6 +70,7 @@ class UserManager {
      */
     add(user, callback) {
         var self = this;
+        
         this.sqlite3.run(
             'INSERT INTO user (name, login, password_hash, role) VALUES (?, ?, ?, ?)',
             [
@@ -137,18 +138,26 @@ class UserManager {
 
     /**
      * @param {string} login - user's login
-     * @param {number} currentUserId - which user to skip
-     *
-     * @returns {(null|User)} a user with given login, or null if such user doesn't exist
+     * @param {number|null} currentUserId - which user to skip
+     * @param {UserOperationCallback} callback - user operation callback
      */
-    getByLogin(login, currentUserId) {
-        for (var index in this.users) {
-            if ((this.users[index].getLogin() === login) && (this.users[index].getId() !== currentUserId)) {
-                return this.users[index];
+    getByLogin(login, currentUserId, callback) {
+        this.sqlite3.get(
+            'SELECT id, name, login, password_hash, role FROM user WHERE (login = ?) AND (id <> ?)',
+            [
+                login,
+                (currentUserId === null ? -1 : currentUserId)
+            ],
+            function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(null, null);
+                } else if (error === null) {
+                    callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
+                }  else {
+                    callback(null, error);
+                }
             }
-        }
-
-        return null;
+        );
     };
 
     /**

@@ -34,25 +34,38 @@ class Auth {
     };
 
     /**
+     * Callback for auth operation
+     *
+     * @callback AuthCallback
+     *
+     * @param {(null|User)} user - user if success, null otherwise
+     * @param {(null|number)} error - error code, null otherwise
+     */
+
+    /**
      * Perform authentication
      *
      * @param {string} login - user login
      * @param {string} password - user password
-     *
-     * @returns {number} AUTH_NO_USER or AUTH_WRONG_PASSWORD if authentication was unsuccsessfull, user id otherwise
+     * @param {AuthCallback} callback - auth callback
      */
-    auth(login, password) {
-        var user = this.application.getDockerBlah().getUserManager().getByLogin(login);
-
-        if (user === null) {
-            return this.AUTH_NO_USER;
-        }
-
-        if (!this.checkPasswordMatch(user.getPasswordHash(), password)) {
-             return this.AUTH_WRONG_PASSWORD;
-        }
-
-        return user.getId();
+    auth(login, password, callback) {
+        // TODO pass password hash
+        this.application.getUserManager().getByLogin(login, null, (user, error) => {
+            if (error === null) {
+                if (user === null) {
+                    callback(null, this.AUTH_NO_USER);
+                } else  {
+                    if (!this.checkPasswordMatch(user.getPasswordHash(), password)) {
+                        callback(null, this.AUTH_WRONG_PASSWORD);
+                    } else {
+                        callback(user, null);
+                    }
+                }
+            } else {
+                callback(null, error)
+            }
+        });
     }
 
     /**

@@ -11,9 +11,7 @@
 /**
  * @param {Application} application - application
  */
-module.exports.controller = function(application) {
-
-    var dockerBlah = application.getDockerBlah();
+module.exports.controller = function (application) {
 
     /**
      * Create a user - page
@@ -21,7 +19,7 @@ module.exports.controller = function(application) {
     application.getExpress().get('/admin/users/create/', function (request, response) {
         response.render('admin/user.html.twig', {
             action: 'admin.users',
-            user: dockerBlah.getUserManager().create(),
+            user: application.getUserManager().create(),
             subaction: 'create'
         });
     });
@@ -30,79 +28,89 @@ module.exports.controller = function(application) {
      * Create a user - handler
      */
     application.getExpress().post('/admin/users/create/', function (request, response) {
-        var
-            roles = {},
-            user = dockerBlah.getUserManager().create(),
-            validation = validateUserActionCreateNewOrUpdateUser(request, user, roles, false);
+        var user = application.getUserManager().create();
 
-        if (validation !== true) {
-            return response.render('admin/user.html.twig', {
-                action: 'admin.users',
-                user: dockerBlah.getUserManager().create(),
-                subaction: 'create',
-                error: validation
-            });
-        }
-
-        dockerBlah.getUserManager().add(user, function(error) {
-            if (error === null) {
-                dockerBlah.getProjectManager().setUserRoleInProject(user.getId(), roles, function (error) {
-                    if (error === null) {
-                        return response.render('admin/user.html.twig', {
-                            action: 'admin.users',
-                            user: dockerBlah.getUserManager().create(),
-                            subaction: 'create',
-                            success: 'User [' + user.getLogin() + '] was created.'
-                        });
-                    } else {
-                        return response.render('admin/user.html.twig', {
-                            action: 'admin.users',
-                            user: user,
-                            subaction: 'create',
-                            error: 'Got error during create. Contact your system administrator.'
-                        });
-                    }
-                });
-            } else {
+        validateUserActionCreateNewOrUpdateUser(request, user, false, function (user, roles, error) {
+            if (error !== null) {
                 return response.render('admin/user.html.twig', {
                     action: 'admin.users',
-                    user: user,
+                    user: application.getUserManager().create(),
                     subaction: 'create',
-                    error: 'Got error during create. Contact your system administrator.'
+                    error: error
                 });
             }
+
+            application.getUserManager().add(user, function (error) {
+                if (error === null) {
+                    application.getProjectManager().setUserRoleInProject(user.getId(), roles, function (error) {
+                        if (error === null) {
+                            return response.render('admin/user.html.twig', {
+                                action: 'admin.users',
+                                user: application.getUserManager().create(),
+                                subaction: 'create',
+                                success: 'User [' + user.getLogin() + '] was created.'
+                            });
+                        } else {
+                            return response.render('admin/user.html.twig', {
+                                action: 'admin.users',
+                                user: user,
+                                subaction: 'create',
+                                error: 'Got error during create. Contact your system administrator.'
+                            });
+                        }
+                    });
+                } else {
+                    return response.render('admin/user.html.twig', {
+                        action: 'admin.users',
+                        user: user,
+                        subaction: 'create',
+                        error: 'Got error during create. Contact your system administrator.'
+                    });
+                }
+            });
+
         });
     });
 
     /**
      * Middleware to preload user if there is a userId in the url
      */
-    application.getExpress().all('/admin/users/:userId/*', function(request, response, next) {
-        request.userId = parseInt(request.params.userId);
-        request.user = Number.isNaN(request.userId)
+    application.getExpress().all('/admin/users/:userId/*', function (request, response, next) {
+        var userId = parseInt(request.params.userId);
+        request.requestedUser = Number.isNaN(userId)
             ? null
-            : dockerBlah.getUserManager().getById(request.userId);
+            : application.getUserManager().getById(userId);
 
         next();
     });
+
+    /**
+     * Callback for update/create event
+     *
+     * @callback UserUpdateOrCreateCallback
+     *
+     * @param {(null|User)} user - new user | user with updated values, null if error happened
+     * @param {(null|object)} roles - will be populated new with new roles in each project for given user,
+     *                                  projectId x role, null if error happened
+     * @param {(null|string)} error - error message, if error happened
+     */
 
     /**
      * Validate request for create new user or update existing
      *
      * @param {Object} request - express request
      * @param {User} user - new/existing user
-     * @param {Object} roles - will be populated new with new roles in each project for given user, projectId x role
      * @param {boolean} isUpdate - is it update operation or create new
-     *
-     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     * @param {UserUpdateOrCreateCallback} callback - user update or create callback
      */
-    function validateUserActionCreateNewOrUpdateUser(request, user, roles, isUpdate) {
+    function validateUserActionCreateNewOrUpdateUser(request, user, isUpdate, callback) {
         var
             name = request.body.name,
             login = request.body.login,
             password = request.body.password,
             role = request.body.role,
-            passwordHash = '';
+            passwordHash = '',
+            roles = {};
 
         if (
             (typeof name === 'undefined') ||
@@ -110,7 +118,7 @@ module.exports.controller = function(application) {
             (typeof name === 'undefined') ||
             (typeof role === 'undefined')
         ) {
-            return 'Not enough data in the request.';
+            return callback(null, null, 'Not enough data in the request.');
         }
 
         name = name.trim();
@@ -119,66 +127,81 @@ module.exports.controller = function(application) {
         role = parseInt(role, 10);
 
         if (
-            (name.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
-            (login.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH)
+            (name.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
+            (login.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH)
         ) {
-            return 'Name and login should be at least ' + dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH +
-                ' characters.';
+            return callback(
+                null,
+                null,
+                'Name and login should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
+                ' characters.'
+            );
         }
 
         if (!isUpdate || (password.length > 0)) {
-            if (password.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH) {
-                return 'Password should be at least ' + dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH +
-                    ' characters.';
+            if (password.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) {
+                return callback(
+                    null,
+                    null,
+                    'Password should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
+                    ' characters.'
+                );
             }
 
-            passwordHash = dockerBlah.getAuth().hashPassword(password);
+            passwordHash = application.getAuth().hashPassword(password);
         } else {
             passwordHash = user.getPasswordHash();
         }
 
-        if (dockerBlah.getUserManager().getByLogin(login, (isUpdate === true) ? user.getId() : -1) !== null) {
-            return 'User with login [' + login + '] already exists.';
-        }
+        var userId = (isUpdate === true) ? user.getId() : -1;
+        application.getUserManager().getByLogin(login, userId, function (foundUser, error) {
+            if (foundUser !== null) {
+                return callback(null, null, 'User with login [' + login + '] already exists.');
+            }
 
-        if (Number.isNaN(role) && !dockerBlah.getUserManager().isRoleValid(role)) {
-            return 'New role is invalid.';
-        }
+            if (Number.isNaN(role) && !application.getUserManager().isRoleValid(role)) {
+                return callback(null, null, 'New role is invalid.');
+            }
 
-        var projects = dockerBlah.getProjectManager().getAll();
+            var projects = application.getProjectManager().getAll();
 
-        for (var projectId in projects) {
-            var roleInProject = request.body['role_' + projectId];
+            for (var projectId in projects) {
+                var roleInProject = request.body['role_' + projectId];
 
-            if (typeof roleInProject !== 'undefined') {
-                roleInProject = parseInt(roleInProject, 10);
+                if (typeof roleInProject !== 'undefined') {
+                    roleInProject = parseInt(roleInProject, 10);
 
-                if (roleInProject !== -1) {
-                    if (!dockerBlah.getProjectManager().isRoleValid(roleInProject)) {
-                        return 'Role for project [' + projects[projectId].getName() + '] is invalid.';
+                    if (roleInProject !== -1) {
+                        if (!application.getProjectManager().isRoleValid(roleInProject)) {
+                            return callback(
+                                null,
+                                null,
+                                'Role for project [' + projects[projectId].getName() + '] is invalid.'
+                            );
+                        }
+
+                        roles[projectId] = roleInProject;
                     }
-
-                    roles[projectId] = roleInProject;
                 }
             }
-        }
 
-        user
-            .setName(name)
-            .setLogin(login)
-            .setRole(role)
-            .setPasswordHash(passwordHash);
+            user
+                .setName(name)
+                .setLogin(login)
+                .setRole(role)
+                .setPasswordHash(passwordHash);
 
-        return true;
+            return callback(user, roles, null);
+        });
     };
 
     /**
      * Update user info
      */
     application.getExpress().post('/admin/users/:userId/', function (request, response) {
-        var users = dockerBlah.getUserManager().getAll();
+        var users = application.getUserManager().getAll();
 
-        if (request.user === null) {
+        if (request.requestedUser === null) {
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
                 users: users,
@@ -187,47 +210,48 @@ module.exports.controller = function(application) {
             });
         }
 
-        var
-            roles = {},
-            validation = validateUserActionCreateNewOrUpdateUser(request, request.user, roles, true);
-
-        if (validation !== true) {
-            return response.render('admin/user.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length,
-                subaction: 'edit',
-                error: validation
-            });
-        }
-
-        dockerBlah.getUserManager().update(request.user, function(error) {
-            if (error === null) {
-                dockerBlah.getProjectManager().setUserRoleInProject(request.user.getId(), roles, function(error) {
-                    if (error === null) {
-                        return response.render('admin/user.html.twig', {
-                            action: 'admin.users',
-                            user: request.user,
-                            subaction: 'edit',
-                            success: 'User info was updated.'
-                        });
-                    } else {
-                        return response.render('admin/user.html.twig', {
-                            action: 'admin.users',
-                            user: request.user,
-                            subaction: 'edit',
-                            error: 'Got error during update. Contact your system administrator.'
-                        });
-                    }
-                });
-            } else {
+        validateUserActionCreateNewOrUpdateUser(request, request.requestedUser, true, function (user, roles, error) {
+            if (error !== null) {
                 return response.render('admin/user.html.twig', {
                     action: 'admin.users',
-                    user: request.user,
+                    user: user,
                     subaction: 'edit',
-                    error: 'Got error during update. Contact your system administrator.'
+                    error: error
                 });
             }
+
+            application.getUserManager().update(request.requestedUser, function (error) {
+                if (error === null) {
+                    application.getProjectManager().setUserRoleInProject(
+                        request.requestedUser.getId(),
+                        roles,
+                        function (error) {
+                            if (error === null) {
+                                return response.render('admin/user.html.twig', {
+                                    action: 'admin.users',
+                                    user: request.requestedUser,
+                                    subaction: 'edit',
+                                    success: 'User info was updated.'
+                                });
+                            } else {
+                                return response.render('admin/user.html.twig', {
+                                    action: 'admin.users',
+                                    user: request.requestedUser,
+                                    subaction: 'edit',
+                                    error: 'Got error during update. Contact your system administrator.'
+                                });
+                            }
+                        }
+                    );
+                } else {
+                    return response.render('admin/user.html.twig', {
+                        action: 'admin.users',
+                        user: request.requestedUser,
+                        subaction: 'edit',
+                        error: 'Got error during update. Contact your system administrator.'
+                    });
+                }
+            });
         });
     });
 
@@ -235,8 +259,8 @@ module.exports.controller = function(application) {
      * View user
      */
     application.getExpress().get('/admin/users/:userId/', function (request, response) {
-        if (request.user === null) {
-            var users = dockerBlah.getUserManager().getAll();
+        if (request.requestedUser === null) {
+            var users = application.getUserManager().getAll();
 
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
@@ -248,8 +272,8 @@ module.exports.controller = function(application) {
 
         response.render('admin/user.html.twig', {
             action: 'admin.users',
-            user: request.user,
-            caption: 'Edit user #' + request.user.getId()
+            user: request.requestedUser,
+            caption: 'Edit user #' + request.requestedUser.getId()
         });
     });
 
@@ -257,7 +281,7 @@ module.exports.controller = function(application) {
      * View all users
      */
     application.getExpress().get('/admin/users/', function (request, response) {
-        var users = dockerBlah.getUserManager().getAll();
+        var users = application.getUserManager().getAll();
 
         response.render('admin/users.html.twig', {
             action: 'admin.users',
@@ -281,7 +305,7 @@ module.exports.controller = function(application) {
 
         var users = {};
 
-        var allUsers = dockerBlah.getUserManager().getAll();
+        var allUsers = application.getUserManager().getAll();
         for (var index in allUsers) {
             var
                 add = true,
@@ -293,15 +317,15 @@ module.exports.controller = function(application) {
 
             if (add) {
                 if (project != -1) {
-                    add = (dockerBlah.getProjectManager().getUserRoleInProject(user.getId(), project) != -1);
+                    add = (application.getProjectManager().getUserRoleInProject(user.getId(), project) != -1);
 
                     if (add && (projectRole != -1)) {
-                        add = (dockerBlah.getProjectManager().getUserRoleInProject(user.getId(), project) == projectRole);
+                        add = (application.getProjectManager().getUserRoleInProject(user.getId(), project) == projectRole);
                     }
                 } else if (projectRole != -1) {
                     var
                         found = false,
-                        allUserProjects = dockerBlah.getProjectManager().getAllForUser(user);
+                        allUserProjects = application.getProjectManager().getAllForUser(user);
                     for (var index in allUserProjects) {
                         if (allUserProjects[index].role == projectRole) {
                             found  = true;
@@ -334,8 +358,8 @@ module.exports.controller = function(application) {
      * Delete user - page
      */
     application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
-        if (request.user === null) {
-            var users = dockerBlah.getUserManager().getAll();
+        if (request.requestedUser === null) {
+            var users = application.getUserManager().getAll();
 
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
@@ -354,8 +378,8 @@ module.exports.controller = function(application) {
      * Delete user - handler
      */
     application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
-        if (request.user === null) {
-            var users = dockerBlah.getUserManager().getAll();
+        if (request.requestedUser === null) {
+            var users = application.getUserManager().getAll();
 
             return response.render('admin/users.html.twig', {
                 action: 'admin.users',
@@ -365,17 +389,17 @@ module.exports.controller = function(application) {
             });
         }
 
-        dockerBlah.getProjectManager().deleteUserFromAllProjects(request.user.getId(), function(error) {
-            var users = dockerBlah.getUserManager().getAll();
+        application.getProjectManager().deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
+            var users = application.getUserManager().getAll();
 
             if (error === null) {
-                dockerBlah.getUserManager().deleteUser(request.user.getId(), function(error) {
+                application.getUserManager().deleteUser(request.requestedUser.getId(), function (error) {
                     if (error === null) {
                         return response.render('admin/users.html.twig', {
                             action: 'admin.users',
                             users: users,
                             usersCount: Object.keys(users).length,
-                            success: 'User [' + request.user.getName() + '] was deleted.'
+                            success: 'User [' + request.requestedUser.getName() + '] was deleted.'
                         });
                     } else {
                         return response.render('admin/users.html.twig', {

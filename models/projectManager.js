@@ -13,21 +13,12 @@ var Project = require('./project.js');
 class ProjectManager {
 
     /**
-     * Callback to be used for all database operations
-     *
-     * @callback DatabaseOperationCallback
-     *
-     * @param {null|Boolean} isError - indicates was there an error during database operation (true) or null otherwise
-     */
-
-
-    /**
      * @constructor
      *
      * @param {Application} application - application
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {NextCallback} next - next callback
      */
-    constructor(application, callback) {
+    constructor(application, next) {
         /** @property {number} ROLE_ADMIN - @constant for ADMIN role */
         application.createConstant(this, 'ROLE_ADMIN', 1);
 
@@ -49,7 +40,7 @@ class ProjectManager {
                 var project = new Project(row.id, row.name);
                 self.projects[project.getId()] = project;
             } else {
-                console.log(error);
+                errorHandler(error);
             }
         }, function(error) {
             if (error === null) {
@@ -58,11 +49,11 @@ class ProjectManager {
                         self.projectUser[row.project_id] = self.projectUser[row.project_id] || {};
                         self.projectUser[row.project_id][row.user_id] = row.role;
                     } else {
-                        console.log(error);
+                        application.handleErrorDuringStartup(error);
                     }
-                }, callback)
+                }, next)
             } else {
-                console.log(error);
+                errorHandler(error);
             }
         });
     };
@@ -155,8 +146,8 @@ class ProjectManager {
      */
     isUserAdmin(project, user) {
         if (
-            this.application.getDockerBlah().getUserManager().isUserSuper(user) ||
-            this.application.getDockerBlah().getUserManager().isUserAdmin(user)
+            this.application.getUserManager().isUserSuper(user) ||
+            this.application.getUserManager().isUserAdmin(user)
         ) {
             return true;
         }
@@ -286,7 +277,7 @@ class ProjectManager {
      */
     setUserRoleInProject(userId, roles, callback) {
         if (Object.keys(roles).length == 0) {
-            callback(false);
+            return callback(null);
         }
 
         var
@@ -303,7 +294,7 @@ class ProjectManager {
 
             query += '(' + projectId + ', ' + userId + ', ' + roles[projectId] + ')';
         }
-        
+
         this.sqlite3.run(query, [], function(error) {
             if (error === null) {
                 for (var projectId in roles) {
@@ -311,10 +302,10 @@ class ProjectManager {
                     self.projectUser[projectId][userId] = roles[projectId];
                 }
 
-                callback(null);
+                return callback(null);
             } else {
                 console.log(error);
-                callback(true);
+                return callback(true);
             }
         });
     };

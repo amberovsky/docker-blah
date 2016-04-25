@@ -27,19 +27,19 @@
         <div class="form-group form-group-sm">
             <label for="name" class="col-sm-3 control-label">Name</label>
             <div class="col-sm-5">
-                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.currentUser.getName() }}" required />
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.user.getName() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
             <label for="login" class="col-sm-3 control-label">Login</label>
             <div class="col-sm-5">
-                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.currentUser.getLogin() }}" required />
+                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.user.getLogin() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Role</label>
             <div class="col-sm-5">
-                <p class="form-control-static">{{ application.getDockerBlah().getUserManager().getRoleCaption(request.currentUser) }}</p>
+                <p class="form-control-static">{{ application.getUserManager().getRoleCaption(request.user) }}</p>
             </div>
         </div>
         <div class="form-group form-group-sm">

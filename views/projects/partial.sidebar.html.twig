@@ -3,7 +3,7 @@
     <li {% if (action == 'project.nodes') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/nodes/"><span class="fa fa-sitemap"></span>&nbsp;Nodes</a></li>
     <li {% if (action == 'project.containers') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/containers/"><span class="fa fa-th"></span>&nbsp;Containers</a></li>
 </ul>
-{% if application.getDockerBlah().getProjectManager().isUserAdmin(request.project, request.currentUser) %}
+{% if application.getProjectManager().isUserAdmin(request.project, request.user) %}
     <ul class="nav nav-sidebar">
         <li {% if (action == 'project.settings') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/settings/"><span class="fa fa-sliders"></span>&nbsp;Project settings</a></li>
     </ul>

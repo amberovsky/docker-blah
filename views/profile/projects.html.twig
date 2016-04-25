@@ -18,7 +18,7 @@
             <tr>
                 <td>{{ project.project.getId() }}</td>
                 <td>{{ project.project.getName() }}</td>
-                <td>{{ application.getDockerBlah().getProjectManager().getRoleCaption(project.role) }}</td>
+                <td>{{ application.getProjectManager().getRoleCaption(project.role) }}</td>
             </tr>
         {% endfor %}
     </table>

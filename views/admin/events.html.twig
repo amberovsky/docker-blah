@@ -9,21 +9,31 @@
     <div class="pull-right form-inline">
         <div class="checkbox checkbox-slider--b-flat checkbox-slider-info">
             <label>
-                <input type="checkbox" ><span style="padding-left: 45px;">Auto refresh</span>
+                <input type="checkbox" checked><span style="padding-left: 45px;">Auto refresh</span>
             </label>
         </div>
         <button class="btn btn-sm btn-primary"><span class="fa fa-trash"></span>&nbsp;&nbsp;Clear</button>
-        <button class="btn btn-sm btn-primary"><span class="fa fa-download"></span>&nbsp;&nbsp;Download</button>
+        <a href="/admin/events/{{ event }}/download/" role="button" class="btn btn-sm btn-primary"><span class="fa fa-download"></span>&nbsp;&nbsp;Download</a>
     </div>
 
     <ul class="nav nav-tabs">
-        <li role="presentation" {% if (subaction == 'http') %}class="active"{% endif %}><a href="/admin/events/http/">HTTP</a></li>
-        <li role="presentation" {% if (subaction == 'system') %}class="active"{% endif %}><a href="/admin/events/system/">SYSTEM</a></li>
+        <li role="presentation" {% if (event == 'http') %}class="active"{% endif %}><a href="/admin/events/http/">HTTP</a></li>
+        <li role="presentation" {% if (event == 'system') %}class="active"{% endif %}><a href="/admin/events/system/">SYSTEM</a></li>
     </ul>
+
+
 
     <br />
     <textarea class="form-control" style="font-family:monospace; color: green; background-color: black;" rows="100">aDSadsaSDasd
     aSDasdaSDASHDFJKASHFKJASHGDFKJAHSGDFKJH
     asdfjaslkdjfhalksjdhflkasjhdf
     aslkdhdfaksjhdfgkjashgdfkjahsgdf</textarea>
+
+    <script>
+        var socket = io.connect('/');
+        socket.on('news', function (data) {
+            console.log(data);
+            socket.emit('my other event', { my: 'data' });
+        });
+    </script>
 {% endblock %}

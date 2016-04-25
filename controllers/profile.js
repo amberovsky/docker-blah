@@ -12,8 +12,6 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-    
-    var dockerBlah = application.getDockerBlah();
 
     /**
      * View profile - page
@@ -44,14 +42,14 @@ module.exports.controller = function (application) {
         login = login.trim();
 
         if (
-            (name.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
-            (login.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH)
+            (name.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
+            (login.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH)
         ) {
-            return 'Name and login should be at least ' + dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH +
+            return 'Name and login should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
                 ' characters.';
         }
 
-        request.currentUser
+        request.user
             .setName(name)
             .setLogin(login);
 
@@ -84,10 +82,10 @@ module.exports.controller = function (application) {
         newPassword2 = newPassword2.trim();
 
         if (
-            (newPassword.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
-            (newPassword2.length < dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH)
+            (newPassword.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
+            (newPassword2.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH)
         ) {
-            return 'Passwords should be at least ' + dockerBlah.getUserManager().MIN_TEXT_FIELD_LENGTH +
+            return 'Passwords should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
                 ' characters.';
         }
 
@@ -96,12 +94,12 @@ module.exports.controller = function (application) {
         }
 
         if (
-            !dockerBlah.getAuth().checkPasswordMatch(request.currentUser.getPasswordHash(), currentPassword)
+            !application.getAuth().checkPasswordMatch(request.user.getPasswordHash(), currentPassword)
         ) {
             return 'Wrong current password';
         }
 
-        request.currentUser.setPasswordHash(dockerBlah.getAuth().hashPassword(newPassword));
+        request.user.setPasswordHash(application.getAuth().hashPassword(newPassword));
 
         return true;
     };
@@ -109,7 +107,7 @@ module.exports.controller = function (application) {
     /**
      * View profile - handler
      */
-    application.getExpress().post('/profile/personal/', function(request, response) {
+    application.getExpress().post('/profile/personal/', function (request, response) {
         const   ACTION_PERSONAL = 'personal';
         const   ACTION_PASSWORD = 'password';
 
@@ -123,10 +121,10 @@ module.exports.controller = function (application) {
         }
 
         /** @type {User} */
-        var currentUser = request.currentUser;
+        var currentUser = request.user;
 
         if (action === ACTION_PERSONAL) {
-            var validation = validateActionPersonalUpdate(request, request.currentUser);
+            var validation = validateActionPersonalUpdate(request, request.user);
             if (validation !== true) {
                 return response.render('profile/personal.html.twig', {
                     action: 'profile.personal',
@@ -134,14 +132,14 @@ module.exports.controller = function (application) {
                 });
             }
 
-            dockerBlah.getUserManager().update(request.currentUser, function (error) {
+            application.getUserManager().update(request.user, function (error) {
                 if (error === null) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
                         success_profile: 'Profile was updated.'
                     });
                 } else {
-                    request.currentUser = currentUser;
+                    request.user = currentUser;
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
                         error_profile: 'Got error during update. Contact your system administrator.'
@@ -157,15 +155,15 @@ module.exports.controller = function (application) {
                     error_password: validation
                 });
             }
-            
-            dockerBlah.getUserManager().update(request.currentUser, function (error) {
+
+            application.getUserManager().update(request.user, function (error) {
                 if (error === null) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
                         success_password: 'Password was changed.'
                     });
                 } else {
-                    request.currentUser = currentUser;
+                    request.user = currentUser;
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
                         error_password: 'Got error during update. Contact your system administrator.'
@@ -187,7 +185,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/profile/projects/', function (request, response) {
         response.render('profile/projects.html.twig', {
             action: 'profile.projects',
-            projects: dockerBlah.getProjectManager().getAllForUser(request.currentUser)
+            projects: application.getProjectManager().getAllForUser(request.user)
         });
     });
 

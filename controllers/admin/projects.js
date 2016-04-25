@@ -12,8 +12,6 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-    
-    var dockerBlah = application.getDockerBlah();
 
     /**
      * Create a new project - page
@@ -21,7 +19,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/admin/projects/create/', function (request, response) {
         response.render('admin/project.html.twig', {
             action: 'admin.projects',
-            project: dockerBlah.getProjectManager().create(),
+            project: application.getProjectManager().create(),
             subaction: 'create'
         });
     });
@@ -31,7 +29,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/projects/create/', function (request, response) {
         var
-            project = dockerBlah.getProjectManager().create(),
+            project = application.getProjectManager().create(),
             validation = validateProjectActionCreateNewOrUpdateProject(request, project, false);
 
         if (validation !== true) {
@@ -43,7 +41,7 @@ module.exports.controller = function (application) {
             });
         }
 
-        dockerBlah.getProjectManager().add(project, function (error) {
+        application.getProjectManager().add(project, function (error) {
             if (error !== null) {
                 response.render('admin/project.html.twig', {
                     action: 'admin.projects',
@@ -52,7 +50,7 @@ module.exports.controller = function (application) {
                     subaction: 'create'
                 });
             } else {
-                var projects = dockerBlah.getProjectManager().getAll();
+                var projects = application.getProjectManager().getAll();
 
                 response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
@@ -71,7 +69,7 @@ module.exports.controller = function (application) {
         request.projectId = parseInt(request.params.projectId);
         request.project = Number.isNaN(request.projectId)
             ? null
-            : dockerBlah.getProjectManager().getById(request.projectId);
+            : application.getProjectManager().getById(request.projectId);
 
         next();
     });
@@ -80,7 +78,7 @@ module.exports.controller = function (application) {
      * View all projects
      */
     application.getExpress().get('/admin/projects/', function (request, response) {
-        var projects = dockerBlah.getProjectManager().getAll();
+        var projects = application.getProjectManager().getAll();
         
         response.render('admin/projects.html.twig', {
             action: 'admin.projects',
@@ -94,7 +92,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
-            var projects = dockerBlah.getProjectManager().getAll();
+            var projects = application.getProjectManager().getAll();
 
             return response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
@@ -128,12 +126,12 @@ module.exports.controller = function (application) {
 
         name = name.trim();
 
-        if (name.length < dockerBlah.getProjectManager().MIN_TEXT_FIELD_LENGTH) {
-            return 'Name should be at least ' + dockerBlah.getProjectManager().MIN_TEXT_FIELD_LENGTH +
+        if (name.length < application.getProjectManager().MIN_TEXT_FIELD_LENGTH) {
+            return 'Name should be at least ' + application.getProjectManager().MIN_TEXT_FIELD_LENGTH +
                 ' characters.';
         }
 
-        if (dockerBlah.getProjectManager().getByName(name, (isUpdate === true) ? project.getId() : -1) !== null) {
+        if (application.getProjectManager().getByName(name, (isUpdate === true) ? project.getId() : -1) !== null) {
             return 'Project with name [' + name + '] already exists.';
         }
 
@@ -147,7 +145,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
-            var projects = dockerBlah.getProjectManager().getAll();
+            var projects = application.getProjectManager().getAll();
 
             return response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
@@ -168,9 +166,9 @@ module.exports.controller = function (application) {
             });
         }
 
-        application.getDockerBlah().getProjectManager().update(request.project, function (error) {
+        application.getProjectManager().update(request.project, function (error) {
             if (error === null) {
-                var projects = dockerBlah.getProjectManager().getAll();
+                var projects = application.getProjectManager().getAll();
 
                 return response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
@@ -194,7 +192,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/projects/:projectId/delete/', function (request, response) {
         if (request.project === null) {
-            var projects = dockerBlah.getProjectManager().getAll();
+            var projects = application.getProjectManager().getAll();
 
             return response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
@@ -214,7 +212,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/projects/:projectId/delete/', function (request, response) {
         if (request.project === null) {
-            var projects = dockerBlah.getProjectManager().getAll();
+            var projects = application.getProjectManager().getAll();
 
             return response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
@@ -224,9 +222,9 @@ module.exports.controller = function (application) {
             });
         }
 
-        application.getDockerBlah().getProjectManager().deleteProject(request.project.getId(), function(error) {
+        application.getProjectManager().deleteProject(request.project.getId(), function (error) {
             if (error === null) {
-                var projects = dockerBlah.getProjectManager().getAll();
+                var projects = application.getProjectManager().getAll();
 
                 return response.render('admin/projects.html.twig', {
                     action: 'admin.projects',

@@ -14,10 +14,10 @@ module.exports.controller = function (application) {
     /**
      * Middleware to check permissions for /admin/* section
      */
-    application.getExpress().all('/admin/*', function(request, response, next) {
+    application.getExpress().all('/admin/*', function (request, response, next) {
         if (
-            (!application.getDockerBlah().getUserManager().isUserAdmin(request.currentUser)) &&
-            (!application.getDockerBlah().getUserManager().isUserSuper(request.currentUser))
+            (!application.getUserManager().isUserAdmin(request.user)) &&
+            (!application.getUserManager().isUserSuper(request.user))
         ) {
             return response.redirect('/');
         }

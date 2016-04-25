@@ -12,17 +12,15 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-    
-    var dockerBlah = application.getDockerBlah();
 
     /**
      * Middleware to preload project if there is a projectId in the url
      */
-    application.getExpress().all('/project/:projectId/*', function(request, response, next) {
+    application.getExpress().all('/project/:projectId/*', function (request, response, next) {
         request.projectId = parseInt(request.params.projectId);
         request.project = Number.isNaN(request.projectId)
             ? null
-            : dockerBlah.getProjectManager().getById(request.projectId);
+            : application.getProjectManager().getById(request.projectId);
 
         next();
     });
@@ -42,7 +40,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/project/:projectId/nodes/', function (request, response) {
         response.render('projects/nodes.html.twig', {
             action: 'project.nodes',
-            nodes: dockerBlah.getNodeManager().filterByProjectId(request.project.getId())
+            nodes: application.getNodeManager().filterByProjectId(request.project.getId())
         });
     });
 

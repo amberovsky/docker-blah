@@ -12,21 +12,12 @@ var Node = require('./node.js');
 class NodeManager {
 
     /**
-     * Callback to be used for all database operations
-     *
-     * @callback DatabaseOperationCallback
-     *
-     * @param {null|Boolean} isError - indicates was there an error during database operation (true) or null otherwise
-     */
-
-    /**
      * @constructor
-     * 
+     *
      * @param {Application} application - application
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {NextCallback} next - next callback
      */
-    constructor(application, callback) {
-        // TODO
+    constructor(application, next) {
         this.sqlite3 = application.getSqlite3();
         this.nodes = {};
 
@@ -36,9 +27,9 @@ class NodeManager {
                 var node = new Node(row.id, row.project_id, row.name, row.ip);
                 self.nodes[node.getId()] = node;
             } else {
-                console.log(error);
+                application.handleErrorDuringStartup(error);
             }
-        }, callback);
+        }, next);
     };
 
     /**

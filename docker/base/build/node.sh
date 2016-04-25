@@ -20,4 +20,8 @@ npm install -g \
     nunjucks@2.4.2 \
     connect-redis@3.0.2 \
     morgan@1.7.0 \
-    winston@2.2.0
+    winston@2.2.0 \
+    socket.io@1.4.5 \
+    passport@0.3.2 \
+    passport-local@1.0.0 \
+    passport.socketio@3.6.1
