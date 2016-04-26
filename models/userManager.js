@@ -24,9 +24,8 @@ class UserManager {
      * @constructor
      *
      * @param {Application} application - application
-     * @param {NextCallback} next - next callback
      */
-    constructor(application, next) {
+    constructor(application) {
         /** @property {number} ROLE_SUPER - @constant for SUPER role */
         application.createConstant(this, 'ROLE_SUPER', 1);
 
@@ -40,19 +39,6 @@ class UserManager {
         application.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
         
         this.sqlite3 = application.getSqlite3();
-
-        /** @type {Object.<number, User>} all users, keys are users ids */
-        this.users = {};
-
-        var self = this;
-        this.sqlite3.each("SELECT id, name, login, password_hash, role FROM user", function (error, row) {
-            if (error === null) {
-                var user = new User(row.id, row.name, row.login, row.password_hash, row.role);
-                self.users[user.getId()] = user;
-            } else {
-                application.handleErrorDuringStartup(error);
-            }
-        }, next);
     };
 
     /**
@@ -69,8 +55,6 @@ class UserManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     add(user, callback) {
-        var self = this;
-        
         this.sqlite3.run(
             'INSERT INTO user (name, login, password_hash, role) VALUES (?, ?, ?, ?)',
             [
@@ -81,7 +65,6 @@ class UserManager {
             ], function(error) {
                 if (error === null) {
                     user.setId(this.lastID);
-                    self.users[user.getId()] = user;
                     callback(null);
                 } else {
                     console.log(error);
@@ -161,19 +144,69 @@ class UserManager {
     };
 
     /**
-     * @param {number} id - user's id
-     *
-     * @returns {(null|User)} - user with given id, or null if such user doesn't exist
+     * @param {string} login - user's login
+     * @param {string} passwordHash - user's password hash
+     * @param {UserOperationCallback} callback - user operation callback
      */
-    getById(id) {
-        return this.users.hasOwnProperty(id) ? this.users[id] : null;
+    getByLoginAndPasswordHash(login, passwordHash, callback) {
+        this.sqlite3.get(
+            'SELECT id, name, login, password_hash, role FROM user WHERE (login = ?) AND (password_hash = ?)',
+            [
+                login,
+                passwordHash
+            ],
+            function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(null, null);
+                } else if (error === null) {
+                    callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
+                }  else {
+                    callback(null, error);
+                }
+            }
+        );
+    }
+
+    /**
+     * @param {number} id - user's id
+     * @param {UserOperationCallback} callback - user operation callback
+     */
+    getById(id, callback) {
+        this.sqlite3.get(
+            'SELECT id, name, login, password_hash, role FROM user WHERE (id = ?)',
+            [
+                id
+            ],
+            function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(null, null);
+                } else if (error === null) {
+                    callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
+                }  else {
+                    callback(null, error);
+                }
+            }
+        );
     };
 
     /**
-     * @returns {Object.<number, User>} all users
+     * Fetch all users
+     * 
+     * @param {UserOperationCallback} callback - user operation callback
      */
-    getAll() {
-        return this.users;
+    getAll(callback) {
+        var users = {};
+
+        this.sqlite3.each("SELECT id, name, login, password_hash, role FROM user", function (error, row) {
+            if (error === null) {
+                var user = new User(row.id, row.name, row.login, row.password_hash, row.role);
+                users[user.getId()] = user;
+            } else {
+                callback({}, error);
+            }
+        }, function (error) {
+            callback(users, error);
+        });
     };
 
     /**
@@ -183,8 +216,6 @@ class UserManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     update(user, callback) {
-        var self = this;
-
         this.sqlite3.run(
             'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ? WHERE id = ?',
             [
@@ -199,7 +230,6 @@ class UserManager {
                         console.log('No rows were updated');
                         callback(true)
                     } else {
-                        self.users[user.getId()] = user;
                         callback(null);
                     }
                 } else {
@@ -215,10 +245,8 @@ class UserManager {
      *
      * @param {number} userId - user's id
      * @param {DatabaseOperationCallback} callback - database operations callback
-     * */
+     */
     deleteUser(userId, callback) {
-        var self = this;
-
         this.sqlite3.run(
             'DELETE FROM user WHERE id = ?',
             [
@@ -230,8 +258,6 @@ class UserManager {
                         console.log('No rows were deleted');
                         callback(true);
                     } else {
-                        delete self.users[userId];
-
                         callback(null);
                     }
                 } else {

@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete user #{{ request.params.user.getId() }}</h1>
-    <form class="form-horizontal" method="post" action="/admin/users/{{ request.params.user.getId() }}/delete/">
-        <h4>Are you sure you want to delete the user {{ request.params.user.getName() }}?</h4>
+    <h1 class="page-header"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete user #{{ request.requestedUser.getId() }}</h1>
+    <form class="form-horizontal" method="post" action="/admin/users/{{ request.requestedUser.getId() }}/delete/">
+        <h4>Are you sure you want to delete the user {{ request.requestedUser.getName() }}?</h4>
         <div class="form-group">
             <div class="col-sm-3">
                 <button type="submit" name="action" id="action" class="btn btn-success" value="Yes"><span class="fa fa-frown-o"></span>&nbsp;&nbsp;Yes</button>&nbsp;&nbsp;

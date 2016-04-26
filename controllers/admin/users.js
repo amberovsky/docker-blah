@@ -77,11 +77,16 @@ module.exports.controller = function (application) {
      */
     application.getExpress().all('/admin/users/:userId/*', function (request, response, next) {
         var userId = parseInt(request.params.userId);
-        request.requestedUser = Number.isNaN(userId)
-            ? null
-            : application.getUserManager().getById(userId);
 
-        next();
+        if (Number.isNaN(userId)) {
+            request.requestedUser = null;
+            return next();
+        }
+
+        application.getUserManager().getById(userId, (user, error) => {
+            request.requestedUser = user;
+            return next();
+        });
     });
 
     /**
@@ -199,58 +204,61 @@ module.exports.controller = function (application) {
      * Update user info
      */
     application.getExpress().post('/admin/users/:userId/', function (request, response) {
-        var users = application.getUserManager().getAll();
+        application.getUserManager().getAll((users, error) => {
 
-        if (request.requestedUser === null) {
-            return response.render('admin/users.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length,
-                error: 'User with given ID doesn\'t exist'
-            });
-        }
+            var requestedUser = request.requestedUser;
 
-        validateUserActionCreateNewOrUpdateUser(request, request.requestedUser, true, function (user, roles, error) {
-            if (error !== null) {
-                return response.render('admin/user.html.twig', {
+            if (requestedUser === null) {
+                return response.render('admin/users.html.twig', {
                     action: 'admin.users',
-                    user: user,
-                    subaction: 'edit',
-                    error: error
+                    users: users,
+                    usersCount: Object.keys(users).length,
+                    error: 'User with given ID doesn\'t exist'
                 });
             }
 
-            application.getUserManager().update(request.requestedUser, function (error) {
-                if (error === null) {
-                    application.getProjectManager().setUserRoleInProject(
-                        request.requestedUser.getId(),
-                        roles,
-                        function (error) {
-                            if (error === null) {
-                                return response.render('admin/user.html.twig', {
-                                    action: 'admin.users',
-                                    user: request.requestedUser,
-                                    subaction: 'edit',
-                                    success: 'User info was updated.'
-                                });
-                            } else {
-                                return response.render('admin/user.html.twig', {
-                                    action: 'admin.users',
-                                    user: request.requestedUser,
-                                    subaction: 'edit',
-                                    error: 'Got error during update. Contact your system administrator.'
-                                });
-                            }
-                        }
-                    );
-                } else {
+            validateUserActionCreateNewOrUpdateUser(request, requestedUser, true, function (user, roles, error) {
+                if (error !== null) {
                     return response.render('admin/user.html.twig', {
                         action: 'admin.users',
-                        user: request.requestedUser,
+                        user: user,
                         subaction: 'edit',
-                        error: 'Got error during update. Contact your system administrator.'
+                        error: error
                     });
                 }
+
+                application.getUserManager().update(requestedUser, function (error) {
+                    if (error === null) {
+                        application.getProjectManager().setUserRoleInProject(
+                            requestedUser.getId(),
+                            roles,
+                            function (error) {
+                                if (error === null) {
+                                    return response.render('admin/user.html.twig', {
+                                        action: 'admin.users',
+                                        user: requestedUser,
+                                        subaction: 'edit',
+                                        success: 'User info was updated.'
+                                    });
+                                } else {
+                                    return response.render('admin/user.html.twig', {
+                                        action: 'admin.users',
+                                        user: requestedUser,
+                                        subaction: 'edit',
+                                        error: 'Got error during update. Contact your system administrator.'
+                                    });
+                                }
+                            }
+                        );
+                    } else {
+                        return response.render('admin/user.html.twig', {
+                            action: 'admin.users',
+                            user: requestedUser,
+                            subaction: 'edit',
+                            error: 'Got error during update. Contact your system administrator.'
+                        });
+                    }
+                });
             });
         });
     });
@@ -260,13 +268,13 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/users/:userId/', function (request, response) {
         if (request.requestedUser === null) {
-            var users = application.getUserManager().getAll();
-
-            return response.render('admin/users.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length,
-                error: 'User with given ID doesn\'t exist'
+            application.getUserManager().getAll((users, error) => {
+                return response.render('admin/users.html.twig', {
+                    action: 'admin.users',
+                    users: users,
+                    usersCount: Object.keys(users).length,
+                    error: 'User with given ID doesn\'t exist'
+                });
             });
         }
 
@@ -281,12 +289,12 @@ module.exports.controller = function (application) {
      * View all users
      */
     application.getExpress().get('/admin/users/', function (request, response) {
-        var users = application.getUserManager().getAll();
-
-        response.render('admin/users.html.twig', {
-            action: 'admin.users',
-            users: users,
-            usersCount: Object.keys(users).length
+        application.getUserManager().getAll((users, error) => {
+            response.render('admin/users.html.twig', {
+                action: 'admin.users',
+                users: users,
+                usersCount: Object.keys(users).length
+            });
         });
     });
 
@@ -305,52 +313,56 @@ module.exports.controller = function (application) {
 
         var users = {};
 
-        var allUsers = application.getUserManager().getAll();
-        for (var index in allUsers) {
-            var
-                add = true,
-                user = allUsers[index];
+        application.getUserManager().getAll((allUsers, error) => {
 
-            if (role != -1) {
-                add = (user.getRole() == role);
-            }
+            var projectManager = application.getProjectManager();
 
-            if (add) {
-                if (project != -1) {
-                    add = (application.getProjectManager().getUserRoleInProject(user.getId(), project) != -1);
+            for (var index in allUsers) {
+                var
+                    add = true,
+                    user = allUsers[index];
 
-                    if (add && (projectRole != -1)) {
-                        add = (application.getProjectManager().getUserRoleInProject(user.getId(), project) == projectRole);
-                    }
-                } else if (projectRole != -1) {
-                    var
-                        found = false,
-                        allUserProjects = application.getProjectManager().getAllForUser(user);
-                    for (var index in allUserProjects) {
-                        if (allUserProjects[index].role == projectRole) {
-                            found  = true;
-                            break;
+                if (role != -1) {
+                    add = (user.getRole() == role);
+                }
+
+                if (add) {
+                    if (project != -1) {
+                        add = (projectManager.getUserRoleInProject(user.getId(), project) != -1);
+
+                        if (add && (projectRole != -1)) {
+                            add = (projectManager.getUserRoleInProject(user.getId(), project) == projectRole);
+                        }
+                    } else if (projectRole != -1) {
+                        var
+                            found = false,
+                            allUserProjects = projectManager.getAllForUser(user);
+                        for (var index in allUserProjects) {
+                            if (allUserProjects[index].role == projectRole) {
+                                found  = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            add = false;
                         }
                     }
+                }
 
-                    if (!found) {
-                        add = false;
-                    }
+                if (add) {
+                    users[user.getId()] = user;
                 }
             }
 
-            if (add) {
-                users[user.getId()] = user;
-            }
-        }
-
-        response.render('admin/users.html.twig', {
-            action: 'admin.users',
-            users: users,
-            usersCount: Object.keys(users).length,
-            selectedRole: role,
-            selectedProject: project,
-            selectedProjectRole: projectRole
+            response.render('admin/users.html.twig', {
+                action: 'admin.users',
+                users: users,
+                usersCount: Object.keys(users).length,
+                selectedRole: role,
+                selectedProject: project,
+                selectedProjectRole: projectRole
+            });
         });
     });
 
@@ -359,13 +371,13 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
         if (request.requestedUser === null) {
-            var users = application.getUserManager().getAll();
-
-            return response.render('admin/users.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length,
-                error: 'User with given ID doesn\'t exist'
+            application.getUserManager().getAll((users, error) => {
+                return response.render('admin/users.html.twig', {
+                    action: 'admin.users',
+                    users: users,
+                    usersCount: Object.keys(users).length,
+                    error: 'User with given ID doesn\'t exist'
+                });
             });
         }
 
@@ -379,43 +391,45 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
         if (request.requestedUser === null) {
-            var users = application.getUserManager().getAll();
-
-            return response.render('admin/users.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length,
-                error: 'User with given ID doesn\'t exist'
-            });
-        }
-
-        application.getProjectManager().deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
-            var users = application.getUserManager().getAll();
-
-            if (error === null) {
-                application.getUserManager().deleteUser(request.requestedUser.getId(), function (error) {
-                    if (error === null) {
-                        return response.render('admin/users.html.twig', {
-                            action: 'admin.users',
-                            users: users,
-                            usersCount: Object.keys(users).length,
-                            success: 'User [' + request.requestedUser.getName() + '] was deleted.'
-                        });
-                    } else {
-                        return response.render('admin/users.html.twig', {
-                            action: 'admin.users',
-                            users: users,
-                            usersCount: Object.keys(users).length,
-                            error: 'Got error during delete. Contact your system administrator.'
-                        });
-                    }
-                });
-            } else {
+            application.getUserManager().getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
                     usersCount: Object.keys(users).length,
-                    error: 'Got error during delete. Contact your system administrator.'
+                    error: 'User with given ID doesn\'t exist'
+                });
+            });
+        }
+
+        application.getProjectManager().deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
+            if (error === null) {
+                application.getUserManager().deleteUser(request.requestedUser.getId(), function (error) {
+                    application.getUserManager().getAll((users, errorForAll) => {
+                        if (error === null) {
+                            return response.render('admin/users.html.twig', {
+                                action: 'admin.users',
+                                users: users,
+                                usersCount: Object.keys(users).length,
+                                success: 'User [' + request.requestedUser.getName() + '] was deleted.'
+                            });
+                        } else {
+                            return response.render('admin/users.html.twig', {
+                                action: 'admin.users',
+                                users: users,
+                                usersCount: Object.keys(users).length,
+                                error: 'Got error during delete. Contact your system administrator.'
+                            });
+                        }
+                    });
+                });
+            } else {
+                application.getUserManager().getAll((users, errorForAll) => {
+                    return response.render('admin/users.html.twig', {
+                        action: 'admin.users',
+                        users: users,
+                        usersCount: Object.keys(users).length,
+                        error: 'Got error during delete. Contact your system administrator.'
+                    });
                 });
             }
         });

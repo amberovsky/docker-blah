@@ -50,17 +50,14 @@ class Auth {
      * @param {AuthCallback} callback - auth callback
      */
     auth(login, password, callback) {
-        // TODO pass password hash
-        this.application.getUserManager().getByLogin(login, null, (user, error) => {
+        var passwordHash = this.hashPassword(password);
+
+        this.application.getUserManager().getByLoginAndPasswordHash(login, passwordHash, (user, error) => {
             if (error === null) {
                 if (user === null) {
                     callback(null, this.AUTH_NO_USER);
                 } else  {
-                    if (!this.checkPasswordMatch(user.getPasswordHash(), password)) {
-                        callback(null, this.AUTH_WRONG_PASSWORD);
-                    } else {
-                        callback(user, null);
-                    }
+                    callback(user, null);
                 }
             } else {
                 callback(null, error)

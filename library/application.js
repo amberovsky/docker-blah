@@ -127,9 +127,9 @@ class Application {
 
         // passport user deserialization
         passport.deserializeUser((id, done) => {
-            var user = this.getUserManager().getById(id);
-
-            done(null, user);
+            this.getUserManager().getById(id, (user, error) => {
+                done(error, user);
+            });
         });
 
         
@@ -208,54 +208,52 @@ class Application {
                 /** @type {NodeManager} - node manager */
                 this.nodeManager = new (require('../models/nodeManager.js'))(this, () => {
                     /** @type {UserManager} - user manager */
-                    this.userManager = new (require('../models/userManager.js'))(this, () => {
+                    this.userManager = new (require('../models/userManager.js'))(this);
 
-                        // load controllers
-                        (function readControllers(dir) {
-                            self.fs.readdirSync(dir).forEach(function (file) {
-                                file = dir + '/' + file;
-                                var stat = self.fs.statSync(file);
-                                if (stat && stat.isDirectory()) {
-                                    readControllers(file)
-                                } else {
-                                    var route = require(file);
-                                    route.controller(self);
-                                }
-                            });
-                        })(__dirname + '/../controllers');
-
-                        var server = this.express.listen(3000, function () {
-                            console.log('hello');
-                        });
-
-                        // TODO websockets
-                        var passportSocketIo = require("passport.socketio");
-
-                        var io = require('socket.io').listen(server);
-
-
-                        io.use(passportSocketIo.authorize({
-                            cookieParser: cookieParser,       // the same middleware you registrer in express
-                            key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
-                            secret:       sessionSecret,    // the session_secret to parse the cookie
-                            store:        sessionStore,        // we NEED to use a sessionstore. no memorystore please
-                            success:      function(data, accept) {
-                                console.log('socket-acc');
-                                accept();
-                            },
-                            fail:         function (data, message, error, accept) {
-                                console.log('spocket-fail');
-                                // error indicates whether the fail is due to an error or just a unauthorized client
-                                if(error)  throw new Error(message);
-                                // send the (not-fatal) error-message to the client and deny the connection
-                                return accept(new Error(message));
+                    // load controllers
+                    (function readControllers(dir) {
+                        self.fs.readdirSync(dir).forEach(function (file) {
+                            file = dir + '/' + file;
+                            var stat = self.fs.statSync(file);
+                            if (stat && stat.isDirectory()) {
+                                readControllers(file)
+                            } else {
+                                var route = require(file);
+                                route.controller(self);
                             }
-                        }));
-
-                        io.on('connection', function (socket) {
-                            console.log('here');
                         });
+                    })(__dirname + '/../controllers');
 
+                    var server = this.express.listen(3000, function () {
+                        console.log('hello');
+                    });
+
+                    // TODO websockets
+                    var passportSocketIo = require("passport.socketio");
+
+                    var io = require('socket.io').listen(server);
+
+
+                    io.use(passportSocketIo.authorize({
+                        cookieParser: cookieParser,       // the same middleware you registrer in express
+                        key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
+                        secret:       sessionSecret,    // the session_secret to parse the cookie
+                        store:        sessionStore,        // we NEED to use a sessionstore. no memorystore please
+                        success:      function(data, accept) {
+                            console.log('socket-acc');
+                            accept();
+                        },
+                        fail:         function (data, message, error, accept) {
+                            console.log('spocket-fail');
+                            // error indicates whether the fail is due to an error or just a unauthorized client
+                            if(error)  throw new Error(message);
+                            // send the (not-fatal) error-message to the client and deny the connection
+                            return accept(new Error(message));
+                        }
+                    }));
+
+                    io.on('connection', function (socket) {
+                        console.log('here');
                     });
                 });
             });
