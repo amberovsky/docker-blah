@@ -13,16 +13,35 @@
  */
 module.exports.controller = function (application) {
 
+    var projectManager = application.getProjectManager();
+    
     /**
      * Middleware to preload project if there is a projectId in the url
      */
     application.getExpress().all('/project/:projectId/*', function (request, response, next) {
-        request.projectId = parseInt(request.params.projectId);
-        request.project = Number.isNaN(request.projectId)
-            ? null
-            : application.getProjectManager().getById(request.projectId);
+        var projectId = parseInt(request.params.projectId);
+        
+        if (Number.isNaN(projectId)) {
+            return response.redirect('/');
+        }
 
-        next();
+        projectManager.getById(projectId, (project, error) => {
+            if (project !== null) {
+                request.project = project;
+
+                projectManager.getUserRoleInProjects(request.user.getId(), (roles) => {
+                    if (!roles.hasOwnProperty(project.getId())) {
+                        return response.redirect('/');
+                    }
+
+                    request.isUserAdminForThisProject = (roles[project.getId()] == projectManager.ROLE_ADMIN);
+
+                    return next();
+                });
+            } else {
+                return response.redirect('/');
+            }
+        });
     });
 
     /**
@@ -38,9 +57,11 @@ module.exports.controller = function (application) {
      * View nodes in project
      */
     application.getExpress().get('/project/:projectId/nodes/', function (request, response) {
-        response.render('projects/nodes.html.twig', {
-            action: 'project.nodes',
-            nodes: application.getNodeManager().filterByProjectId(request.project.getId())
+        application.getNodeManager().filterByProjectId(request.project.getId(), (nodes, error) => {
+            response.render('projects/nodes.html.twig', {
+                action: 'project.nodes',
+                nodes: nodes
+            });
         });
     });
 
@@ -57,9 +78,13 @@ module.exports.controller = function (application) {
      * View project settings
      */
     application.getExpress().get('/project/:projectId/settings/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            return response.redirect('/');
+        }
+        
         response.render('projects/settings.html.twig', {
             action: 'project.settings'
         });
     });
-    
+
 };

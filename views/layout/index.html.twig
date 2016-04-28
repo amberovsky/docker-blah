@@ -29,8 +29,10 @@
                 <li class="dropdown {% if action|match('projects\.(.*)') %}active"{% endif %}">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% if request.project %}Project: {{ request.project.getName() }} {% else %}Select a project{% endif %}&nbsp;<span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        {% for _, project in application.getProjectManager().getAll() %}
-                            <li><a href="/project/{{ project.getId() }}/">{{ project.getName() }}</a></li>
+                        {% for _, project in allProjects %}
+                            {% if (projectsWithAccess[project.getId()]) %}
+                                <li><a href="/project/{{ project.getId() }}/">{{ project.getName() }}</a></li>
+                            {% endif %}
                         {% endfor %}
                     </ul>
                 </li>

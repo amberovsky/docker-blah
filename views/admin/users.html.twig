@@ -38,7 +38,7 @@
                 <label class="control-label" for="project">Project:</label>
                 <select class="form-control" id="project" name="project">
                     <option value="-1">ALL</option>
-                    {% for _, project in application.getProjectManager().getAll() %}
+                    {% for _, project in allProjects %}
                         <option value="{{ project.getId() }}" {% if (selectedProject == project.getId()) %}selected{% endif %}>{{ project.getName() }}</option>
                     {% endfor %}
                 </select>
@@ -81,9 +81,11 @@
                 <td>{{ user.getName() }}</td>
                 <td>{{ user.getLogin() }}</td>
                 <td class="text-center">
-                    {% for project in application.getProjectManager().getAllForUser(user) %}
-                        {{ project.project.getName() }}<br>
-                    {% endfor %}
+                    {% if projects[user.getId()] %}
+                        {% for _, project in projects[user.getId()] %}
+                            {{ project.getName() }}<br>
+                        {% endfor %}
+                    {% endif %}
                 </td>
                 <td class="text-center">
                     <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;

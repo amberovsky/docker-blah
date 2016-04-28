@@ -14,7 +14,7 @@
                 <th>Role</th>
             </tr>
         </thead>
-        {% for project in projects %}
+        {% for _, project in projects %}
             <tr>
                 <td>{{ project.project.getId() }}</td>
                 <td>{{ project.project.getName() }}</td>

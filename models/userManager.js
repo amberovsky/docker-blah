@@ -9,6 +9,9 @@
 /** @type {User} */
 var User = require('./user.js');
 
+/** @type {Project} */
+var Project = require('./project.js');
+
 class UserManager {
 
     /**
@@ -16,7 +19,8 @@ class UserManager {
      *
      * @callback UserOperationCallback
      *
-     * @param {(null|User)} user - user after applied operation or null if no user with given criteria
+     * @param {(null|User|Object.<number, User>)} user - user (or list of users) after applied operation or null if no
+     *                                                   user with given criteria
      * @param {(null|string)} error - error message
      */
 
@@ -267,6 +271,70 @@ class UserManager {
             }
         )
     };
+
+    /**
+     * Search for users with role, projectId or role in a project
+     * 
+     * @param {number} role - given role, -1 means no restriction
+     * @param {number} projectId - project id, -1 means no restriction
+     * @param {number} projectRole - project role, -1 means no restriction
+     * @param {callback} callback - {Object.<User>, Object.<Project>}[] found users with corresponding projects,
+     *                              indexed by user id
+     */
+    searchByCriteria(role, projectId, projectRole, callback) {
+        var
+            users = {},
+            projects = {},
+            search = ['(1 = 1)'],
+            params = {};
+
+        if (role !== -1) {
+            search.push('(user.role = $role)');
+            params['$role'] = role;
+        }
+
+        if (projectId !== -1) {
+            search.push('(project_user.project_id = $project_id)');
+            params['$project_id'] = projectId;
+        }
+
+        if (projectRole !== -1) {
+            search.push('(project_user.role = $project_role)');
+            params['$project_role'] = projectRole;
+        }
+
+        var query = 'SELECT' +
+            '   user.id AS u_i, user.name AS u_n, user.login AS u_l, user.password_hash AS u_ph, user.role AS u_r, ' +
+            '   project.id as p_i, project.name as p_n ' +
+            'FROM ' +
+            '   user LEFT JOIN project_user ON (project_user.user_id = user.id) ' +
+            '   LEFT JOIN project ON (project.id = project_user.project_id) ' +
+            'WHERE ' +
+                search.join(' AND ');
+
+        this.sqlite3.each(
+            query,
+            params,
+            function(error, row) {
+                if (error === null) {
+                    var user = new User(row.u_i, row.u_n, row.u_l, row.u_ph, row.u_r);
+                    var project = new Project(row.p_i, row.p_n);
+
+                    users[user.getId()] = user;
+                    projects[user.getId()] = projects[user.getId()] || {};
+                    projects[user.getId()][project.getId()] = project;
+                } else {
+                    console.log(error);
+                    callback({ users: {}, projects: {} }, error);
+                }
+            }, function (error) {
+                if (error !== null) {
+                    console.log(error);
+                }
+                callback({ users: users, projects: projects }, error);
+            }
+        );
+    }
 
     /**
      * @param {User} user - user

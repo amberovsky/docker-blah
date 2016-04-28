@@ -13,13 +13,18 @@
  */
 module.exports.controller = function (application) {
 
+    var
+        userManager = application.getUserManager(),
+        projectManager = application.getProjectManager();
+    
     /**
      * Create a user - page
      */
     application.getExpress().get('/admin/users/create/', function (request, response) {
         response.render('admin/user.html.twig', {
             action: 'admin.users',
-            user: application.getUserManager().create(),
+            roles: {},
+            user: userManager.create(),
             subaction: 'create'
         });
     });
@@ -28,32 +33,35 @@ module.exports.controller = function (application) {
      * Create a user - handler
      */
     application.getExpress().post('/admin/users/create/', function (request, response) {
-        var user = application.getUserManager().create();
+        var user = userManager.create();
 
         validateUserActionCreateNewOrUpdateUser(request, user, false, function (user, roles, error) {
             if (error !== null) {
                 return response.render('admin/user.html.twig', {
                     action: 'admin.users',
-                    user: application.getUserManager().create(),
+                    user: userManager.create(),
+                    roles: {},
                     subaction: 'create',
                     error: error
                 });
             }
 
-            application.getUserManager().add(user, function (error) {
+            userManager.add(user, function (error) {
                 if (error === null) {
-                    application.getProjectManager().setUserRoleInProject(user.getId(), roles, function (error) {
+                    projectManager.setUserRoleInProject(user.getId(), roles, function (error) {
                         if (error === null) {
-                            return response.render('admin/user.html.twig', {
-                                action: 'admin.users',
-                                user: application.getUserManager().create(),
-                                subaction: 'create',
-                                success: 'User [' + user.getLogin() + '] was created.'
-                            });
+                            return fetchUsersByCriteria(
+                                response,
+                                -1,
+                                -1,
+                                -1,
+                                'User [' + user.getLogin() + '] was created.'
+                            );
                         } else {
                             return response.render('admin/user.html.twig', {
                                 action: 'admin.users',
                                 user: user,
+                                roles: {},
                                 subaction: 'create',
                                 error: 'Got error during create. Contact your system administrator.'
                             });
@@ -63,12 +71,12 @@ module.exports.controller = function (application) {
                     return response.render('admin/user.html.twig', {
                         action: 'admin.users',
                         user: user,
+                        roles: {},
                         subaction: 'create',
                         error: 'Got error during create. Contact your system administrator.'
                     });
                 }
             });
-
         });
     });
 
@@ -79,11 +87,14 @@ module.exports.controller = function (application) {
         var userId = parseInt(request.params.userId);
 
         if (Number.isNaN(userId)) {
-            request.requestedUser = null;
-            return next();
+            return response.redirect('/');
         }
 
-        application.getUserManager().getById(userId, (user, error) => {
+        userManager.getById(userId, (user, error) => {
+            if (user === null) {
+                return response.redirect('/');
+            }
+            
             request.requestedUser = user;
             return next();
         });
@@ -131,25 +142,20 @@ module.exports.controller = function (application) {
         password = password.trim();
         role = parseInt(role, 10);
 
-        if (
-            (name.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
-            (login.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH)
-        ) {
+        if ((name.length < userManager.MIN_TEXT_FIELD_LENGTH) || (login.length < userManager.MIN_TEXT_FIELD_LENGTH)) {
             return callback(
                 null,
                 null,
-                'Name and login should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
-                ' characters.'
+                'Name and login should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
             );
         }
 
         if (!isUpdate || (password.length > 0)) {
-            if (password.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) {
+            if (password.length < userManager.MIN_TEXT_FIELD_LENGTH) {
                 return callback(
                     null,
                     null,
-                    'Password should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
-                    ' characters.'
+                    'Password should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
                 );
             }
 
@@ -159,44 +165,45 @@ module.exports.controller = function (application) {
         }
 
         var userId = (isUpdate === true) ? user.getId() : -1;
-        application.getUserManager().getByLogin(login, userId, function (foundUser, error) {
+        userManager.getByLogin(login, userId, function (foundUser, error) {
             if (foundUser !== null) {
                 return callback(null, null, 'User with login [' + login + '] already exists.');
             }
 
-            if (Number.isNaN(role) && !application.getUserManager().isRoleValid(role)) {
+            if (Number.isNaN(role) && !userManager.isRoleValid(role)) {
                 return callback(null, null, 'New role is invalid.');
             }
 
-            var projects = application.getProjectManager().getAll();
+            projectManager.getAll((projects, error) => {
+                for (var projectId in projects) {
+                    var roleInProject = request.body['role_' + projectId];
 
-            for (var projectId in projects) {
-                var roleInProject = request.body['role_' + projectId];
+                    if (typeof roleInProject !== 'undefined') {
+                        roleInProject = parseInt(roleInProject, 10);
 
-                if (typeof roleInProject !== 'undefined') {
-                    roleInProject = parseInt(roleInProject, 10);
+                        if (roleInProject !== -1) {
+                            if (!projectManager.isRoleValid(roleInProject)) {
+                                return callback(
+                                    null,
+                                    null,
+                                    'Role for project [' + projects[projectId].getName() + '] is invalid.'
+                                );
+                            }
 
-                    if (roleInProject !== -1) {
-                        if (!application.getProjectManager().isRoleValid(roleInProject)) {
-                            return callback(
-                                null,
-                                null,
-                                'Role for project [' + projects[projectId].getName() + '] is invalid.'
-                            );
+                            roles[projectId] = roleInProject;
                         }
-
-                        roles[projectId] = roleInProject;
                     }
                 }
-            }
 
-            user
-                .setName(name)
-                .setLogin(login)
-                .setRole(role)
-                .setPasswordHash(passwordHash);
+                user
+                    .setName(name)
+                    .setLogin(login)
+                    .setRole(role)
+                    .setPasswordHash(passwordHash);
 
-            return callback(user, roles, null);
+                return callback(user, roles, null);
+
+            });
         });
     };
 
@@ -204,7 +211,7 @@ module.exports.controller = function (application) {
      * Update user info
      */
     application.getExpress().post('/admin/users/:userId/', function (request, response) {
-        application.getUserManager().getAll((users, error) => {
+        userManager.getAll((users, error) => {
 
             var requestedUser = request.requestedUser;
 
@@ -222,28 +229,31 @@ module.exports.controller = function (application) {
                     return response.render('admin/user.html.twig', {
                         action: 'admin.users',
                         user: user,
+                        roles: roles,
                         subaction: 'edit',
                         error: error
                     });
                 }
 
-                application.getUserManager().update(requestedUser, function (error) {
+                userManager.update(requestedUser, function (error) {
                     if (error === null) {
-                        application.getProjectManager().setUserRoleInProject(
+                        projectManager.setUserRoleInProject(
                             requestedUser.getId(),
                             roles,
                             function (error) {
                                 if (error === null) {
-                                    return response.render('admin/user.html.twig', {
-                                        action: 'admin.users',
-                                        user: requestedUser,
-                                        subaction: 'edit',
-                                        success: 'User info was updated.'
-                                    });
+                                    return fetchUsersByCriteria(
+                                        response,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        'User [' + user.getLogin() + '] info was updated.'
+                                    );
                                 } else {
                                     return response.render('admin/user.html.twig', {
                                         action: 'admin.users',
                                         user: requestedUser,
+                                        roles: roles,
                                         subaction: 'edit',
                                         error: 'Got error during update. Contact your system administrator.'
                                     });
@@ -254,6 +264,7 @@ module.exports.controller = function (application) {
                         return response.render('admin/user.html.twig', {
                             action: 'admin.users',
                             user: requestedUser,
+                            roles: roles,
                             subaction: 'edit',
                             error: 'Got error during update. Contact your system administrator.'
                         });
@@ -268,7 +279,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/users/:userId/', function (request, response) {
         if (request.requestedUser === null) {
-            application.getUserManager().getAll((users, error) => {
+            userManager.getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
@@ -278,24 +289,37 @@ module.exports.controller = function (application) {
             });
         }
 
-        response.render('admin/user.html.twig', {
-            action: 'admin.users',
-            user: request.requestedUser,
-            caption: 'Edit user #' + request.requestedUser.getId()
+        projectManager.getUserRoleInProjects(request.requestedUser.getId(), (roles, error) => {
+            response.render('admin/user.html.twig', {
+                action: 'admin.users',
+                user: request.requestedUser,
+                roles: roles,
+                caption: 'Edit user #' + request.requestedUser.getId()
+            });
         });
     });
+
+    function fetchUsersByCriteria(response, role, projectId, projectRole, successMessage) {
+        userManager.searchByCriteria(role, projectId, projectRole, (result, error) => {
+
+            response.render('admin/users.html.twig', {
+                action: 'admin.users',
+                users: result.users,
+                projects: result.projects,
+                usersCount: Object.keys(result.users).length,
+                selectedRole: role,
+                selectedProject: projectId,
+                selectedProjectRole: projectRole,
+                success: successMessage
+            });
+        });
+    }
 
     /**
      * View all users
      */
     application.getExpress().get('/admin/users/', function (request, response) {
-        application.getUserManager().getAll((users, error) => {
-            response.render('admin/users.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length
-            });
-        });
+        return fetchUsersByCriteria(response, -1, -1, -1);
     });
 
     /**
@@ -304,66 +328,18 @@ module.exports.controller = function (application) {
     application.getExpress().post('/admin/users/', function (request, response) {
         var
             role = request.body.role,
-            project = request.body.project,
+            projectId = request.body.project,
             projectRole = request.body.project_role;
 
-        role = (typeof role === 'undefined') ? -1 : role;
-        project = (typeof project === 'undefined') ? -1 : project;
-        projectRole = (typeof projectRole === 'undefined') ? -1 : projectRole;
+        role = parseInt((typeof role === 'undefined') ? -1 : role, 10);
+        projectId = parseInt((typeof projectId === 'undefined') ? -1 : projectId, 10);
+        projectRole = parseInt((typeof projectRole === 'undefined') ? -1 : projectRole, 10);
 
-        var users = {};
+        role = Number.isNaN(role) ? -1 : role;
+        projectId = Number.isNaN(projectId) ? -1 : projectId;
+        projectRole = Number.isNaN(projectRole) ? -1 : projectRole;
 
-        application.getUserManager().getAll((allUsers, error) => {
-
-            var projectManager = application.getProjectManager();
-
-            for (var index in allUsers) {
-                var
-                    add = true,
-                    user = allUsers[index];
-
-                if (role != -1) {
-                    add = (user.getRole() == role);
-                }
-
-                if (add) {
-                    if (project != -1) {
-                        add = (projectManager.getUserRoleInProject(user.getId(), project) != -1);
-
-                        if (add && (projectRole != -1)) {
-                            add = (projectManager.getUserRoleInProject(user.getId(), project) == projectRole);
-                        }
-                    } else if (projectRole != -1) {
-                        var
-                            found = false,
-                            allUserProjects = projectManager.getAllForUser(user);
-                        for (var index in allUserProjects) {
-                            if (allUserProjects[index].role == projectRole) {
-                                found  = true;
-                                break;
-                            }
-                        }
-
-                        if (!found) {
-                            add = false;
-                        }
-                    }
-                }
-
-                if (add) {
-                    users[user.getId()] = user;
-                }
-            }
-
-            response.render('admin/users.html.twig', {
-                action: 'admin.users',
-                users: users,
-                usersCount: Object.keys(users).length,
-                selectedRole: role,
-                selectedProject: project,
-                selectedProjectRole: projectRole
-            });
-        });
+        return fetchUsersByCriteria(response, role, projectId, projectRole);
     });
 
     /**
@@ -371,7 +347,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
         if (request.requestedUser === null) {
-            application.getUserManager().getAll((users, error) => {
+            userManager.getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
@@ -391,7 +367,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
         if (request.requestedUser === null) {
-            application.getUserManager().getAll((users, error) => {
+            userManager.getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
@@ -401,17 +377,18 @@ module.exports.controller = function (application) {
             });
         }
 
-        application.getProjectManager().deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
+        projectManager.deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
             if (error === null) {
-                application.getUserManager().deleteUser(request.requestedUser.getId(), function (error) {
-                    application.getUserManager().getAll((users, errorForAll) => {
+                userManager.deleteUser(request.requestedUser.getId(), function (error) {
+                    userManager.getAll((users, errorForAll) => {
                         if (error === null) {
-                            return response.render('admin/users.html.twig', {
-                                action: 'admin.users',
-                                users: users,
-                                usersCount: Object.keys(users).length,
-                                success: 'User [' + request.requestedUser.getName() + '] was deleted.'
-                            });
+                            return fetchUsersByCriteria(
+                                response,
+                                -1,
+                                -1,
+                                -1,
+                                'User [' + request.requestedUser.getName() + '] was deleted.'
+                            );
                         } else {
                             return response.render('admin/users.html.twig', {
                                 action: 'admin.users',
@@ -423,7 +400,7 @@ module.exports.controller = function (application) {
                     });
                 });
             } else {
-                application.getUserManager().getAll((users, errorForAll) => {
+                userManager.getAll((users, errorForAll) => {
                     return response.render('admin/users.html.twig', {
                         action: 'admin.users',
                         users: users,

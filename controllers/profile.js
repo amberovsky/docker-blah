@@ -12,6 +12,10 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
+    
+    var
+        userManager = application.getUserManager(),
+        projectManager = application.getProjectManager();
 
     /**
      * View profile - page
@@ -26,34 +30,38 @@ module.exports.controller = function (application) {
      * Validate request for update user personal data
      * 
      * @param {Object} request - express request
-     *
-     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     * @param {callback} callback - {User, error}
      */
-    function validateActionPersonalUpdate(request) {
+    function validateActionPersonalUpdate(request, callback) {
         var
             name = request.body.name,
             login = request.body.login;
 
         if ((typeof name === 'undefined') || (typeof login === 'undefined')) {
-            return 'Not enough data in the request.';
+            return callback(request.user, 'Not enough data in the request.');
         }
 
         name = name.trim();
         login = login.trim();
 
-        if (
-            (name.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
-            (login.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH)
-        ) {
-            return 'Name and login should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
-                ' characters.';
+        if ((name.length < userManager.MIN_TEXT_FIELD_LENGTH) || (login.length < userManager.MIN_TEXT_FIELD_LENGTH)) {
+            return callback(
+                request.user,
+                'Name and login should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
+            );
         }
 
-        request.user
-            .setName(name)
-            .setLogin(login);
+        userManager.getByLogin(login, request.user.getId(), (foundUser, error) => {
+            if (foundUser !== null) {
+                return callback(request.user, 'User with login [' + login + '] already exists.');
+            }
 
-        return true;
+            request.user
+                .setName(name)
+                .setLogin(login);
+
+            return callback(request.user, null);
+        });
     };
 
     /**
@@ -82,11 +90,10 @@ module.exports.controller = function (application) {
         newPassword2 = newPassword2.trim();
 
         if (
-            (newPassword.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH) ||
-            (newPassword2.length < application.getUserManager().MIN_TEXT_FIELD_LENGTH)
+            (newPassword.length < userManager.MIN_TEXT_FIELD_LENGTH) ||
+            (newPassword2.length < userManager.MIN_TEXT_FIELD_LENGTH)
         ) {
-            return 'Passwords should be at least ' + application.getUserManager().MIN_TEXT_FIELD_LENGTH +
-                ' characters.';
+            return 'Passwords should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.';
         }
 
         if (newPassword !== newPassword2) {
@@ -124,27 +131,29 @@ module.exports.controller = function (application) {
         var currentUser = request.user;
 
         if (action === ACTION_PERSONAL) {
-            var validation = validateActionPersonalUpdate(request, request.user);
-            if (validation !== true) {
-                return response.render('profile/personal.html.twig', {
-                    action: 'profile.personal',
-                    error_profile: validation
-                });
-            }
-
-            application.getUserManager().update(request.user, function (error) {
-                if (error === null) {
-                    response.render('profile/personal.html.twig', {
+            validateActionPersonalUpdate(request, (user, error) => {
+                if (error !== null) {
+                    return response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
-                        success_profile: 'Profile was updated.'
-                    });
-                } else {
-                    request.user = currentUser;
-                    response.render('profile/personal.html.twig', {
-                        action: 'profile.personal',
-                        error_profile: 'Got error during update. Contact your system administrator.'
+                        error_profile: error
                     });
                 }
+
+                userManager.update(request.user, function (error) {
+                    if (error === null) {
+                        response.render('profile/personal.html.twig', {
+                            action: 'profile.personal',
+                            success_profile: 'Profile was updated.'
+                        });
+                    } else {
+                        request.user = currentUser;
+                        response.render('profile/personal.html.twig', {
+                            action: 'profile.personal',
+                            error_profile: 'Got error during update. Contact your system administrator.'
+                        });
+                    }
+                });
+
             });
         } else if (action === ACTION_PASSWORD) { // if (action === ACTION_PROFILE) {
             var validation = validateActionPasswordUpdate(request);
@@ -156,7 +165,7 @@ module.exports.controller = function (application) {
                 });
             }
 
-            application.getUserManager().update(request.user, function (error) {
+            userManager.update(request.user, function (error) {
                 if (error === null) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
@@ -183,9 +192,11 @@ module.exports.controller = function (application) {
      * View projects
      */
     application.getExpress().get('/profile/projects/', function (request, response) {
-        response.render('profile/projects.html.twig', {
-            action: 'profile.projects',
-            projects: application.getProjectManager().getAllForUser(request.user)
+        projectManager.getAllForUser(request.user, (projects, error) => {
+            response.render('profile/projects.html.twig', {
+                action: 'profile.projects',
+                projects: projects
+            });
         });
     });
 

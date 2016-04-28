@@ -95,7 +95,7 @@ class Application {
         });
         this.express.use(session({
             key: 'express.sid',
-            resave: true,
+            resave: false,
             saveUninitialized: false,
             secret: sessionSecret,
             store: sessionStore
@@ -142,7 +142,25 @@ class Application {
             environemnt.addGlobal('application', this);
             environemnt.addGlobal('request', request);
 
-            next();
+            if (typeof request.user !== 'undefined') {
+                this.getProjectManager().getAll((projects, error) => {
+                    environemnt.addGlobal('allProjects', projects);
+
+                    if (this.getUserManager().isUserUser(request.user)) {
+                        this.getProjectManager().getAllForUser(request.user, (projectsWithAccess, error) => {
+                            environemnt.addGlobal('projectsWithAccess', projectsWithAccess);
+
+                            return next();
+                        });
+                    } else {
+                        environemnt.addGlobal('projectsWithAccess', projects);
+
+                        return next();
+                    }
+                });
+            } else {
+                return next();
+            }
         });
 
         // handle logout
@@ -204,58 +222,58 @@ class Application {
             /** @type {Auth} - Auth */
             this.auth = new (require('./auth.js'))(this);
             /** @type {ProjectManager} - project manager */
-            this.projectManager = new (require('../models/projectManager.js'))(this, () => {
-                /** @type {NodeManager} - node manager */
-                this.nodeManager = new (require('../models/nodeManager.js'))(this, () => {
-                    /** @type {UserManager} - user manager */
-                    this.userManager = new (require('../models/userManager.js'))(this);
+            this.projectManager = new (require('../models/projectManager.js'))(this);
+            
+            /** @type {NodeManager} - node manager */
+            this.nodeManager = new (require('../models/nodeManager.js'))(this);
 
-                    // load controllers
-                    (function readControllers(dir) {
-                        self.fs.readdirSync(dir).forEach(function (file) {
-                            file = dir + '/' + file;
-                            var stat = self.fs.statSync(file);
-                            if (stat && stat.isDirectory()) {
-                                readControllers(file)
-                            } else {
-                                var route = require(file);
-                                route.controller(self);
-                            }
-                        });
-                    })(__dirname + '/../controllers');
+            /** @type {UserManager} - user manager */
+            this.userManager = new (require('../models/userManager.js'))(this);
 
-                    var server = this.express.listen(3000, function () {
-                        console.log('hello');
-                    });
-
-                    // TODO websockets
-                    var passportSocketIo = require("passport.socketio");
-
-                    var io = require('socket.io').listen(server);
-
-
-                    io.use(passportSocketIo.authorize({
-                        cookieParser: cookieParser,       // the same middleware you registrer in express
-                        key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
-                        secret:       sessionSecret,    // the session_secret to parse the cookie
-                        store:        sessionStore,        // we NEED to use a sessionstore. no memorystore please
-                        success:      function(data, accept) {
-                            console.log('socket-acc');
-                            accept();
-                        },
-                        fail:         function (data, message, error, accept) {
-                            console.log('spocket-fail');
-                            // error indicates whether the fail is due to an error or just a unauthorized client
-                            if(error)  throw new Error(message);
-                            // send the (not-fatal) error-message to the client and deny the connection
-                            return accept(new Error(message));
-                        }
-                    }));
-
-                    io.on('connection', function (socket) {
-                        console.log('here');
-                    });
+            // load controllers
+            (function readControllers(dir) {
+                self.fs.readdirSync(dir).forEach(function (file) {
+                    file = dir + '/' + file;
+                    var stat = self.fs.statSync(file);
+                    if (stat && stat.isDirectory()) {
+                        readControllers(file)
+                    } else {
+                        var route = require(file);
+                        route.controller(self);
+                    }
                 });
+            })(__dirname + '/../controllers');
+
+            var server = this.express.listen(3000, function () {
+                console.log('hello');
+            });
+
+            // TODO websockets
+            var passportSocketIo = require("passport.socketio");
+
+            var io = require('socket.io').listen(server);
+
+
+            io.use(passportSocketIo.authorize({
+                cookieParser: cookieParser,       // the same middleware you registrer in express
+                key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
+                secret:       sessionSecret,    // the session_secret to parse the cookie
+                store:        sessionStore,        // we NEED to use a sessionstore. no memorystore please
+                success:      function(data, accept) {
+                    console.log('socket-acc');
+                    accept();
+                },
+                fail:         function (data, message, error, accept) {
+                    console.log('spocket-fail');
+                    // error indicates whether the fail is due to an error or just a unauthorized client
+                    if(error)  throw new Error(message);
+                    // send the (not-fatal) error-message to the client and deny the connection
+                    return accept(new Error(message));
+                }
+            }));
+
+            io.on('connection', function (socket) {
+                console.log('here');
             });
         };
 

@@ -12,41 +12,48 @@ var Node = require('./node.js');
 class NodeManager {
 
     /**
+     * Callback to be used for all database operations
+     *
+     * @callback NodeOperationCallback
+     *
+     * @param {(null|Node|Object.<number, Node>)} node - node (or list of nodes) after applied operation or null if no
+     *                                                   node with given criteria
+     * @param {(null|string)} error - error message
+     */
+
+
+    /**
      * @constructor
      *
      * @param {Application} application - application
-     * @param {NextCallback} next - next callback
      */
-    constructor(application, next) {
+    constructor(application) {
         this.sqlite3 = application.getSqlite3();
-        this.nodes = {};
-
-        var self = this;
-        this.sqlite3.each("SELECT id, project_id, name, ip FROM node", function(error, row) {
-            if (error === null) {
-                var node = new Node(row.id, row.project_id, row.name, row.ip);
-                self.nodes[node.getId()] = node;
-            } else {
-                application.handleErrorDuringStartup(error);
-            }
-        }, next);
     };
 
     /**
-     * @param {number} projectId - project id
+     * Get nodes for given project
      * 
-     * @returns {Node[]} - all nodes in given project
+     * @param {number} projectId - project id
+     * @param {NodeOperationCallback} callback - node operation callback
      */
-    filterByProjectId(projectId) {
-        var nodes = [];
+    filterByProjectId(projectId, callback) {
+        var nodes = {};
 
-        for (var index in this.nodes) {
-            if (this.nodes[index].getProjectId() == projectId) {
-                nodes.push(this.nodes[index]);
+        this.sqlite3.each(
+            'SELECT id, project_id, name, ip FROM node WHERE (project_id = ?)',
+            [projectId],
+            function(error, row) {
+                if (error === null) {
+                    var node = new Node(row.id, row.project_id, row.name, row.ip);
+                    nodes[node.getId()] = node;
+                } else {
+                    callback({}, error);
+                }
+            }, function (error) {
+                callback(nodes, error);
             }
-        }
-        
-        return nodes;
+        );
     };
     
 }

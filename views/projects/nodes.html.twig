@@ -15,7 +15,7 @@
                 <th>Response time/status</th>
             </tr>
         </thead>
-        {% for node in nodes %}
+        {% for _, node in nodes %}
             <tr>
                 <td>{{ node.getId() }}</td>
                 <td>{{ node.getName() }}</td>

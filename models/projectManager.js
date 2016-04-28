@@ -11,14 +11,22 @@
 var Project = require('./project.js');
 
 class ProjectManager {
+    /**
+     * Callback to be used for all database operations
+     *
+     * @callback ProjectOperationCallback
+     *
+     * @param {(null|Project|Object.<number, Project>)} project - project (or list of projects) after applied operation
+     *                                                            or null if no projet with given criteria
+     * @param {(null|string)} error - error message
+     */
 
     /**
      * @constructor
      *
      * @param {Application} application - application
-     * @param {NextCallback} next - next callback
      */
-    constructor(application, next) {
+    constructor(application) {
         /** @property {number} ROLE_ADMIN - @constant for ADMIN role */
         application.createConstant(this, 'ROLE_ADMIN', 1);
 
@@ -31,31 +39,6 @@ class ProjectManager {
 
         this.application = application;
         this.sqlite3 = application.getSqlite3();
-        this.projects = {};
-        this.projectUser = {};
-
-        var self = this;
-        this.sqlite3.each("SELECT id, name FROM project", function(error, row) {
-            if (error === null) {
-                var project = new Project(row.id, row.name);
-                self.projects[project.getId()] = project;
-            } else {
-                errorHandler(error);
-            }
-        }, function(error) {
-            if (error === null) {
-                self.sqlite3.each("SELECT project_id, user_id, role FROM project_user", function(error, row) {
-                    if (error === null) {
-                        self.projectUser[row.project_id] = self.projectUser[row.project_id] || {};
-                        self.projectUser[row.project_id][row.user_id] = row.role;
-                    } else {
-                        application.handleErrorDuringStartup(error);
-                    }
-                }, next)
-            } else {
-                errorHandler(error);
-            }
-        });
     };
 
     /**
@@ -107,57 +90,102 @@ class ProjectManager {
 
     /**
      * @param {number} id - project's id
-     *
-     * @returns {(null|Project)} project with given id, or null if such project doesn't exist
+     * @param {ProjectOperationCallback} callback - project operation callback 
      */
-    getById(id) {
-        return this.projects.hasOwnProperty(id) ? this.projects[id] : null;
+    getById(id, callback) {
+        this.sqlite3.get(
+            'SELECT id, name FROM project WHERE (id = ?)',
+            [
+                id
+            ],
+            function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(null, null);
+                } else if (error === null) {
+                    callback(new Project(row.id, row.name), null);
+                }  else {
+                    callback(null, error);
+                }
+            }
+        );
     };
 
     /**
-     * @returns {Object.<number, Project>} all projects
+     * Fetch all projects
+     *
+     * @param {ProjectOperationCallback} callback - project operation callback
      */
-    getAll() {
-        return this.projects;
+    getAll(callback) {
+        var projects = {};
+
+        this.sqlite3.each("SELECT id, name FROM project", function (error, row) {
+            if (error === null) {
+                var project = new Project(row.id, row.name);
+                projects[project.getId()] = project;
+            } else {
+                callback({}, error);
+            }
+        }, function (error) {
+            callback(projects, error);
+        });
     };
 
     /**
-     *
      * @param {string} name - project's name
      * @param {number} currentProjectId - which project to skip
-     *
-     * @returns {(null|Project)} project with given name, or null if such project doesn't exist
+     * @param {callback} callback - {boolean} true, if project with given name already exists, skipping current one
      */
-    getByName(name, currentProjectId) {
-        for (var index in this.projects) {
-            if ((this.projects[index].getName() === name) && (this.projects[index].getId() !== currentProjectId)) {
-                return this.projects[index];
+    doesExistWithSameName(name, currentProjectId, callback) {
+        this.sqlite3.get(
+            'SELECT id FROM project WHERE (id <> ?) AND (name = ?)',
+            [
+                currentProjectId,
+                name
+            ],
+            function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(false);
+                } else if (error === null) {
+                    callback(true);
+                }  else {
+                    console.log(error);
+                    callback(true);
+                }
             }
-        }
-
-        return null;
+        );
     };
 
     /**
      * @param {Project} project - project to explore
      * @param {User} user - user to explore
-     *
-     * @returns {boolean} true, if given user has admin role in given project, false otherwise
+     * @param {callback} callback - {boolean} true, if given user has admin role in given project, false otherwise
      */
-    isUserAdmin(project, user) {
+    isUserAdmin(project, user, callback) {
         if (
             this.application.getUserManager().isUserSuper(user) ||
             this.application.getUserManager().isUserAdmin(user)
         ) {
-            return true;
+            return callback(true);
         }
 
-        return (
-            !this.projectUser.hasOwnProperty(project.getId()) ||
-            !this.projectUser[project.getId()].hasOwnProperty(user.getId())
-        )
-        ? false
-        : (this.projectUser[project.getId()][user.getId()] === this.ROLE_ADMIN);
+        this.sqlite3.get(
+            'SELECT role FROM project_user WHERE (project_id = ?) AND (user_id = ?) AND (role = ?)',
+            [
+                project.getId(),
+                user.getId(),
+                this.ROLE_ADMIN
+            ],
+            function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(false);
+                } else if (error === null) {
+                    callback(true);
+                }  else {
+                    console.log(error);
+                    callback(false);
+                }
+            }
+        );
     };
 
     /**
@@ -167,7 +195,6 @@ class ProjectManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     add(project, callback) {
-        var self = this;
         this.sqlite3.run(
             'INSERT INTO project (name) VALUES (?)',
             [
@@ -175,7 +202,6 @@ class ProjectManager {
             ], function(error) {
                 if (error === null) {
                     project.setId(this.lastID);
-                    self.projects[project.getId()] = project;
                     callback(null);
                 } else {
                     console.log(error);
@@ -186,14 +212,12 @@ class ProjectManager {
     };
 
     /**
-     * Update project data, also in the database
+     * Update project data
      *
      * @param {Project} project - project with new values
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     update(project, callback) {
-        var self = this;
-
         this.sqlite3.run(
             'UPDATE project SET name = ? WHERE id = ?',
             [
@@ -205,7 +229,6 @@ class ProjectManager {
                         console.log('No rows were updated');
                         callback(true)
                     } else {
-                        self.projects[project.getId()] = project;
                         callback(null);
                     }
                 } else {
@@ -217,14 +240,12 @@ class ProjectManager {
     };
 
     /**
-     * Delete given user prom all projects, also in the database
+     * Delete given user from all projects
      *
      * @param {number} userId - user id
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     deleteUserFromAllProjects(userId, callback) {
-        var self = this;
-
         this.sqlite3.run(
             'DELETE FROM project_user WHERE user_id = ?',
             [
@@ -236,12 +257,6 @@ class ProjectManager {
                         console.log('No rows were deleted');
                         callback(true);
                     } else {
-                        for (var projectId in self.projectUser) {
-                            if (self.projectUser[projectId].hasOwnProperty(userId)) {
-                                delete self.projectUser[projectId][userId];
-                            }
-                        }
-
                         callback(null);
                     }
                 } else {
@@ -254,22 +269,30 @@ class ProjectManager {
 
     /**
      * @param {number} userId - user id
-     * @param {number} projectId - project id
-     *
-     * @returns {number} -1 if given user doesn't have any roles in the given project, role otherwise
+     * @param {callback} callback - {Object.<number, number>} project_id x role
      */
-    getUserRoleInProject(userId, projectId) {
-        if (!this.projectUser.hasOwnProperty(projectId)) {
-            return -1;
-        }
+    getUserRoleInProjects(userId, callback) {
+        var roles = {};
 
-        return this.projectUser[projectId].hasOwnProperty(userId)
-            ? this.projectUser[projectId][userId]
-            : -1;
+        this.sqlite3.each(
+            'SELECT role, project_id FROM project_user WHERE (user_id = ?)',
+            [
+                userId
+            ],
+            function(error, row) {
+                if (error === null) {
+                    roles[row.project_id] = row.role;
+                } else {
+                    callback({}, error);
+                }
+            }, function (error) {
+                callback(roles, error);
+            }
+        );
     };
 
     /**
-     * Set given roles for given user, also in the database
+     * Set given roles for given user
      *
      * @param {number} userId - user id
      * @param {Object.<number, number>} roles - list of roles, where keys are projects ids and values - roles
@@ -281,7 +304,6 @@ class ProjectManager {
         }
 
         var
-            self = this,
             addComma = false,
             query = 'INSERT OR REPLACE INTO project_user (project_id, user_id, role) VALUES ';
 
@@ -297,11 +319,6 @@ class ProjectManager {
 
         this.sqlite3.run(query, [], function(error) {
             if (error === null) {
-                for (var projectId in roles) {
-                    self.projectUser[projectId] = self.projectUser[projectId] || {};
-                    self.projectUser[projectId][userId] = roles[projectId];
-                }
-
                 return callback(null);
             } else {
                 console.log(error);
@@ -309,31 +326,47 @@ class ProjectManager {
             }
         });
     };
-
+    
     /**
-     * Get list of all projects with roles wich given user has
+     * Get list of all projects with roles which given user has
      *
      * @param {User} user - user
-     *
-     * @returns {Object.<Project, number>[]} - array of Project x role for given user
+     * @param {callback} callback - {Object.<number, Object.<Project, number>>} project_id x { project, role }
      */
-    getAllForUser(user) {
-        var projects = [];
+    getAllForUser(user, callback) {
+        var projects = {};
 
-        for (var index in this.projectUser) {
-            if (this.projectUser[index].hasOwnProperty(user.getId())) {
-                projects.push({
-                    project: this.projects[index],
-                    role: this.projectUser[index][user.getId()]
-                });
+        this.sqlite3.each(
+            'SELECT' +
+            '   role, project.id AS id, project.name AS name ' +
+            'FROM ' +
+            '   project_user LEFT JOIN project ' +
+            'ON ' +
+            '   (project_user.project_id = project.id) ' +
+            'WHERE ' +
+            '   (user_id = ?)',
+            [
+                user.getId()
+            ],
+            function(error, row) {
+                if (error === null) {
+                    var project = new Project(row.id, row.name);
+
+                    projects[project.getId()] = {
+                        project: project,
+                        role: row.role
+                    };
+                } else {
+                    callback({}, error);
+                }
+            }, function (error) {
+                callback(projects, error);
             }
-        }
-
-        return projects;
+        );
     };
 
     /**
-     * Delete project,  also in the database
+     * Delete project
      *
      * @param {number} projectId - project id
      * @param {DatabaseOperationCallback} callback - database operations callback
@@ -343,12 +376,8 @@ class ProjectManager {
         
         this.sqlite3.run('DELETE FROM project_user WHERE project_id = ?', [projectId], function(error) {
             if (error === null) {
-                delete self.projectUser[projectId];
-                
                 self.sqlite3.run('DELETE FROM project WHERE id = ?', [projectId], function(error) {
                    if (error === null) {
-                       delete self.projects[projectId];
-                       
                        callback(null);
                    } else {
                        console.log(error);
