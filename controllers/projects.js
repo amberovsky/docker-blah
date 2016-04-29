@@ -12,8 +12,6 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-
-    var projectManager = application.getProjectManager();
     
     /**
      * Middleware to preload project if there is a projectId in the url
@@ -25,19 +23,25 @@ module.exports.controller = function (application) {
             return response.redirect('/');
         }
 
-        projectManager.getById(projectId, (project, error) => {
+        request.projectManager.getById(projectId, (project, error) => {
             if (project !== null) {
                 request.project = project;
 
-                projectManager.getUserRoleInProjects(request.user.getId(), (roles) => {
-                    if (!roles.hasOwnProperty(project.getId())) {
-                        return response.redirect('/');
-                    }
+                if (request.userManager.isUserUser(request.user)) {
+                    request.projectManager.getUserRoleInProjects(request.user.getId(), (roles) => {
+                        if (!roles.hasOwnProperty(project.getId())) {
+                            return response.redirect('/');
+                        }
 
-                    request.isUserAdminForThisProject = (roles[project.getId()] == projectManager.ROLE_ADMIN);
+                        request.isUserAdminForThisProject =
+                            (roles[project.getId()] == request.projectManager.ROLE_ADMIN);
 
+                        return next();
+                    });
+                } else {
+                    request.isUserAdminForThisProject = true;
                     return next();
-                });
+                }
             } else {
                 return response.redirect('/');
             }
@@ -57,7 +61,7 @@ module.exports.controller = function (application) {
      * View nodes in project
      */
     application.getExpress().get('/project/:projectId/nodes/', function (request, response) {
-        application.getNodeManager().filterByProjectId(request.project.getId(), (nodes, error) => {
+        request.nodeManager.filterByProjectId(request.project.getId(), (nodes, error) => {
             response.render('projects/nodes.html.twig', {
                 action: 'project.nodes',
                 nodes: nodes
@@ -81,7 +85,7 @@ module.exports.controller = function (application) {
         if (!request.isUserAdminForThisProject) {
             return response.redirect('/');
         }
-        
+
         response.render('projects/settings.html.twig', {
             action: 'project.settings'
         });

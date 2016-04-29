@@ -15,10 +15,7 @@ module.exports.controller = function (application) {
      * Middleware to check permissions for /admin/* section
      */
     application.getExpress().all('/admin/*', function (request, response, next) {
-        if (
-            (!application.getUserManager().isUserAdmin(request.user)) &&
-            (!application.getUserManager().isUserSuper(request.user))
-        ) {
+        if ((!request.userManager.isUserAdmin(request.user)) && (!request.userManager.isUserSuper(request.user))) {
             return response.redirect('/');
         }
 

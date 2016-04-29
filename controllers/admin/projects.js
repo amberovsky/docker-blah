@@ -12,16 +12,14 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-
-    var projectManager = application.getProjectManager();
-
+    
     /**
      * Create a new project - page
      */
     application.getExpress().get('/admin/projects/create/', function (request, response) {
         response.render('admin/project.html.twig', {
             action: 'admin.projects',
-            project: projectManager.create(),
+            project: request.projectManager.create(),
             subaction: 'create'
         });
     });
@@ -30,7 +28,7 @@ module.exports.controller = function (application) {
      * Create a new project - handler
      */
     application.getExpress().post('/admin/projects/create/', function (request, response) {
-        var project = projectManager.create();
+        var project = request.projectManager.create();
 
          validateProjectActionCreateNewOrUpdateProject(request, project, false, (project, error) => {
              if (error !== null) {
@@ -42,7 +40,7 @@ module.exports.controller = function (application) {
                  });
              }
 
-             projectManager.add(project, function (error) {
+             request.projectManager.add(project, function (error) {
                  if (error !== null) {
                      response.render('admin/project.html.twig', {
                          action: 'admin.projects',
@@ -51,7 +49,7 @@ module.exports.controller = function (application) {
                          subaction: 'create'
                      });
                  } else {
-                     projectManager.getAll((projects, error) => {
+                     request.projectManager.getAll((projects, error) => {
                          response.render('admin/projects.html.twig', {
                              action: 'admin.projects',
                              projects: projects,
@@ -74,7 +72,7 @@ module.exports.controller = function (application) {
             return response.redirect('/');
         }
 
-        projectManager.getById(projectId, (project, error) => {
+        request.projectManager.getById(projectId, (project, error) => {
             if (project === null) {
                 return response.redirect('/');
             }
@@ -88,7 +86,7 @@ module.exports.controller = function (application) {
      * View all projects
      */
     application.getExpress().get('/admin/projects/', function (request, response) {
-        projectManager.getAll((projects, error) => {
+        request.projectManager.getAll((projects, error) => {
             response.render('admin/projects.html.twig', {
                 action: 'admin.projects',
                 projects: projects,
@@ -135,14 +133,14 @@ module.exports.controller = function (application) {
 
         name = name.trim();
 
-        if (name.length < projectManager.MIN_TEXT_FIELD_LENGTH) {
-            return callback(project, 'Name should be at least ' + projectManager.MIN_TEXT_FIELD_LENGTH +
+        if (name.length < request.projectManager.MIN_TEXT_FIELD_LENGTH) {
+            return callback(project, 'Name should be at least ' + request.projectManager.MIN_TEXT_FIELD_LENGTH +
                 ' characters.');
         }
 
         var projectId = (isUpdate === true) ? project.getId() : -1;
 
-        projectManager.doesExistWithSameName(name, projectId, (check) => {
+        request.projectManager.doesExistWithSameName(name, projectId, (check) => {
             if (check) {
                 return callback(project, 'Project with name [' + name + '] already exists.');
             }
@@ -158,7 +156,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
         if (request.project === null) {
-            projectManager.getAll((projects, error) => {
+            request.projectManager.getAll((projects, error) => {
                 return response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
                     projects: projects,
@@ -178,9 +176,9 @@ module.exports.controller = function (application) {
                 });
             }
 
-            projectManager.update(project, function (error) {
+            request.projectManager.update(project, function (error) {
                 if (error === null) {
-                    application.projectManager.getAll((projects, error) => {
+                    request.projectManager.getAll((projects, error) => {
                         return response.render('admin/projects.html.twig', {
                             action: 'admin.projects',
                             projects: projects,
@@ -206,7 +204,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/projects/:projectId/delete/', function (request, response) {
         if (request.project === null) {
-            projectManager.getAll((projects, error) => {
+            request.projectManager.getAll((projects, error) => {
                 return response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
                     projects: projects,
@@ -226,7 +224,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/projects/:projectId/delete/', function (request, response) {
         if (request.project === null) {
-            projectManager.getAll((projects, error) => {
+            request.projectManager.getAll((projects, error) => {
                 return response.render('admin/projects.html.twig', {
                     action: 'admin.projects',
                     projects: projects,
@@ -236,9 +234,9 @@ module.exports.controller = function (application) {
             });
         }
 
-        projectManager.deleteProject(request.project.getId(), function (error) {
+        request.projectManager.deleteProject(request.project.getId(), function (error) {
             if (error === null) {
-                projectManager.getAll((projects, error) => {
+                request.projectManager.getAll((projects, error) => {
                     return response.render('admin/projects.html.twig', {
                         action: 'admin.projects',
                         projects: projects,

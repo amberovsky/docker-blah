@@ -12,10 +12,6 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-
-    var
-        userManager = application.getUserManager(),
-        projectManager = application.getProjectManager();
     
     /**
      * Create a user - page
@@ -24,7 +20,7 @@ module.exports.controller = function (application) {
         response.render('admin/user.html.twig', {
             action: 'admin.users',
             roles: {},
-            user: userManager.create(),
+            user: request.userManager.create(),
             subaction: 'create'
         });
     });
@@ -33,24 +29,25 @@ module.exports.controller = function (application) {
      * Create a user - handler
      */
     application.getExpress().post('/admin/users/create/', function (request, response) {
-        var user = userManager.create();
+        var user = request.userManager.create();
 
         validateUserActionCreateNewOrUpdateUser(request, user, false, function (user, roles, error) {
             if (error !== null) {
                 return response.render('admin/user.html.twig', {
                     action: 'admin.users',
-                    user: userManager.create(),
+                    user: request.userManager.create(),
                     roles: {},
                     subaction: 'create',
                     error: error
                 });
             }
 
-            userManager.add(user, function (error) {
+            request.userManager.add(user, function (error) {
                 if (error === null) {
-                    projectManager.setUserRoleInProject(user.getId(), roles, function (error) {
+                    request.projectManager.setUserRoleInProject(user.getId(), roles, function (error) {
                         if (error === null) {
                             return fetchUsersByCriteria(
+                                request,
                                 response,
                                 -1,
                                 -1,
@@ -90,7 +87,7 @@ module.exports.controller = function (application) {
             return response.redirect('/');
         }
 
-        userManager.getById(userId, (user, error) => {
+        request.userManager.getById(userId, (user, error) => {
             if (user === null) {
                 return response.redirect('/');
             }
@@ -142,20 +139,23 @@ module.exports.controller = function (application) {
         password = password.trim();
         role = parseInt(role, 10);
 
-        if ((name.length < userManager.MIN_TEXT_FIELD_LENGTH) || (login.length < userManager.MIN_TEXT_FIELD_LENGTH)) {
+        if (
+            (name.length < request.userManager.MIN_TEXT_FIELD_LENGTH) ||
+            (login.length < request.userManager.MIN_TEXT_FIELD_LENGTH)
+        ) {
             return callback(
                 null,
                 null,
-                'Name and login should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
+                'Name and login should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
             );
         }
 
         if (!isUpdate || (password.length > 0)) {
-            if (password.length < userManager.MIN_TEXT_FIELD_LENGTH) {
+            if (password.length < request.userManager.MIN_TEXT_FIELD_LENGTH) {
                 return callback(
                     null,
                     null,
-                    'Password should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
+                    'Password should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
                 );
             }
 
@@ -165,16 +165,16 @@ module.exports.controller = function (application) {
         }
 
         var userId = (isUpdate === true) ? user.getId() : -1;
-        userManager.getByLogin(login, userId, function (foundUser, error) {
+        request.userManager.getByLogin(login, userId, function (foundUser, error) {
             if (foundUser !== null) {
                 return callback(null, null, 'User with login [' + login + '] already exists.');
             }
 
-            if (Number.isNaN(role) && !userManager.isRoleValid(role)) {
+            if (Number.isNaN(role) && !request.userManager.isRoleValid(role)) {
                 return callback(null, null, 'New role is invalid.');
             }
 
-            projectManager.getAll((projects, error) => {
+            request.projectManager.getAll((projects, error) => {
                 for (var projectId in projects) {
                     var roleInProject = request.body['role_' + projectId];
 
@@ -182,7 +182,7 @@ module.exports.controller = function (application) {
                         roleInProject = parseInt(roleInProject, 10);
 
                         if (roleInProject !== -1) {
-                            if (!projectManager.isRoleValid(roleInProject)) {
+                            if (!request.projectManager.isRoleValid(roleInProject)) {
                                 return callback(
                                     null,
                                     null,
@@ -211,7 +211,7 @@ module.exports.controller = function (application) {
      * Update user info
      */
     application.getExpress().post('/admin/users/:userId/', function (request, response) {
-        userManager.getAll((users, error) => {
+        request.userManager.getAll((users, error) => {
 
             var requestedUser = request.requestedUser;
 
@@ -235,14 +235,15 @@ module.exports.controller = function (application) {
                     });
                 }
 
-                userManager.update(requestedUser, function (error) {
+                request.userManager.update(requestedUser, function (error) {
                     if (error === null) {
-                        projectManager.setUserRoleInProject(
+                        request.projectManager.setUserRoleInProject(
                             requestedUser.getId(),
                             roles,
                             function (error) {
                                 if (error === null) {
                                     return fetchUsersByCriteria(
+                                        request,
                                         response,
                                         -1,
                                         -1,
@@ -279,7 +280,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/users/:userId/', function (request, response) {
         if (request.requestedUser === null) {
-            userManager.getAll((users, error) => {
+            request.userManager.getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
@@ -289,7 +290,7 @@ module.exports.controller = function (application) {
             });
         }
 
-        projectManager.getUserRoleInProjects(request.requestedUser.getId(), (roles, error) => {
+        request.projectManager.getUserRoleInProjects(request.requestedUser.getId(), (roles, error) => {
             response.render('admin/user.html.twig', {
                 action: 'admin.users',
                 user: request.requestedUser,
@@ -299,10 +300,20 @@ module.exports.controller = function (application) {
         });
     });
 
-    function fetchUsersByCriteria(response, role, projectId, projectRole, successMessage) {
-        userManager.searchByCriteria(role, projectId, projectRole, (result, error) => {
+    /**
+     * Search for users with given criteria and renders the template
+     *
+     * @param {Object} request - expressjs request
+     * @param {Object} response - expressjs response
+     * @param {number} role - search by role, -1 means any
+     * @param {number} projectId - search by project, -1 means any
+     * @param {number} projectRole - search by role in project, -1 means any
+     * @param {(string|undefined)} successMessage - success message, if present
+     */
+    function fetchUsersByCriteria(request, response, role, projectId, projectRole, successMessage) {
+        request.userManager.searchByCriteria(role, projectId, projectRole, (result, error) => {
 
-            response.render('admin/users.html.twig', {
+            return response.render('admin/users.html.twig', {
                 action: 'admin.users',
                 users: result.users,
                 projects: result.projects,
@@ -319,7 +330,7 @@ module.exports.controller = function (application) {
      * View all users
      */
     application.getExpress().get('/admin/users/', function (request, response) {
-        return fetchUsersByCriteria(response, -1, -1, -1);
+        return fetchUsersByCriteria(request, response, -1, -1, -1);
     });
 
     /**
@@ -339,7 +350,7 @@ module.exports.controller = function (application) {
         projectId = Number.isNaN(projectId) ? -1 : projectId;
         projectRole = Number.isNaN(projectRole) ? -1 : projectRole;
 
-        return fetchUsersByCriteria(response, role, projectId, projectRole);
+        return fetchUsersByCriteria(request, response, role, projectId, projectRole);
     });
 
     /**
@@ -347,7 +358,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
         if (request.requestedUser === null) {
-            userManager.getAll((users, error) => {
+            request.userManager.getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
@@ -367,7 +378,7 @@ module.exports.controller = function (application) {
      */
     application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
         if (request.requestedUser === null) {
-            userManager.getAll((users, error) => {
+            request.userManager.getAll((users, error) => {
                 return response.render('admin/users.html.twig', {
                     action: 'admin.users',
                     users: users,
@@ -377,12 +388,13 @@ module.exports.controller = function (application) {
             });
         }
 
-        projectManager.deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
+        request.projectManager.deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
             if (error === null) {
-                userManager.deleteUser(request.requestedUser.getId(), function (error) {
-                    userManager.getAll((users, errorForAll) => {
+                request.userManager.deleteUser(request.requestedUser.getId(), function (error) {
+                    request.userManager.getAll((users, errorForAll) => {
                         if (error === null) {
                             return fetchUsersByCriteria(
+                                request,
                                 response,
                                 -1,
                                 -1,
@@ -400,7 +412,7 @@ module.exports.controller = function (application) {
                     });
                 });
             } else {
-                userManager.getAll((users, errorForAll) => {
+                request.userManager.getAll((users, errorForAll) => {
                     return response.render('admin/users.html.twig', {
                         action: 'admin.users',
                         users: users,

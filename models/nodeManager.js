@@ -26,9 +26,11 @@ class NodeManager {
      * @constructor
      *
      * @param {Application} application - application
+     * @param {winston.Logger} logger - logger
      */
-    constructor(application) {
+    constructor(application, logger) {
         this.sqlite3 = application.getSqlite3();
+        this.logger = logger;
     };
 
     /**
@@ -38,7 +40,9 @@ class NodeManager {
      * @param {NodeOperationCallback} callback - node operation callback
      */
     filterByProjectId(projectId, callback) {
-        var nodes = {};
+        var
+            nodes = {},
+            self = this;
 
         this.sqlite3.each(
             'SELECT id, project_id, name, ip FROM node WHERE (project_id = ?)',
@@ -48,9 +52,14 @@ class NodeManager {
                     var node = new Node(row.id, row.project_id, row.name, row.ip);
                     nodes[node.getId()] = node;
                 } else {
+                    this.logger.error(error);
                     callback({}, error);
                 }
             }, function (error) {
+                if (error !== null) {
+                    self.logger.error(error);
+                }
+                
                 callback(nodes, error);
             }
         );

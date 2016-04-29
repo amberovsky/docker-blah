@@ -24,16 +24,18 @@
 
 
     <br />
-    <textarea class="form-control" style="font-family:monospace; color: green; background-color: black;" rows="100">aDSadsaSDasd
+    <textarea id="events" name="events" class="form-control" style="font-family:monospace; color: green; background-color: black;" rows="30">aDSadsaSDasd
     aSDasdaSDASHDFJKASHFKJASHGDFKJAHSGDFKJH
     asdfjaslkdjfhalksjdhflkasjhdf
     aslkdhdfaksjhdfgkjashgdfkjahsgdf</textarea>
 
     <script>
-        var socket = io.connect('/');
-        socket.on('news', function (data) {
-            console.log(data);
-            socket.emit('my other event', { my: 'data' });
+        var
+            socket = io.connect('/'),
+            textarea = $('#events');
+
+        socket.on('message', function (data) {
+            textarea.val(data);
         });
     </script>
 {% endblock %}

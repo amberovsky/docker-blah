@@ -13,10 +13,6 @@
  */
 module.exports.controller = function (application) {
     
-    var
-        userManager = application.getUserManager(),
-        projectManager = application.getProjectManager();
-
     /**
      * View profile - page
      */
@@ -44,14 +40,17 @@ module.exports.controller = function (application) {
         name = name.trim();
         login = login.trim();
 
-        if ((name.length < userManager.MIN_TEXT_FIELD_LENGTH) || (login.length < userManager.MIN_TEXT_FIELD_LENGTH)) {
+        if (
+            (name.length < request.userManager.MIN_TEXT_FIELD_LENGTH) ||
+            (login.length < request.userManager.MIN_TEXT_FIELD_LENGTH)
+        ) {
             return callback(
                 request.user,
-                'Name and login should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
+                'Name and login should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
             );
         }
 
-        userManager.getByLogin(login, request.user.getId(), (foundUser, error) => {
+        request.userManager.getByLogin(login, request.user.getId(), (foundUser, error) => {
             if (foundUser !== null) {
                 return callback(request.user, 'User with login [' + login + '] already exists.');
             }
@@ -90,10 +89,10 @@ module.exports.controller = function (application) {
         newPassword2 = newPassword2.trim();
 
         if (
-            (newPassword.length < userManager.MIN_TEXT_FIELD_LENGTH) ||
-            (newPassword2.length < userManager.MIN_TEXT_FIELD_LENGTH)
+            (newPassword.length < request.userManager.MIN_TEXT_FIELD_LENGTH) ||
+            (newPassword2.length < request.userManager.MIN_TEXT_FIELD_LENGTH)
         ) {
-            return 'Passwords should be at least ' + userManager.MIN_TEXT_FIELD_LENGTH + ' characters.';
+            return 'Passwords should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.';
         }
 
         if (newPassword !== newPassword2) {
@@ -139,7 +138,7 @@ module.exports.controller = function (application) {
                     });
                 }
 
-                userManager.update(request.user, function (error) {
+                request.userManager.update(request.user, function (error) {
                     if (error === null) {
                         response.render('profile/personal.html.twig', {
                             action: 'profile.personal',
@@ -165,7 +164,7 @@ module.exports.controller = function (application) {
                 });
             }
 
-            userManager.update(request.user, function (error) {
+            request.userManager.update(request.user, function (error) {
                 if (error === null) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
@@ -192,7 +191,7 @@ module.exports.controller = function (application) {
      * View projects
      */
     application.getExpress().get('/profile/projects/', function (request, response) {
-        projectManager.getAllForUser(request.user, (projects, error) => {
+        request.projectManager.getAllForUser(request.user, (projects, error) => {
             response.render('profile/projects.html.twig', {
                 action: 'profile.projects',
                 projects: projects

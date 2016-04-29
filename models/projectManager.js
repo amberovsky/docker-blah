@@ -25,8 +25,10 @@ class ProjectManager {
      * @constructor
      *
      * @param {Application} application - application
+     * @param {UserManager} userManager - userManager
+     * @param {winston.Logger} logger - logger
      */
-    constructor(application) {
+    constructor(application, userManager, logger) {
         /** @property {number} ROLE_ADMIN - @constant for ADMIN role */
         application.createConstant(this, 'ROLE_ADMIN', 1);
 
@@ -37,8 +39,9 @@ class ProjectManager {
         /** @property {number} MIN_TEXT_FIELD_LENGTH - @constant minimum length for Project text properties */
         application.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
 
-        this.application = application;
+        this.userManager = userManager;
         this.sqlite3 = application.getSqlite3();
+        this.logger = logger;
     };
 
     /**
@@ -93,6 +96,8 @@ class ProjectManager {
      * @param {ProjectOperationCallback} callback - project operation callback 
      */
     getById(id, callback) {
+        var self = this;
+        
         this.sqlite3.get(
             'SELECT id, name FROM project WHERE (id = ?)',
             [
@@ -104,6 +109,7 @@ class ProjectManager {
                 } else if (error === null) {
                     callback(new Project(row.id, row.name), null);
                 }  else {
+                    self.logger.error(error);
                     callback(null, error);
                 }
             }
@@ -116,16 +122,23 @@ class ProjectManager {
      * @param {ProjectOperationCallback} callback - project operation callback
      */
     getAll(callback) {
-        var projects = {};
+        var
+            projects = {},
+            self = this;
 
         this.sqlite3.each("SELECT id, name FROM project", function (error, row) {
             if (error === null) {
                 var project = new Project(row.id, row.name);
                 projects[project.getId()] = project;
             } else {
+                self.logger.error(error);
                 callback({}, error);
             }
         }, function (error) {
+            if (error !== null) {
+                self.logger.error(error);
+            }
+            
             callback(projects, error);
         });
     };
@@ -136,6 +149,8 @@ class ProjectManager {
      * @param {callback} callback - {boolean} true, if project with given name already exists, skipping current one
      */
     doesExistWithSameName(name, currentProjectId, callback) {
+        var self = this;
+        
         this.sqlite3.get(
             'SELECT id FROM project WHERE (id <> ?) AND (name = ?)',
             [
@@ -148,7 +163,7 @@ class ProjectManager {
                 } else if (error === null) {
                     callback(true);
                 }  else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -161,10 +176,9 @@ class ProjectManager {
      * @param {callback} callback - {boolean} true, if given user has admin role in given project, false otherwise
      */
     isUserAdmin(project, user, callback) {
-        if (
-            this.application.getUserManager().isUserSuper(user) ||
-            this.application.getUserManager().isUserAdmin(user)
-        ) {
+        var self = this;
+        
+        if (this.userManager.isUserSuper(user) || this.userManager.isUserAdmin(user)) {
             return callback(true);
         }
 
@@ -181,7 +195,7 @@ class ProjectManager {
                 } else if (error === null) {
                     callback(true);
                 }  else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(false);
                 }
             }
@@ -195,6 +209,8 @@ class ProjectManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     add(project, callback) {
+        var self = this;
+        
         this.sqlite3.run(
             'INSERT INTO project (name) VALUES (?)',
             [
@@ -204,7 +220,7 @@ class ProjectManager {
                     project.setId(this.lastID);
                     callback(null);
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -218,6 +234,8 @@ class ProjectManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     update(project, callback) {
+        var self = this;
+        
         this.sqlite3.run(
             'UPDATE project SET name = ? WHERE id = ?',
             [
@@ -232,7 +250,7 @@ class ProjectManager {
                         callback(null);
                     }
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -246,6 +264,8 @@ class ProjectManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     deleteUserFromAllProjects(userId, callback) {
+        var self = this;
+        
         this.sqlite3.run(
             'DELETE FROM project_user WHERE user_id = ?',
             [
@@ -254,13 +274,12 @@ class ProjectManager {
             function(error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        console.log('No rows were deleted');
                         callback(true);
                     } else {
                         callback(null);
                     }
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -272,7 +291,9 @@ class ProjectManager {
      * @param {callback} callback - {Object.<number, number>} project_id x role
      */
     getUserRoleInProjects(userId, callback) {
-        var roles = {};
+        var
+            roles = {},
+            self = this;
 
         this.sqlite3.each(
             'SELECT role, project_id FROM project_user WHERE (user_id = ?)',
@@ -283,9 +304,14 @@ class ProjectManager {
                 if (error === null) {
                     roles[row.project_id] = row.role;
                 } else {
+                    self.logger.error(error);
                     callback({}, error);
                 }
             }, function (error) {
+                if (error !== null) {
+                    self.logger.error(error);
+                }
+                
                 callback(roles, error);
             }
         );
@@ -299,6 +325,8 @@ class ProjectManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     setUserRoleInProject(userId, roles, callback) {
+        var self = this;
+        
         if (Object.keys(roles).length == 0) {
             return callback(null);
         }
@@ -321,7 +349,7 @@ class ProjectManager {
             if (error === null) {
                 return callback(null);
             } else {
-                console.log(error);
+                self.logger.error(error);
                 return callback(true);
             }
         });
@@ -334,7 +362,9 @@ class ProjectManager {
      * @param {callback} callback - {Object.<number, Object.<Project, number>>} project_id x { project, role }
      */
     getAllForUser(user, callback) {
-        var projects = {};
+        var
+            projects = {},
+            self = this;
 
         this.sqlite3.each(
             'SELECT' +
@@ -357,9 +387,14 @@ class ProjectManager {
                         role: row.role
                     };
                 } else {
+                    self.logger.error(error);
                     callback({}, error);
                 }
             }, function (error) {
+                if (error !== null) {
+                    self.logger.error(error);
+                }
+                
                 callback(projects, error);
             }
         );
@@ -380,12 +415,13 @@ class ProjectManager {
                    if (error === null) {
                        callback(null);
                    } else {
-                       console.log(error);
+                       self.logger.error(error);
                        callback(true);
                    }
                 });
             } else {
-                console.log(error);
+                self.logger.error(error);
+
                 callback(true);
             }
         });

@@ -39,7 +39,7 @@
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Role</label>
             <div class="col-sm-5">
-                <p class="form-control-static">{{ application.getUserManager().getRoleCaption(request.user) }}</p>
+                <p class="form-control-static">{{ request.userManager.getRoleCaption(request.user) }}</p>
             </div>
         </div>
         <div class="form-group form-group-sm">

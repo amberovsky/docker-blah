@@ -29,7 +29,7 @@
                 <label class="control-label" for="role">System role:</label>
                 <select class="form-control" id="role" name="role">
                     <option value="-1">ALL</option>
-                    {% for role, id in application.getUserManager().getRoles() %}
+                    {% for role, id in request.userManager.getRoles() %}
                         <option value="{{ id }}" {% if (selectedRole == id) %}selected{% endif %}>{{ role }}</option>
                     {% endfor %}
                 </select>
@@ -47,7 +47,7 @@
                 <label class="control-label" for="project_role">Project role:</label>
                 <select class="form-control" id="project_role" name="project_role">
                     <option value="-1">ALL</option>
-                    {% for role, id in application.getProjectManager().getRoles() %}
+                    {% for role, id in request.projectManager.getRoles() %}
                         <option value="{{ id }}" {% if (selectedProjectRole == id) %}selected{% endif %}>{{ role }}</option>
                     {% endfor %}
                 </select>

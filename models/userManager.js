@@ -28,8 +28,9 @@ class UserManager {
      * @constructor
      *
      * @param {Application} application - application
+     * @param {winston.Logger} logger - logger
      */
-    constructor(application) {
+    constructor(application, logger) {
         /** @property {number} ROLE_SUPER - @constant for SUPER role */
         application.createConstant(this, 'ROLE_SUPER', 1);
 
@@ -43,6 +44,7 @@ class UserManager {
         application.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
         
         this.sqlite3 = application.getSqlite3();
+        this.logger = logger;
     };
 
     /**
@@ -59,6 +61,8 @@ class UserManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     add(user, callback) {
+        var self = this;
+
         this.sqlite3.run(
             'INSERT INTO user (name, login, password_hash, role) VALUES (?, ?, ?, ?)',
             [
@@ -71,7 +75,7 @@ class UserManager {
                     user.setId(this.lastID);
                     callback(null);
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -129,6 +133,8 @@ class UserManager {
      * @param {UserOperationCallback} callback - user operation callback
      */
     getByLogin(login, currentUserId, callback) {
+        var self = this;
+
         this.sqlite3.get(
             'SELECT id, name, login, password_hash, role FROM user WHERE (login = ?) AND (id <> ?)',
             [
@@ -141,6 +147,7 @@ class UserManager {
                 } else if (error === null) {
                     callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
                 }  else {
+                    self.logger.error(error);
                     callback(null, error);
                 }
             }
@@ -153,6 +160,8 @@ class UserManager {
      * @param {UserOperationCallback} callback - user operation callback
      */
     getByLoginAndPasswordHash(login, passwordHash, callback) {
+        var self = this;
+
         this.sqlite3.get(
             'SELECT id, name, login, password_hash, role FROM user WHERE (login = ?) AND (password_hash = ?)',
             [
@@ -165,6 +174,7 @@ class UserManager {
                 } else if (error === null) {
                     callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
                 }  else {
+                    self.logger.error(error);
                     callback(null, error);
                 }
             }
@@ -176,6 +186,8 @@ class UserManager {
      * @param {UserOperationCallback} callback - user operation callback
      */
     getById(id, callback) {
+        var self = this;
+
         this.sqlite3.get(
             'SELECT id, name, login, password_hash, role FROM user WHERE (id = ?)',
             [
@@ -187,6 +199,7 @@ class UserManager {
                 } else if (error === null) {
                     callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
                 }  else {
+                    self.logger.error(error);
                     callback(null, error);
                 }
             }
@@ -199,16 +212,23 @@ class UserManager {
      * @param {UserOperationCallback} callback - user operation callback
      */
     getAll(callback) {
-        var users = {};
+        var
+            users = {},
+            self = this;
 
         this.sqlite3.each("SELECT id, name, login, password_hash, role FROM user", function (error, row) {
             if (error === null) {
                 var user = new User(row.id, row.name, row.login, row.password_hash, row.role);
                 users[user.getId()] = user;
             } else {
+                self.logger.error(error);
                 callback({}, error);
             }
         }, function (error) {
+            if (error !== null) {
+                self.logger.error(error);
+            }
+
             callback(users, error);
         });
     };
@@ -220,6 +240,8 @@ class UserManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     update(user, callback) {
+        var self = this;
+
         this.sqlite3.run(
             'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ? WHERE id = ?',
             [
@@ -231,13 +253,13 @@ class UserManager {
             ], function(error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        console.log('No rows were updated');
                         callback(true)
                     } else {
+                        self.logger.error(error);
                         callback(null);
                     }
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -251,6 +273,8 @@ class UserManager {
      * @param {DatabaseOperationCallback} callback - database operations callback
      */
     deleteUser(userId, callback) {
+        var self = this;
+
         this.sqlite3.run(
             'DELETE FROM user WHERE id = ?',
             [
@@ -262,10 +286,11 @@ class UserManager {
                         console.log('No rows were deleted');
                         callback(true);
                     } else {
+                        self.logger.error(error);
                         callback(null);
                     }
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback(true);
                 }
             }
@@ -286,7 +311,8 @@ class UserManager {
             users = {},
             projects = {},
             search = ['(1 = 1)'],
-            params = {};
+            params = {},
+            self = this;
 
         if (role !== -1) {
             search.push('(user.role = $role)');
@@ -324,13 +350,14 @@ class UserManager {
                     projects[user.getId()] = projects[user.getId()] || {};
                     projects[user.getId()][project.getId()] = project;
                 } else {
-                    console.log(error);
+                    self.logger.error(error);
                     callback({ users: {}, projects: {} }, error);
                 }
             }, function (error) {
                 if (error !== null) {
-                    console.log(error);
+                    self.logger.error(error);
                 }
+                
                 callback({ users: users, projects: projects }, error);
             }
         );

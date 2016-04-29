@@ -1,5 +1,4 @@
 /.idea/
 /data/docker-blah.db
 /data/redis.aof
-/logs/
 /node_modules/

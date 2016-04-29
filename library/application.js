@@ -63,23 +63,60 @@ class Application {
         }));
 
 
-        // logging
+        // http requests logger
         var morgan = require('morgan');
-        var winston = require('winston');
         this.express.use(morgan('combined', {
-            stream: this.fs.createWriteStream(__dirname + '/../logs/http.log', { flags: 'a' })
+            stream: this.fs.createWriteStream('/var/log/docker-blah/http.log', { flags: 'a' })
         }));
+
+        // formatter for logger
+        var loggerFormatter = function (guid) {
+            return function(options) {
+                var date = new Date();
+
+                // add leading zeroes
+                var leadZero = function (value, count) {
+                    if (typeof count === 'undefined') {
+                        count = 2;
+                    }
+
+                    while (value.toString().length < count) {
+                        value = '0' + value;
+                    }
+
+                    return value;
+                };
+
+                return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' +
+                    leadZero(date.getUTCDate()) + ' ' + leadZero(date.getUTCHours()) + ':' +
+                    leadZero(date.getUTCMinutes()) + ':' + leadZero(date.getUTCSeconds()) + '.' +
+                    leadZero(date.getUTCMilliseconds(), 3) + ' ' + guid + ' - ' +
+                    options.level + ': ' + options.message;
+            };
+        };
+
+        // system logger
+        var winston = require('winston');
+        this.logger = new (winston.Logger)({
+            transports: [
+                new (winston.transports.File)({
+                    filename: '/var/log/docker-blah/system.log',
+                    json: false,
+                    formatter: loggerFormatter('[SYSTEM]')
+                })
+            ]
+        });
 
 
         // templating
         var nunjucks = require('nunjucks');
-        var environemnt = nunjucks.configure(__dirname + '/../views', {
+        var environment = nunjucks.configure(__dirname + '/../views', {
             autoescape: true,
             express: this.express,
             noCache: true // TODO
         });
 
-        environemnt.addFilter('match', function (input, pattern) {
+        environment.addFilter('match', function (input, pattern) {
             return (input.match(new RegExp(pattern)) !== null);
         });
 
@@ -139,21 +176,49 @@ class Application {
 
         // set default variables in templates
         this.express.use((request, response, next) => {
-            environemnt.addGlobal('application', this);
-            environemnt.addGlobal('request', request);
+            // globals for each template
+            environment.addGlobal('application', this);
+            environment.addGlobal('request', request);
+
+            request.guid = '[' + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) +
+                self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + ']';
+
+            request.logger = new (winston.Logger)({
+                transports: [
+                    new (winston.transports.File)({
+                        filename: '/var/log/docker-blah/system.log',
+                        json: false,
+                        formatter: loggerFormatter(request.guid)
+                    })
+                ]
+            });
+
+            /** @type {UserManager} - user manager */
+            request.userManager = new (require('../models/userManager.js'))(self, request.logger);
+
+            /** @type {ProjectManager} - project manager */
+            request.projectManager = new (require('../models/projectManager.js'))(
+                self,
+                request.userManager,
+                request.logger
+            );
+
+            /** @type {NodeManager} - node manager */
+            request.nodeManager = new (require('../models/nodeManager.js'))(self, request.logger);
 
             if (typeof request.user !== 'undefined') {
-                this.getProjectManager().getAll((projects, error) => {
-                    environemnt.addGlobal('allProjects', projects);
+                // for auth'ed user we will add list of available projects
+                request.projectManager.getAll((projects, error) => {
+                    environment.addGlobal('allProjects', projects);
 
-                    if (this.getUserManager().isUserUser(request.user)) {
-                        this.getProjectManager().getAllForUser(request.user, (projectsWithAccess, error) => {
-                            environemnt.addGlobal('projectsWithAccess', projectsWithAccess);
+                    if (request.userManager.isUserUser(request.user)) {
+                        request.projectManager.getAllForUser(request.user, (projectsWithAccess, error) => {
+                            environment.addGlobal('projectsWithAccess', projectsWithAccess);
 
                             return next();
                         });
                     } else {
-                        environemnt.addGlobal('projectsWithAccess', projects);
+                        environment.addGlobal('projectsWithAccess', projects);
 
                         return next();
                     }
@@ -221,14 +286,9 @@ class Application {
 
             /** @type {Auth} - Auth */
             this.auth = new (require('./auth.js'))(this);
-            /** @type {ProjectManager} - project manager */
-            this.projectManager = new (require('../models/projectManager.js'))(this);
-            
-            /** @type {NodeManager} - node manager */
-            this.nodeManager = new (require('../models/nodeManager.js'))(this);
 
             /** @type {UserManager} - user manager */
-            this.userManager = new (require('../models/userManager.js'))(this);
+            this.userManager = new (require('../models/userManager.js'))(self, this.logger);
 
             // load controllers
             (function readControllers(dir) {
@@ -244,36 +304,44 @@ class Application {
                 });
             })(__dirname + '/../controllers');
 
+            /**
+             * Ta-daaa! The server
+             */
             var server = this.express.listen(3000, function () {
+                self.getLogger().info('ppp');
                 console.log('hello');
             });
 
-            // TODO websockets
+            // socket.io & passportjs
             var passportSocketIo = require("passport.socketio");
-
             var io = require('socket.io').listen(server);
 
-
+            // passportjs for auth
             io.use(passportSocketIo.authorize({
-                cookieParser: cookieParser,       // the same middleware you registrer in express
-                key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
-                secret:       sessionSecret,    // the session_secret to parse the cookie
-                store:        sessionStore,        // we NEED to use a sessionstore. no memorystore please
+                cookieParser: cookieParser, // the same middleware you register in express
+                key:          'express.sid', // the name of the cookie where express/connect stores its session_id
+                secret:       sessionSecret, // the session_secret to parse the cookie
+                store:        sessionStore, // we NEED to use a sessionstore. no memorystore please
                 success:      function(data, accept) {
                     console.log('socket-acc');
                     accept();
                 },
                 fail:         function (data, message, error, accept) {
-                    console.log('spocket-fail');
+                    // TODO more detailed logs
+                    console.log('failed socket connection');
+
                     // error indicates whether the fail is due to an error or just a unauthorized client
-                    if(error)  throw new Error(message);
+                    if (error) {
+                        throw new Error(message);
+                    }
+
                     // send the (not-fatal) error-message to the client and deny the connection
                     return accept(new Error(message));
                 }
             }));
 
             io.on('connection', function (socket) {
-                console.log('here');
+                // TODO
             });
         };
 
@@ -304,6 +372,10 @@ class Application {
         });
     };
 
+    getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
     handleErrorDuringStartup(error) {
         console.log(error);
     };
@@ -330,13 +402,6 @@ class Application {
     }
 
     /**
-     * @returns {ProjectManager}
-     */
-    getProjectManager() {
-        return this.projectManager;
-    }
-
-    /**
      * @returns {UserManager}
      */
     getUserManager() {
@@ -344,17 +409,17 @@ class Application {
     }
 
     /**
-     * @returns {NodeManager}
-     */
-    getNodeManager() {
-        return this.nodeManager;
-    }
-
-    /**
      * @returns {string} path to event files
      */
     getEventsDirectory() {
         return __dirname + '/../logs/';
+    }
+
+    /**
+     * @returns {winston.Logger} system logger
+     */
+    getLogger() {
+        return this.logger;
     }
 
     /**
