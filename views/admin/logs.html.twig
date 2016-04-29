@@ -1,0 +1,41 @@
+{% extends '../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-list-alt"></span>&nbsp;&nbsp;Logs</h1>
+    <div class="pull-right form-inline">
+        <div class="checkbox checkbox-slider--b-flat checkbox-slider-info">
+            <label>
+                <input type="checkbox" checked><span class="checkbox-label-p45">Auto refresh</span>
+            </label>
+        </div>
+        <a href="/admin/logs/{{ log }}/wipe/" role="button" class="btn btn-sm btn-primary"><span class="fa fa-trash"></span>&nbsp;&nbsp;Wipe on server</a>
+        <a href="/admin/logs/{{ log }}/download/" role="button" class="btn btn-sm btn-primary"><span class="fa fa-download"></span>&nbsp;&nbsp;Download</a>
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li role="presentation" {% if (log == 'http') %}class="active"{% endif %}><a href="/admin/logs/http/">HTTP</a></li>
+        <li role="presentation" {% if (log == 'system') %}class="active"{% endif %}><a href="/admin/logs/system/">SYSTEM</a></li>
+    </ul>
+
+
+
+    <br />
+    <textarea id="logs" name="logs" class="form-control" style="font-family:monospace; color: green; background-color: black;" rows="30">aDSadsaSDasd
+    aSDasdaSDASHDFJKASHFKJASHGDFKJAHSGDFKJH
+    asdfjaslkdjfhalksjdhflkasjhdf
+    aslkdhdfaksjhdfgkjashgdfkjahsgdf</textarea>
+
+    <script>
+        var
+            socket = io.connect('/'),
+            textarea = $('#logs');
+
+        socket.on('message', function (data) {
+            textarea.val(data);
+        });
+    </script>
+{% endblock %}

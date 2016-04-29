@@ -66,7 +66,7 @@ class Application {
         // http requests logger
         var morgan = require('morgan');
         this.express.use(morgan('combined', {
-            stream: this.fs.createWriteStream('/var/log/docker-blah/http.log', { flags: 'a' })
+            stream: this.fs.createWriteStream(self.getLogsDirectory() + '/http.log', { flags: 'a' })
         }));
 
         // formatter for logger
@@ -97,15 +97,17 @@ class Application {
 
         // system logger
         var winston = require('winston');
-        this.logger = new (winston.Logger)({
+        this.systemLogger = new (winston.Logger)({
             transports: [
                 new (winston.transports.File)({
-                    filename: '/var/log/docker-blah/system.log',
+                    filename: self.getLogsDirectory() + '/system.log',
                     json: false,
                     formatter: loggerFormatter('[SYSTEM]')
                 })
             ]
         });
+
+        this.systemLogger.info('booting docker-blah...');
 
 
         // templating
@@ -186,7 +188,7 @@ class Application {
             request.logger = new (winston.Logger)({
                 transports: [
                     new (winston.transports.File)({
-                        filename: '/var/log/docker-blah/system.log',
+                        filename: self.getLogsDirectory() + '/system.log',
                         json: false,
                         formatter: loggerFormatter(request.guid)
                     })
@@ -288,7 +290,7 @@ class Application {
             this.auth = new (require('./auth.js'))(this);
 
             /** @type {UserManager} - user manager */
-            this.userManager = new (require('../models/userManager.js'))(self, this.logger);
+            this.userManager = new (require('../models/userManager.js'))(self, this.systemLogger);
 
             // load controllers
             (function readControllers(dir) {
@@ -308,7 +310,7 @@ class Application {
              * Ta-daaa! The server
              */
             var server = this.express.listen(3000, function () {
-                self.getLogger().info('ppp');
+                self.systemLogger.info('docker-blah has started');
                 console.log('hello');
             });
 
@@ -409,17 +411,17 @@ class Application {
     }
 
     /**
-     * @returns {string} path to event files
+     * @returns {string} path to logs
      */
-    getEventsDirectory() {
-        return __dirname + '/../logs/';
+    getLogsDirectory() {
+        return '/var/log/docker-blah/';
     }
 
     /**
      * @returns {winston.Logger} system logger
      */
-    getLogger() {
-        return this.logger;
+    getSystemLogger() {
+        return this.systemLogger;
     }
 
     /**
