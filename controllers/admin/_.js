@@ -16,6 +16,8 @@ module.exports.controller = function (application) {
      */
     application.getExpress().all('/admin/*', function (request, response, next) {
         if ((!request.userManager.isUserAdmin(request.user)) && (!request.userManager.isUserSuper(request.user))) {
+            request.logger.error('access to admin area with admin or super priveleges');
+
             return response.redirect('/');
         }
 

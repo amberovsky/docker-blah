@@ -39,6 +39,8 @@ module.exports.controller = function(application) {
             application.getSystemLogger().info('log was truncated by [' + request.user.getId() + '] - [' +
                 request.user.getName() + ']');
 
+            request.logger.info('log [' + request.log + '] was truncated');
+
             return response.render('admin/logs.html.twig', {
                 action: 'admin.logs',
                 log: request.log
@@ -54,16 +56,6 @@ module.exports.controller = function(application) {
             application.getLogsDirectory() + request.log + '.log',
             'docker-blah.' + request.log + '.log'
         );
-    });
-
-    /**
-     * View log
-     */
-    application.getExpress().get('/admin/logs/:log/', function (request, response) {
-        response.render('admin/logs.html.twig', {
-            action: 'admin.logs',
-            log: request.log
-        });
     });
 
     /**

@@ -49,6 +49,8 @@ module.exports.controller = function (application) {
                          subaction: 'create'
                      });
                  } else {
+                     request.logger.info('new project [' + project.getName() + '] was created');
+
                      request.projectManager.getAll((projects, error) => {
                          response.render('admin/projects.html.twig', {
                              action: 'admin.projects',
@@ -63,18 +65,44 @@ module.exports.controller = function (application) {
     });
 
     /**
+     * Renders template for all projects
+     *
+     * @param {Object} request - expressjs request
+     * @param {Object} response - expressjs response
+     * @param {(string|null)} success - success message, if present
+     * @param {(string|null)} error - error message, if present
+     */
+    function routeToAllProjects(request, response, success, error) {
+        request.projectManager.getAll((projects, getAllError) => {
+            response.render('admin/projects.html.twig', {
+                action: 'admin.projects',
+                projects: projects,
+                projectsCount: Object.keys(projects).length,
+                success: success,
+                error: error
+            });
+        });
+    };
+
+    /**
      * Middleware to preload project if there is a projectId in the url
      */
     application.getExpress().all('/admin/projects/:projectId/*', function (request, response, next) {
         var projectId = parseInt(request.params.projectId);
 
         if (Number.isNaN(projectId)) {
-            return response.redirect('/');
+            request.logger.info('project was requested by non-NAN id [' + projectId + '], url : ' +
+                request.originalUrl);
+
+            return routeToAllProjects(request, response, null, 'Wrong project id');
         }
 
         request.projectManager.getById(projectId, (project, error) => {
             if (project === null) {
-                return response.redirect('/');
+                request.logger.info('non-existed project [' + projectId + '] was requested, url : ' +
+                    request.originalUrl);
+
+                return routeToAllProjects(request, response, null, 'Project with given id doesn\'t exist');
             }
             
             request.project = project;
@@ -86,30 +114,13 @@ module.exports.controller = function (application) {
      * View all projects
      */
     application.getExpress().get('/admin/projects/', function (request, response) {
-        request.projectManager.getAll((projects, error) => {
-            response.render('admin/projects.html.twig', {
-                action: 'admin.projects',
-                projects: projects,
-                projectsCount: Object.keys(projects).length
-            });
-        });
+        return routeToAllProjects(request, response, null, null);
     });
 
     /**
      * View project
      */
     application.getExpress().get('/admin/projects/:projectId/', function (request, response) {
-        if (request.project === null) {
-            projectManager.getAll((projects, error) =>  {
-                return response.render('admin/projects.html.twig', {
-                    action: 'admin.projects',
-                    projects: projects,
-                    projectsCount: Object.keys(projects).length,
-                    error: 'Project with given ID doesn\'t exist'
-                });
-            });
-        }
-
         response.render('admin/project.html.twig', {
             action: 'admin.projects',
             project: request.project
@@ -155,17 +166,6 @@ module.exports.controller = function (application) {
      * Update project info
      */
     application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
-        if (request.project === null) {
-            request.projectManager.getAll((projects, error) => {
-                return response.render('admin/projects.html.twig', {
-                    action: 'admin.projects',
-                    projects: projects,
-                    projectsCount: Object.keys(projects).length,
-                    error: 'Project with given ID doesn\'t exist'
-                });
-            });
-        }
-
         validateProjectActionCreateNewOrUpdateProject(request, request.project, true, (project, error) => {
             if (error !== null) {
                 return response.render('admin/project.html.twig', {
@@ -178,14 +178,11 @@ module.exports.controller = function (application) {
 
             request.projectManager.update(project, function (error) {
                 if (error === null) {
-                    request.projectManager.getAll((projects, error) => {
-                        return response.render('admin/projects.html.twig', {
-                            action: 'admin.projects',
-                            projects: projects,
-                            projectsCount: Object.keys(projects).length,
-                            success: 'Project [' + project.getName() + '] info was updated.'
-                        });
-                    })
+                    request.logger.info('project [' + project.getName() + '] was updated.');
+
+                    return routeToAllProjects(
+                        request, response, 'Project [' + project.getName() + '] info was updated.', null
+                    );
                 } else {
                     return response.render('admin/project.html.twig', {
                         action: 'admin.projects',
@@ -203,17 +200,6 @@ module.exports.controller = function (application) {
      * Delete project - page
      */
     application.getExpress().get('/admin/projects/:projectId/delete/', function (request, response) {
-        if (request.project === null) {
-            request.projectManager.getAll((projects, error) => {
-                return response.render('admin/projects.html.twig', {
-                    action: 'admin.projects',
-                    projects: projects,
-                    projectsCount: Object.keys(projects).length,
-                    error: 'Project with given ID doesn\'t exist'
-                });
-            })
-        }
-
         response.render('admin/project.delete.html.twig', {
             action: 'admin.projects'
         });
@@ -223,34 +209,17 @@ module.exports.controller = function (application) {
      * Delete project - handler
      */
     application.getExpress().post('/admin/projects/:projectId/delete/', function (request, response) {
-        if (request.project === null) {
-            request.projectManager.getAll((projects, error) => {
-                return response.render('admin/projects.html.twig', {
-                    action: 'admin.projects',
-                    projects: projects,
-                    projectsCount: Object.keys(projects).length,
-                    error: 'Project with given ID doesn\'t exist'
-                });
-            });
-        }
-
         request.projectManager.deleteProject(request.project.getId(), function (error) {
             if (error === null) {
-                request.projectManager.getAll((projects, error) => {
-                    return response.render('admin/projects.html.twig', {
-                        action: 'admin.projects',
-                        projects: projects,
-                        projectsCount: Object.keys(projects).length,
-                        success: 'Project [' + request.project.getName() + '] was deleted.'
-                    });
-                });
+                request.logger.info('project [' + project.getName() + '] was deleted.');
+
+                return routeToAllProjects(
+                    request, response, 'Project [' + request.project.getName() + '] was deleted.', null
+                );
             } else {
-                return response.render('admin/projects.html.twig', {
-                    action: 'admin.projects',
-                    projects: projects,
-                    projectsCount: Object.keys(projects).length,
-                    error: 'Got error during update. Contact your system administrator.'
-                });
+                return routeToAllProjects(
+                    request, response, null, 'Got error during update. Contact your system administrator.'
+                );
             }
         });
     });
