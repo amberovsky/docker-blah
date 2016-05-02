@@ -1,9 +1,9 @@
 "use strict";
 
 /**
- * admin.js - admin actions, not so important to be in a separate file
+ * settings.js - admin settings
  *
- * /admin/*
+ * /admin/settings/*
  *
  * (C) Anton Zagorskii aka amberovsky
  */

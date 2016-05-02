@@ -38,8 +38,8 @@ class Auth {
      *
      * @callback AuthCallback
      *
+     * @param {(null|number)} error - error code, null otherwise 
      * @param {(null|User)} user - user if success, null otherwise
-     * @param {(null|number)} error - error code, null otherwise
      */
 
     /**
@@ -52,15 +52,15 @@ class Auth {
     auth(login, password, callback) {
         var passwordHash = this.hashPassword(password);
 
-        this.application.getUserManager().getByLoginAndPasswordHash(login, passwordHash, (user, error) => {
+        this.application.getUserManager().getByLoginAndPasswordHash(login, passwordHash, (error, user) => {
             if (error === null) {
                 if (user === null) {
-                    callback(null, this.AUTH_NO_USER);
+                    callback(this.AUTH_NO_USER, null);
                 } else  {
-                    callback(user, null);
+                    callback(null, user);
                 }
             } else {
-                callback(null, error)
+                callback(error, null)
             }
         });
     }

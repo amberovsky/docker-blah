@@ -26,7 +26,7 @@ module.exports.controller = function (application) {
      * Validate request for update user personal data
      * 
      * @param {Object} request - express request
-     * @param {callback} callback - {User, error}
+     * @param {callback} callback - {error, User}
      */
     function validateActionPersonalUpdate(request, callback) {
         var
@@ -34,7 +34,7 @@ module.exports.controller = function (application) {
             login = request.body.login;
 
         if ((typeof name === 'undefined') || (typeof login === 'undefined')) {
-            return callback(request.user, 'Not enough data in the request.');
+            return callback('Not enough data in the request.', request.user);
         }
 
         name = name.trim();
@@ -45,21 +45,21 @@ module.exports.controller = function (application) {
             (login.length < request.userManager.MIN_TEXT_FIELD_LENGTH)
         ) {
             return callback(
-                request.user,
-                'Name and login should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
+                'Name and login should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.',
+                request.user
             );
         }
 
         request.userManager.getByLogin(login, request.user.getId(), (foundUser, error) => {
             if (foundUser !== null) {
-                return callback(request.user, 'User with login [' + login + '] already exists.');
+                return callback('User with login [' + login + '] already exists.', request.user);
             }
 
             request.user
                 .setName(name)
                 .setLogin(login);
 
-            return callback(request.user, null);
+            return callback(null, request.user);
         });
     };
 
@@ -130,7 +130,7 @@ module.exports.controller = function (application) {
         var currentUser = request.user;
 
         if (action === ACTION_PERSONAL) {
-            validateActionPersonalUpdate(request, (user, error) => {
+            validateActionPersonalUpdate(request, (error, user) => {
                 if (error !== null) {
                     return response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
@@ -138,7 +138,7 @@ module.exports.controller = function (application) {
                     });
                 }
 
-                request.userManager.update(request.user, function (error) {
+                request.userManager.update(request.user, function (error, user) {
                     if (error === null) {
                         response.render('profile/personal.html.twig', {
                             action: 'profile.personal',
@@ -164,7 +164,7 @@ module.exports.controller = function (application) {
                 });
             }
 
-            request.userManager.update(request.user, function (error) {
+            request.userManager.update(request.user, function (error, user) {
                 if (error === null) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
@@ -191,7 +191,7 @@ module.exports.controller = function (application) {
      * View projects
      */
     application.getExpress().get('/profile/projects/', function (request, response) {
-        request.projectManager.getAllForUser(request.user, (projects, error) => {
+        request.projectManager.getAllForUser(request.user, (error, projects) => {
             response.render('profile/projects.html.twig', {
                 action: 'profile.projects',
                 projects: projects

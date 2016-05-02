@@ -38,6 +38,19 @@ class Node {
     };
 
     /**
+     * Set new id
+     *
+     * @param {number} id - new id
+     *
+     * @returns {Node}
+     */
+    setId(id) {
+        this.id = id;
+
+        return this;
+    };
+
+    /**
      * @returns {number} project id
      */
     getProjectId() {
@@ -52,10 +65,36 @@ class Node {
     };
 
     /**
+     * Set new name
+     *
+     * @param {string} name - new name
+     *
+     * @returns {Node}
+     */
+    setName(name) {
+        this.name = name;
+
+        return this;
+    };
+
+    /**
      * @returns {string} ip
      */
     getIp() {
         return this.ip;
+    };
+
+    /**
+     * Set IP
+     *
+     * @param {string} ip - new ip
+     *
+     * @returns {Node}
+     */
+    setIp(ip) {
+        this.ip = ip;
+
+        return this;
     };
 
     /**

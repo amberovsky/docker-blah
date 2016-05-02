@@ -13,7 +13,8 @@ class Application {
      *
      * @callback DatabaseOperationCallback
      *
-     * @param {null|Boolean} isError - indicates was there an error during database operation (true) or null otherwise
+     * @param {null|string} isError - indicates was there an error during database operation (true) or error message
+     *                                otherwise
      */
 
     /**
@@ -69,8 +70,13 @@ class Application {
             stream: this.fs.createWriteStream(self.getLogsDirectory() + '/http.log', { flags: 'a' })
         }));
 
-        // formatter for logger
-        var loggerFormatter = function (guid) {
+        /**
+         * @param {string} tid - thread id
+         * @param {string} uid - user id
+         *
+         * @returns {Function} - message formatter for logger
+         */
+        var loggerFormatter = function (tid, uid) {
             return function(options) {
                 var date = new Date();
 
@@ -87,11 +93,10 @@ class Application {
                     return value;
                 };
 
-                return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' +
-                    leadZero(date.getUTCDate()) + ' ' + leadZero(date.getUTCHours()) + ':' +
-                    leadZero(date.getUTCMinutes()) + ':' + leadZero(date.getUTCSeconds()) + '.' +
-                    leadZero(date.getUTCMilliseconds(), 3) + ' ' + guid + ' - ' +
-                    options.level + ': ' + options.message;
+                return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' + leadZero(date.getUTCDate()) +
+                    ' ' + leadZero(date.getUTCHours()) + ':' + leadZero(date.getUTCMinutes()) + ':' +
+                    leadZero(date.getUTCSeconds()) + '.' + leadZero(date.getUTCMilliseconds(), 3) + ' TID: ' + tid +
+                    ' UID: [' + uid + '] - ' + options.level + ': ' + options.message;
             };
         };
 
@@ -102,7 +107,7 @@ class Application {
                 new (winston.transports.File)({
                     filename: self.getLogsDirectory() + '/system.log',
                     json: false,
-                    formatter: loggerFormatter('[SYSTEM]')
+                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM')
                 })
             ]
         });
@@ -149,15 +154,16 @@ class Application {
 
         // local strategy for passport
         passport.use(new LocalStrategy((username, password, done) => {
-                this.getAuth().auth(username, password, function (user, error) {
-                    if (user !== null) {
-                        return done(null, user);
-                    } else {
-                        return done(null, false);
-                    }
-                });
-            }
-        ));
+            this.getAuth().auth(username, password, function (error, user) {
+                if (user !== null) {
+                    return done(null, user);
+                } else {
+                    self.getSystemLogger().error('unable to auth user with login [' + username + '], error: [' +
+                        error + ']');
+                    return done(null, false);
+                }
+            });
+        }));
 
         // passport user serialization
         passport.serializeUser(function (user, done) {
@@ -166,7 +172,11 @@ class Application {
 
         // passport user deserialization
         passport.deserializeUser((id, done) => {
-            this.getUserManager().getById(id, (user, error) => {
+            this.getUserManager().getById(id, (error, user) => {
+                if (error !== null) {
+                    self.getSystemLogger().error('unable to deserialize user [' + id + ']');
+                }
+
                 done(error, user);
             });
         });
@@ -182,7 +192,8 @@ class Application {
             environment.addGlobal('application', this);
             environment.addGlobal('request', request);
 
-            request.guid = '[' + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) +
+            // thread id
+            request.tid = '[' + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) +
                 self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + ']';
 
             request.logger = new (winston.Logger)({
@@ -190,7 +201,12 @@ class Application {
                     new (winston.transports.File)({
                         filename: self.getLogsDirectory() + '/system.log',
                         json: false,
-                        formatter: loggerFormatter(request.guid)
+                        formatter: loggerFormatter(
+                            request.tid,
+                            (typeof request.user !== 'undefined')
+                                ? (request.user.getId() + ' : ' + request.user.getName())
+                                : 'NON-AUTH'
+                        )
                     })
                 ]
             });
@@ -210,20 +226,14 @@ class Application {
 
             if (typeof request.user !== 'undefined') {
                 // for auth'ed user we will add list of available projects
-                request.projectManager.getAll((projects, error) => {
+                request.projectManager.getAll((error, projects) => {
                     environment.addGlobal('allProjects', projects);
-
-                    if (request.userManager.isUserUser(request.user)) {
-                        request.projectManager.getAllForUser(request.user, (projectsWithAccess, error) => {
-                            environment.addGlobal('projectsWithAccess', projectsWithAccess);
-
-                            return next();
-                        });
-                    } else {
-                        environment.addGlobal('projectsWithAccess', projects);
+                    
+                    request.projectManager.getAllForUser(request.user, (error, projectsWithAccess) => {
+                        request.projectsWithAccess = projectsWithAccess;
 
                         return next();
-                    }
+                    });
                 });
             } else {
                 return next();
@@ -348,7 +358,7 @@ class Application {
         };
 
         // database
-        var file = __dirname + '/../data/docker-blah.db';
+        var file = __dirname + '/../../data/docker-blah.db';
         var exists = this.fs.existsSync(file);
         var SQLite3 = require('sqlite3').verbose();
 
@@ -364,7 +374,7 @@ class Application {
                         if (error === null) {
                             run();
                         } else {
-                            console.log(error);
+                            self.getSystemLogger(error);
                         }
                     }
                 );
@@ -374,13 +384,15 @@ class Application {
         });
     };
 
+    /**
+     * @param {number} min - minimum value for a random number
+     * @param {number} max - maximum value for a random number
+     *
+     * @returns {number} - pseudo-random number
+     */
     getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
-
-    handleErrorDuringStartup(error) {
-        console.log(error);
-    };
 
     /**
      * @returns {Object}

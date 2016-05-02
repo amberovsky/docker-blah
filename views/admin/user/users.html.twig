@@ -1,7 +1,7 @@
-{% extends '../layout/index.html.twig' %}
+{% extends '../../layout/index.html.twig' %}
 
 {% block sidebar %}
-    {% include './partial.sidebar.html.twig' %}
+    {% include './../partial.sidebar.html.twig' %}
 {% endblock %}
 
 {% block content %}
@@ -71,7 +71,8 @@
             <th>ID</th>
             <th>Name</th>
             <th>Login</th>
-            <th class="text-center">Projects</th>
+            <th>System role</th>
+            <th class="text-center">Projects / Role</th>
             <th class="text-center">Actions</th>
         </tr>
         </thead>
@@ -80,10 +81,11 @@
                 <td>{{ user.getId() }}</td>
                 <td>{{ user.getName() }}</td>
                 <td>{{ user.getLogin() }}</td>
+                <td>{{ request.userManager.getRoleCaption(user) }}</td>
                 <td class="text-center">
                     {% if projects[user.getId()] %}
                         {% for _, project in projects[user.getId()] %}
-                            {{ project.getName() }}<br>
+                            {{ project.getName() }} / {{ request.projectManager.getRoleCaption(roles[user.getId()][project.getId()]) }}<br>
                         {% endfor %}
                     {% endif %}
                 </td>

@@ -1,19 +1,19 @@
-{% extends '../layout/index.html.twig' %}
+{% extends '../../layout/index.html.twig' %}
 
 {% block sidebar %}
-    {% include './partial.sidebar.html.twig' %}
+    {% include './../partial.sidebar.html.twig' %}
 {% endblock %}
 
 {% block content %}
     <h1 class="page-header">
-        <span class="fa fa-cubes"></span>&nbsp;&nbsp;<a href="/admin/projects/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
+        <span class="fa fa-sitemap"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
         {% if (subaction == 'create') %}
-            Create a project
+            Create a new node in project [{{ request.project.getName() }}]
         {% else %}
-            Edit project #{{ project.getId() }}
+            Edit node #{{ request.node.getId() }} in project [{{ request.project.getName() }}]
         {% endif %}
     </h1>
-    <form class="form-horizontal" method="post" action="/admin/projects/{% if (subaction == 'create') %}create{% else %}{{ project.getId() }}{% endif %}/">
+    <form class="form-horizontal" method="post" action="/project/{{ request.project.getId() }}/nodes/{% if (subaction == 'create') %}create{% else %}{{ request.node.getId() }}{% endif %}/">
         {% if (error or success) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-6">
@@ -27,9 +27,21 @@
             </div>
         {% endif %}
         <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label">Project</label>
+            <div class="col-sm-3">
+                <p class="form-control-static">{{ request.project.getName() }}</p>
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
             <label for="name" class="col-sm-1 control-label">Name</label>
             <div class="col-sm-3">
-                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ project.getName() }}" required />
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.node.getName() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="ip" class="col-sm-1 control-label">IP</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="ip" name="ip" placeholder="xxx.xxx.xxx.xxx" value="{{ request.node.getIp() }}" required />
             </div>
         </div>
         <br />

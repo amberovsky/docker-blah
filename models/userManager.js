@@ -19,9 +19,9 @@ class UserManager {
      *
      * @callback UserOperationCallback
      *
+     * @param {(null|string)} error - error message
      * @param {(null|User|Object.<number, User>)} user - user (or list of users) after applied operation or null if no
      *                                                   user with given criteria
-     * @param {(null|string)} error - error message
      */
 
     /**
@@ -58,7 +58,7 @@ class UserManager {
      * Add a new user, also save to the database
      *
      * @param {User} user - new user
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {DatabaseOperationCallback} callback - user operation callback
      */
     add(user, callback) {
         var self = this;
@@ -70,7 +70,7 @@ class UserManager {
                 user.getLogin(),
                 user.getPasswordHash(),
                 user.getRole()
-            ], function(error) {
+            ], function (error) {
                 if (error === null) {
                     user.setId(this.lastID);
                     callback(null);
@@ -145,10 +145,10 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
+                    callback(null, new User(row.id, row.name, row.login, row.password_hash, row.role));
                 }  else {
                     self.logger.error(error);
-                    callback(null, error);
+                    callback(error, null);
                 }
             }
         );
@@ -172,10 +172,10 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
+                    callback(null, new User(row.id, row.name, row.login, row.password_hash, row.role));
                 }  else {
                     self.logger.error(error);
-                    callback(null, error);
+                    callback(error, null);
                 }
             }
         );
@@ -197,10 +197,10 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(new User(row.id, row.name, row.login, row.password_hash, row.role), null);
+                    callback(null, new User(row.id, row.name, row.login, row.password_hash, row.role));
                 }  else {
                     self.logger.error(error);
-                    callback(null, error);
+                    callback(error, null);
                 }
             }
         );
@@ -222,14 +222,14 @@ class UserManager {
                 users[user.getId()] = user;
             } else {
                 self.logger.error(error);
-                callback({}, error);
+                callback(error, {});
             }
         }, function (error) {
             if (error !== null) {
                 self.logger.error(error);
             }
 
-            callback(users, error);
+            callback(error, users);
         });
     };
 
@@ -237,7 +237,7 @@ class UserManager {
      * Update user data, also in the database
      *
      * @param {User} user - user with new values
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {DatabaseOperationCallback} callback - user operation callback
      */
     update(user, callback) {
         var self = this;
@@ -250,7 +250,7 @@ class UserManager {
                 user.getRole(),
                 user.getPasswordHash(),
                 user.getId()
-            ], function(error) {
+            ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
                         callback(true)
@@ -280,18 +280,18 @@ class UserManager {
             [
                 userId
             ],
-            function(error) {
+            function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        console.log('No rows were deleted');
-                        callback(true);
+                        self.logger.info('No rows were deleted');
+                        callback('no rows were deleted');
                     } else {
                         self.logger.error(error);
                         callback(null);
                     }
                 } else {
                     self.logger.error(error);
-                    callback(true);
+                    callback(error);
                 }
             }
         )
@@ -310,6 +310,7 @@ class UserManager {
         var
             users = {},
             projects = {},
+            roles = {},
             search = ['(1 = 1)'],
             params = {},
             self = this;
@@ -331,7 +332,7 @@ class UserManager {
 
         var query = 'SELECT' +
             '   user.id AS u_i, user.name AS u_n, user.login AS u_l, user.password_hash AS u_ph, user.role AS u_r, ' +
-            '   project.id as p_i, project.name as p_n ' +
+            '   project.id as p_i, project.name as p_n, project_user.role as pu_r ' +
             'FROM ' +
             '   user LEFT JOIN project_user ON (project_user.user_id = user.id) ' +
             '   LEFT JOIN project ON (project.id = project_user.project_id) ' +
@@ -341,24 +342,28 @@ class UserManager {
         this.sqlite3.each(
             query,
             params,
-            function(error, row) {
+            function (error, row) {
                 if (error === null) {
                     var user = new User(row.u_i, row.u_n, row.u_l, row.u_ph, row.u_r);
                     var project = new Project(row.p_i, row.p_n);
 
                     users[user.getId()] = user;
+
                     projects[user.getId()] = projects[user.getId()] || {};
                     projects[user.getId()][project.getId()] = project;
+
+                    roles[user.getId()] = roles[user.getId()] || {};
+                    roles[user.getId()][project.getId()] = row.pu_r;
                 } else {
                     self.logger.error(error);
-                    callback({ users: {}, projects: {} }, error);
+                    callback(error, { users: {}, projects: {}, roles: {} });
                 }
             }, function (error) {
                 if (error !== null) {
                     self.logger.error(error);
                 }
-                
-                callback({ users: users, projects: projects }, error);
+
+                callback(error, { users: users, projects: projects, roles: roles });
             }
         );
     }

@@ -3,6 +3,8 @@
 /**
  * _.js - access restriction for admin actions. Has to be included first!
  *
+ * /admin/* 
+ *
  * (C) Anton Zagorskii aka amberovsky
  */
 

@@ -1,0 +1,48 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header">
+        <span class="fa fa-cubes"></span>&nbsp;&nbsp;<a href="/admin/projects/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
+        {% if (subaction == 'create') %}
+            Create a project
+        {% else %}
+            Edit project #{{ request.project.getId() }}
+        {% endif %}
+    </h1>
+    <form class="form-horizontal" method="post" action="/admin/projects/{% if (subaction == 'create') %}create{% else %}{{ request.project.getId() }}{% endif %}/">
+        {% if (error or success) %}
+            <div class="form-group form-group-sm">
+                <div class="col-sm-6">
+                    {% if (error) %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm">
+            <label for="name" class="col-sm-1 control-label">Name</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.project.getName() }}" required />
+            </div>
+        </div>
+        <br />
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-sm-3">
+                <button type="submit" name="action" id="action" class="btn btn-success" value="projects">
+                    {% if (subaction == 'create') %}
+                        <span class="fa fa-check-circle-o"></span>&nbsp;&nbsp;Create
+                    {% else %}
+                        <span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

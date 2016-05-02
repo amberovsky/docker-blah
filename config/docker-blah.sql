@@ -12,8 +12,8 @@ CREATE TABLE node(
   project_id  INTEGER       NOT NULL,
   name        VARCHAR(100)  NOT NULL    DEFAULT '',
   ip          CHAR(15)      NOT NULL,
-  UNIQUE (ip),
-  UNIQUE (project_id, name)
+  UNIQUE (project_id, name),
+  UNIQUE (project_id, ip)
 );
 
 INSERT INTO node (id, project_id, name, ip) VALUES (1, 1, 'FT APP', '123');

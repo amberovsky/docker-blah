@@ -16,9 +16,9 @@ class ProjectManager {
      *
      * @callback ProjectOperationCallback
      *
-     * @param {(null|Project|Object.<number, Project>)} project - project (or list of projects) after applied operation
-     *                                                            or null if no projet with given criteria
-     * @param {(null|string)} error - error message
+     * @param {(null|string)} error - error message 
+     * @param {(null|boolean|Project|Object.<number, Project>)} project - project (or list of projects) after applied
+     *        operation or null if no project with given criteria or boolean for check/if/does operations
      */
 
     /**
@@ -107,10 +107,10 @@ class ProjectManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(new Project(row.id, row.name), null);
+                    callback(null, new Project(row.id, row.name));
                 }  else {
                     self.logger.error(error);
-                    callback(null, error);
+                    callback(error, null);
                 }
             }
         );
@@ -132,21 +132,21 @@ class ProjectManager {
                 projects[project.getId()] = project;
             } else {
                 self.logger.error(error);
-                callback({}, error);
+                callback(error, {});
             }
         }, function (error) {
             if (error !== null) {
                 self.logger.error(error);
             }
             
-            callback(projects, error);
+            callback(error, projects);
         });
     };
 
     /**
      * @param {string} name - project's name
      * @param {number} currentProjectId - which project to skip
-     * @param {callback} callback - {boolean} true, if project with given name already exists, skipping current one
+     * @param {ProjectOperationCallback} callback - project operation callback
      */
     doesExistWithSameName(name, currentProjectId, callback) {
         var self = this;
@@ -159,54 +159,22 @@ class ProjectManager {
             ],
             function (error, row) {
                 if (typeof row === 'undefined') {
-                    callback(false);
+                    callback(null, false);
                 } else if (error === null) {
-                    callback(true);
+                    callback(null, true);
                 }  else {
                     self.logger.error(error);
-                    callback(true);
+                    callback(error, true);
                 }
             }
         );
     };
-
+    
     /**
-     * @param {Project} project - project to explore
-     * @param {User} user - user to explore
-     * @param {callback} callback - {boolean} true, if given user has admin role in given project, false otherwise
-     */
-    isUserAdmin(project, user, callback) {
-        var self = this;
-        
-        if (this.userManager.isUserSuper(user) || this.userManager.isUserAdmin(user)) {
-            return callback(true);
-        }
-
-        this.sqlite3.get(
-            'SELECT role FROM project_user WHERE (project_id = ?) AND (user_id = ?) AND (role = ?)',
-            [
-                project.getId(),
-                user.getId(),
-                this.ROLE_ADMIN
-            ],
-            function (error, row) {
-                if (typeof row === 'undefined') {
-                    callback(false);
-                } else if (error === null) {
-                    callback(true);
-                }  else {
-                    self.logger.error(error);
-                    callback(false);
-                }
-            }
-        );
-    };
-
-    /**
-     * Add a new project, also save to the database
+     * Add a new project
      *
      * @param {Project} project - new project
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {DatabaseOperationCallback} callback - database operation callback
      */
     add(project, callback) {
         var self = this;
@@ -215,7 +183,7 @@ class ProjectManager {
             'INSERT INTO project (name) VALUES (?)',
             [
                 project.getName()
-            ], function(error) {
+            ], function (error) {
                 if (error === null) {
                     project.setId(this.lastID);
                     callback(null);
@@ -231,7 +199,7 @@ class ProjectManager {
      * Update project data
      *
      * @param {Project} project - project with new values
-     * @param {DatabaseOperationCallback} callback - database operations callback
+     * @param {DatabaseOperationCallback} callback - database operation callback
      */
     update(project, callback) {
         var self = this;
@@ -241,10 +209,10 @@ class ProjectManager {
             [
                 project.getName(),
                 project.getId()
-            ], function(error) {
+            ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        console.log('No rows were updated');
+                        self.logger.info('No rows were updated');
                         callback(true)
                     } else {
                         callback(null);
@@ -271,52 +239,21 @@ class ProjectManager {
             [
                 userId
             ],
-            function(error) {
+            function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        callback(true);
+                        callback('no rows were updated');
                     } else {
                         callback(null);
                     }
                 } else {
                     self.logger.error(error);
-                    callback(true);
+                    callback(error);
                 }
             }
         )
     };
-
-    /**
-     * @param {number} userId - user id
-     * @param {callback} callback - {Object.<number, number>} project_id x role
-     */
-    getUserRoleInProjects(userId, callback) {
-        var
-            roles = {},
-            self = this;
-
-        this.sqlite3.each(
-            'SELECT role, project_id FROM project_user WHERE (user_id = ?)',
-            [
-                userId
-            ],
-            function(error, row) {
-                if (error === null) {
-                    roles[row.project_id] = row.role;
-                } else {
-                    self.logger.error(error);
-                    callback({}, error);
-                }
-            }, function (error) {
-                if (error !== null) {
-                    self.logger.error(error);
-                }
-                
-                callback(roles, error);
-            }
-        );
-    };
-
+    
     /**
      * Set given roles for given user
      *
@@ -345,12 +282,12 @@ class ProjectManager {
             query += '(' + projectId + ', ' + userId + ', ' + roles[projectId] + ')';
         }
 
-        this.sqlite3.run(query, [], function(error) {
+        this.sqlite3.run(query, [], function (error) {
             if (error === null) {
                 return callback(null);
             } else {
                 self.logger.error(error);
-                return callback(true);
+                return callback(error);
             }
         });
     };
@@ -378,7 +315,7 @@ class ProjectManager {
             [
                 user.getId()
             ],
-            function(error, row) {
+            function (error, row) {
                 if (error === null) {
                     var project = new Project(row.id, row.name);
 
@@ -388,14 +325,14 @@ class ProjectManager {
                     };
                 } else {
                     self.logger.error(error);
-                    callback({}, error);
+                    callback(error, {});
                 }
             }, function (error) {
                 if (error !== null) {
                     self.logger.error(error);
                 }
                 
-                callback(projects, error);
+                callback(error, projects);
             }
         );
     };
@@ -409,23 +346,55 @@ class ProjectManager {
     deleteProject(projectId, callback) {
         var self = this;
         
-        this.sqlite3.run('DELETE FROM project_user WHERE project_id = ?', [projectId], function(error) {
+        this.sqlite3.run('DELETE FROM project_user WHERE project_id = ?', [projectId], function (error) {
             if (error === null) {
-                self.sqlite3.run('DELETE FROM project WHERE id = ?', [projectId], function(error) {
+                self.sqlite3.run('DELETE FROM project WHERE id = ?', [projectId], function (error) {
                    if (error === null) {
                        callback(null);
                    } else {
                        self.logger.error(error);
-                       callback(true);
+                       callback(error);
                    }
                 });
             } else {
                 self.logger.error(error);
 
-                callback(true);
+                callback(error);
             }
         });
     };
+
+    /**
+     * @param {number} userId - user id
+     * @param {callback} callback - {Object.<number, number>} project_id x role
+     */
+    getUserRoleInProjects(userId, callback) {
+        var
+            roles = {},
+            self = this;
+
+        this.sqlite3.each(
+            'SELECT role, project_id FROM project_user WHERE (user_id = ?)',
+            [
+                userId
+            ],
+            function(error, row) {
+                if (error === null) {
+                    roles[row.project_id] = row.role;
+                } else {
+                    self.logger.error(error);
+                    callback(error, {});
+                }
+            }, function (error) {
+                if (error !== null) {
+                    self.logger.error(error);
+                }
+
+                callback(error, roles);
+            }
+        );
+    };
+    
 }
 
 module.exports = ProjectManager;

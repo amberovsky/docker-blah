@@ -1,7 +1,7 @@
-{% extends '../layout/index.html.twig' %}
+{% extends '../../layout/index.html.twig' %}
 
 {% block sidebar %}
-    {% include './partial.sidebar.html.twig' %}
+    {% include './../partial.sidebar.html.twig' %}
 {% endblock %}
 
 {% block content %}
@@ -10,10 +10,10 @@
         {% if (subaction == 'create') %}
             Create a user
         {% else %}
-            Edit user #{{ user.getId() }}
+            Edit user #{{ request.requestedUser.getId() }}
         {% endif %}
     </h1>
-    <form class="form-horizontal" method="post" action="/admin/users/{% if (subaction == 'create') %}create{% else %}{{ user.getId() }}{% endif %}/">
+    <form class="form-horizontal" method="post" action="/admin/users/{% if (subaction == 'create') %}create{% else %}{{ request.requestedUser.getId() }}{% endif %}/">
         {% if (error or success) %}
             <div class="form-group form-group-sm">
                 <div class="col-sm-6">
@@ -34,13 +34,13 @@
         <div class="form-group form-group-sm">
             <label for="name" class="col-sm-1 control-label">Name</label>
             <div class="col-sm-3">
-                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ user.getName() }}" required />
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.requestedUser.getName() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
             <label for="login" class="col-sm-1 control-label">Login</label>
             <div class="col-sm-3">
-                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ user.getLogin() }}" required />
+                <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.requestedUser.getLogin() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
@@ -48,7 +48,7 @@
             <div class="col-sm-3">
                 <select class="form-control" id="role" name="role">
                     {% for role, id in request.userManager.getRoles() %}
-                        <option value="{{ id }}" {% if (user.getRole() == id) %}selected{% endif %}>{{ role }}</option>
+                        <option value="{{ id }}" {% if (request.requestedUser.getRole() == id) %}selected{% endif %}>{{ role }}</option>
                     {% endfor %}
                 </select>
             </div>

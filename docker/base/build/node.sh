@@ -10,6 +10,7 @@ apt-get install -y nodejs
 npm update npm
 
 npm install -g \
+    ip@1.1.2 \
     body-parser@1.15.0 \
     cookie-parser@1.4.1 \
     dockerode@2.2.10 \
