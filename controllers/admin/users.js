@@ -90,14 +90,14 @@ module.exports.controller = function (application) {
         var userId = parseInt(request.params.userId);
 
         if (Number.isNaN(userId)) {
-            request.logger.info('user was requested by non-NAN id [' + userId + '], url : ' + request.originalUrl);
+            request.logger.info('user was requested by non-NAN id [' + userId + ']');
 
             return fetchUsersByCriteria(request, response, -1, -1, -1, null, 'Wrong user id');
         }
 
         request.userManager.getById(userId, (error, user) => {
             if (user === null) {
-                request.logger.info('non-existed user [' + userId + '] was requested, url : ' + request.originalUrl);
+                request.logger.info('non-existed user [' + userId + '] was requested');
 
                 return fetchUsersByCriteria(
                     request, response, -1, -1, -1, null, 'User with given id doesn\'t exist'

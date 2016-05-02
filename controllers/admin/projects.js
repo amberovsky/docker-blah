@@ -85,16 +85,14 @@ module.exports.controller = function (application) {
         var projectId = parseInt(request.params.projectId);
 
         if (Number.isNaN(projectId)) {
-            request.logger.info('project was requested by non-NAN id [' + projectId + '], url : ' +
-                request.originalUrl);
+            request.logger.info('project was requested by non-NAN id [' + projectId + ']');
 
             return routeToAllProjects(request, response, null, 'Wrong project id');
         }
 
         request.projectManager.getById(projectId, (error, project) => {
             if (project === null) {
-                request.logger.info('non-existed project [' + projectId + '] was requested, url : ' +
-                    request.originalUrl);
+                request.logger.info('non-existed project [' + projectId + '] was requested');
 
                 return routeToAllProjects(request, response, null, 'Project with given id doesn\'t exist');
             }

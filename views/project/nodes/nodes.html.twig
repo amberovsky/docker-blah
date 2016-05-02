@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-sitemap"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Nodes : {{ nodesCount }}</h1>
+    <h1 class="page-header"><span class="fa fa-sitemap"></span>&nbsp;&nbsp;{% if (request.isUserAdminForThisProject) %}<a href="/project/{{ request.project.getId() }}/nodes/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;{% endif %}Nodes : {{ nodesCount }}</h1>
     {% if (error or success) %}
         <div class="form-group row">
             <div class="col-sm-8">

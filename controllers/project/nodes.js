@@ -45,6 +45,12 @@ module.exports.controller = function (application) {
      * Create a new node - page
      */
     application.getExpress().get('/project/:projectId/nodes/create/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            request.logger.info('user doesn\'t have enough rights for this action');
+
+            return routeToAllNodes(request, response, null, null);
+        }
+
         request.node = request.nodeManager.create(request.project.getId());
 
         return response.render('project/nodes/node.html.twig', {
@@ -105,6 +111,12 @@ module.exports.controller = function (application) {
      * Create a new node - handler
      */
     application.getExpress().post('/project/:projectId/nodes/create/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            request.logger.info('user doesn\'t have enough rights for this action');
+
+            return routeToAllNodes(request, response, null, null);
+        }
+
         request.node = request.nodeManager.create(request.project.getId());
 
         validateNodeActionCreateNewOrUpdate(request, false, (error) => {
@@ -142,8 +154,7 @@ module.exports.controller = function (application) {
         var nodeId = parseInt(request.params.nodeId);
 
         if (Number.isNaN(nodeId)) {
-            request.logger.info('node was requested by non-NAN id [' + nodeId + '], url : ' +
-                request.originalUrl);
+            request.logger.info('node was requested by non-NAN id [' + nodeId + ']');
 
             return routeToAllNodes(request, response, null, 'Wrong node id');
         }
@@ -151,7 +162,7 @@ module.exports.controller = function (application) {
         request.nodeManager.getByIdAndProjectId(nodeId, request.project.getId(), (error, node) => {
             if (node === null) {
                 request.logger.info('non-existed node [' + nodeId + '] in project [' + request.project.getId() +
-                    '] was requested, url : ' + request.originalUrl);
+                    '] was requested');
 
                 return routeToAllNodes(request, response, null, 'Node with given id doesn\'t exist');
             }
@@ -165,6 +176,12 @@ module.exports.controller = function (application) {
      * View/Edit node
      */
     application.getExpress().get('/project/:projectId/nodes/:nodeId/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            request.logger.info('user doesn\'t have enough rights for this action');
+
+            return routeToAllNodes(request, response, null, null);
+        }
+
         return response.render('project/nodes/node.html.twig', {
             action: 'project.nodes',
             subaction: 'edit'
@@ -175,6 +192,12 @@ module.exports.controller = function (application) {
      * Update node info
      */
     application.getExpress().post('/project/:projectId/nodes/:nodeId/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            request.logger.info('user doesn\'t have enough rights for this action');
+
+            return routeToAllNodes(request, response, null, null);
+        }
+
         validateNodeActionCreateNewOrUpdate(request, true, (error) => {
             if (error !== null) {
                 return response.render('project/nodes/node.html.twig', {
@@ -207,6 +230,12 @@ module.exports.controller = function (application) {
      * Delete node - page
      */
     application.getExpress().get('/project/:projectId/nodes/:nodeId/delete/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            request.logger.info('user doesn\'t have enough rights for this action');
+
+            return routeToAllNodes(request, response, null, null);
+        }
+
         response.render('project/nodes/delete.html.twig', {
             action: 'project.nodes'
         });
@@ -216,6 +245,12 @@ module.exports.controller = function (application) {
      * Delete node - handler
      */
     application.getExpress().post('/project/:projectId/nodes/:nodeId/delete/', function (request, response) {
+        if (!request.isUserAdminForThisProject) {
+            request.logger.info('user doesn\'t have enough rights for this action');
+
+            return routeToAllNodes(request, response, null, null);
+        }
+        
         request.nodeManager.deleteNode(request.node.getId(), function (error) {
             if (error === null) {
                 request.logger.info('node [' + request.node.getName() + '] in project [' + request.project.getName() +

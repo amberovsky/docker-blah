@@ -73,10 +73,11 @@ class Application {
         /**
          * @param {string} tid - thread id
          * @param {string} uid - user id
+         * @param {string} uri - uri
          *
          * @returns {Function} - message formatter for logger
          */
-        var loggerFormatter = function (tid, uid) {
+        var loggerFormatter = function (tid, uid, uri) {
             return function(options) {
                 var date = new Date();
 
@@ -96,7 +97,7 @@ class Application {
                 return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' + leadZero(date.getUTCDate()) +
                     ' ' + leadZero(date.getUTCHours()) + ':' + leadZero(date.getUTCMinutes()) + ':' +
                     leadZero(date.getUTCSeconds()) + '.' + leadZero(date.getUTCMilliseconds(), 3) + ' TID: ' + tid +
-                    ' UID: [' + uid + '] - ' + options.level + ': ' + options.message;
+                    ' UID: [' + uid + '] - ' + options.level + ': ' + options.message + '; URI: [' + uri + ']';
             };
         };
 
@@ -107,7 +108,7 @@ class Application {
                 new (winston.transports.File)({
                     filename: self.getLogsDirectory() + '/system.log',
                     json: false,
-                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM')
+                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM', 'N/A')
                 })
             ]
         });
@@ -205,7 +206,8 @@ class Application {
                             request.tid,
                             (typeof request.user !== 'undefined')
                                 ? (request.user.getId() + ' : ' + request.user.getName())
-                                : 'NON-AUTH'
+                                : 'NON-AUTH',
+                            request.originalUrl
                         )
                     })
                 ]
