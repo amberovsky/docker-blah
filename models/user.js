@@ -16,8 +16,9 @@ class User {
      * @param {string} login - login
      * @param {string} passwordHash - password hash
      * @param {number} role - role, {@see UserManager}
+     * @param {number} localId - id for project for local configured docker, -1 otherwise
      */
-    constructor (id, name, login, passwordHash, role) {
+    constructor (id, name, login, passwordHash, role, localId) {
         /** @type {number} id */
         this.id = id;
 
@@ -32,6 +33,9 @@ class User {
 
          /** @type {number} role */
         this.role = role;
+        
+        /** @type {number} localId - id for project for local configured docker, -1 otherwise */
+        this.localId = localId;
     };
 
     /**
@@ -134,6 +138,24 @@ class User {
 
         return this;
     };
+
+    /**
+     * @returns {number} id for project for local configured docker, -1 otherwise
+     */
+    getLocalId() {
+        return this.localId;
+    }
+
+    /**
+     * @param {number} localId - id for project for local configured docker, -1 otherwise
+     * 
+     * @returns {User}
+     */
+    setLocalId(localId) {
+        this.localId = localId;
+        
+        return this;
+    }
 
 }
 

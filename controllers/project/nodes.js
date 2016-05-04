@@ -69,18 +69,21 @@ module.exports.controller = function (application) {
     function validateNodeActionCreateNewOrUpdate(request, isUpdate, callback) {
         var
             name = request.body.name,
-            ip = request.body.ip;
+            ip = request.body.ip,
+            port = request.body.port;
         
         request.node
             .setName(name)
-            .setIp(ip);
+            .setIp(ip)
+            .setPort(port);
 
-        if ((typeof name === 'undefined') || (typeof ip === 'undefined')) {
+        if ((typeof name === 'undefined') || (typeof ip === 'undefined') || (typeof port === 'undefined')) {
             return callback('Not enough data in the request.');
         }
 
         name = name.trim();
         ip = ip.trim();
+        port = port.trim();
 
         if (name.length < request.nodeManager.MIN_TEXT_FIELD_LENGTH) {
             return callback('Name should be at least ' + request.nodeManager.MIN_TEXT_FIELD_LENGTH + ' characters.');
@@ -92,6 +95,11 @@ module.exports.controller = function (application) {
             return callback('IP has to be in v4 format');
         }
 
+        port = parseInt(port);
+        if (Number.isNaN(port)) {
+            return callback('Port has to be positive integer');
+        }
+
         var nodeId = (isUpdate === true) ? request.node.getId() : -1;
 
         request.nodeManager.doesExistWithSameNameOrIpInProject(name, ip, nodeId, request.project, (error, check) => {
@@ -101,7 +109,8 @@ module.exports.controller = function (application) {
 
             request.node
                 .setName(name)
-                .setIp(ip);
+                .setIp(ip)
+                .setPort(port);
 
             return callback(null);
         });

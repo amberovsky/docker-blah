@@ -12,7 +12,7 @@ var Project = require('./project.js');
 
 class ProjectManager {
     /**
-     * Callback to be used for all database operations
+     * Callback to be used for all operations with Project
      *
      * @callback ProjectOperationCallback
      *
@@ -48,8 +48,33 @@ class ProjectManager {
      * @returns {Project} new blank project
      */
     create() {
-        return new Project(-1, '');
+        return new Project(-1, '', -1, '', '', '');
     };
+
+    /**
+     * Creates a new project from given values from database
+     *
+     * @param {sqlite3.row} row - row from database
+     * @param {(string|undefined)} prefix - prefix added to columns name, in joins, for example
+     *
+     * @returns {Project} new project
+     */
+    createForRow(row, prefix) {
+        if (typeof prefix === 'undefined') {
+            prefix = '';
+        } else {
+            prefix += '.';
+        }
+        
+        return new Project(
+            row[prefix + 'id'],
+            row[prefix + 'name'],
+            row[prefix + 'user_id'],
+            row[prefix + 'ca'],
+            row[prefix + 'cert'],
+            row[prefix + 'key']
+        );
+    }
 
     /**
      * @param {number} role - role
@@ -99,7 +124,7 @@ class ProjectManager {
         var self = this;
         
         this.sqlite3.get(
-            'SELECT id, name FROM project WHERE (id = ?)',
+            'SELECT id, name, user_id, ca, cert, key FROM project WHERE (id = ?)',
             [
                 id
             ],
@@ -107,7 +132,7 @@ class ProjectManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, new Project(row.id, row.name));
+                    callback(null, self.createForRow(row));
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -126,9 +151,9 @@ class ProjectManager {
             projects = {},
             self = this;
 
-        this.sqlite3.each("SELECT id, name FROM project", function (error, row) {
+        this.sqlite3.each("SELECT id, name, user_id, ca, cert, key FROM project", function (error, row) {
             if (error === null) {
-                var project = new Project(row.id, row.name);
+                var project = self.createForRow(row);
                 projects[project.getId()] = project;
             } else {
                 self.logger.error(error);
@@ -180,9 +205,13 @@ class ProjectManager {
         var self = this;
         
         this.sqlite3.run(
-            'INSERT INTO project (name) VALUES (?)',
+            'INSERT INTO project (name, user_id, ca, cert, key) VALUES (?, ?, ?, ?, ?)',
             [
-                project.getName()
+                project.getName(),
+                project.getUserId(),
+                project.getCA(),
+                project.getCERT(),
+                project.getKEY()
             ], function (error) {
                 if (error === null) {
                     project.setId(this.lastID);
@@ -205,9 +234,13 @@ class ProjectManager {
         var self = this;
         
         this.sqlite3.run(
-            'UPDATE project SET name = ? WHERE id = ?',
+            'UPDATE project SET name = ?, user_id = ?, ca = ?, cert = ?, key = ? WHERE id = ?',
             [
                 project.getName(),
+                project.getUserId(),
+                project.getCA(),
+                project.getCERT(),
+                project.getKEY(),
                 project.getId()
             ], function (error) {
                 if (error === null) {
@@ -305,7 +338,7 @@ class ProjectManager {
 
         this.sqlite3.each(
             'SELECT' +
-            '   role, project.id AS id, project.name AS name ' +
+            '   role, project.id, project.name, project.user_id, project_ca, project.cert, project.key ' +
             'FROM ' +
             '   project_user LEFT JOIN project ' +
             'ON ' +
@@ -317,7 +350,7 @@ class ProjectManager {
             ],
             function (error, row) {
                 if (error === null) {
-                    var project = new Project(row.id, row.name);
+                    var project = self.createForRow(row, 'project');
 
                     projects[project.getId()] = {
                         project: project,

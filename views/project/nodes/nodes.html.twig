@@ -40,7 +40,7 @@
             <tr>
                 <td>{{ node.getId() }}</td>
                 <td>{{ node.getName() }}</td>
-                <td>{{ node.getIp() }}</td>
+                <td>{{ node.getIp() }}:{{ node.getPort() }}</td>
                 <td>{{ node.getResponseTime() }}</td>
                 {% if (request.isUserAdminForThisProject) %}
                 <td>

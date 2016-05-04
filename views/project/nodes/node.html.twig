@@ -44,6 +44,12 @@
                 <input type="text" class="form-control" id="ip" name="ip" placeholder="xxx.xxx.xxx.xxx" value="{{ request.node.getIp() }}" required />
             </div>
         </div>
+        <div class="form-group form-group-sm">
+            <label for="port" class="col-sm-1 control-label">port</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="port" name="port" placeholder="12345" value="{{ request.node.getPort() }}" pattern="\d*" required />
+            </div>
+        </div>
         <br />
         <div class="form-group">
             <div class="col-sm-offset-1 col-sm-3">

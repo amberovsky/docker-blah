@@ -1,9 +1,9 @@
 "use strict";
 
 /**
- * profile.js - user profile actions
+ * personal.js - user's personal info
  *
- * /profile/*
+ * /profile/personal/*
  *
  * (C) Anton Zagorskii aka amberovsky
  */
@@ -26,15 +26,19 @@ module.exports.controller = function (application) {
      * Validate request for update user personal data
      * 
      * @param {Object} request - express request
-     * @param {callback} callback - {error, User}
+     * @param {DatabaseOperationCallback} callback - callback
      */
     function validateActionPersonalUpdate(request, callback) {
         var
             name = request.body.name,
             login = request.body.login;
 
+        request.user
+            .setName(name)
+            .setLogin(login)
+
         if ((typeof name === 'undefined') || (typeof login === 'undefined')) {
-            return callback('Not enough data in the request.', request.user);
+            return callback('Not enough data in the request.');
         }
 
         name = name.trim();
@@ -45,21 +49,20 @@ module.exports.controller = function (application) {
             (login.length < request.userManager.MIN_TEXT_FIELD_LENGTH)
         ) {
             return callback(
-                'Name and login should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.',
-                request.user
+                'Name and login should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.'
             );
         }
 
         request.userManager.getByLogin(login, request.user.getId(), (foundUser, error) => {
             if (foundUser !== null) {
-                return callback('User with login [' + login + '] already exists.', request.user);
+                return callback('User with login [' + login + '] already exists.');
             }
 
             request.user
                 .setName(name)
                 .setLogin(login);
 
-            return callback(null, request.user);
+            return callback(null);
         });
     };
 
@@ -99,9 +102,7 @@ module.exports.controller = function (application) {
             return 'New passwords do not match.';
         }
 
-        if (
-            !application.getAuth().checkPasswordMatch(request.user.getPasswordHash(), currentPassword)
-        ) {
+        if (!application.getAuth().checkPasswordMatch(request.user.getPasswordHash(), currentPassword)) {
             return 'Wrong current password';
         }
 
@@ -130,7 +131,7 @@ module.exports.controller = function (application) {
         var currentUser = request.user;
 
         if (action === ACTION_PERSONAL) {
-            validateActionPersonalUpdate(request, (error, user) => {
+            validateActionPersonalUpdate(request, (error) => {
                 if (error !== null) {
                     return response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
@@ -138,7 +139,7 @@ module.exports.controller = function (application) {
                     });
                 }
 
-                request.userManager.update(request.user, function (error, user) {
+                request.userManager.update(request.user, function (error) {
                     if (error === null) {
                         response.render('profile/personal.html.twig', {
                             action: 'profile.personal',
@@ -164,7 +165,7 @@ module.exports.controller = function (application) {
                 });
             }
 
-            request.userManager.update(request.user, function (error, user) {
+            request.userManager.update(request.user, function (error) {
                 if (error === null) {
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
@@ -180,23 +181,13 @@ module.exports.controller = function (application) {
             });
 
         } else { // } else if (action === ACTION_PASSWORD) { // if (action === ACTION_PROFILE) {
+            request.logger.error('wrong request ' + action);
+            
             response.render('profile/personal.html.twig', {
                 action: 'profile.personal',
-                error_profile: 'Wrong request 2.' + action
+                error_profile: 'Wrong request'
             });
         }
-    });
-
-    /**
-     * View projects
-     */
-    application.getExpress().get('/profile/projects/', function (request, response) {
-        request.projectManager.getAllForUser(request.user, (error, projects) => {
-            response.render('profile/projects.html.twig', {
-                action: 'profile.projects',
-                projects: projects
-            });
-        });
     });
 
 };

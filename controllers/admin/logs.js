@@ -11,7 +11,7 @@
 /**
  * @param {Application} application - application
  */
-module.exports.controller = function(application) {
+module.exports.controller = function (application) {
 
     /**
      * Middleware to detect log in the url
@@ -21,9 +21,11 @@ module.exports.controller = function(application) {
 
         if (
             (typeof request.log === 'undefined') ||
-            ((request.log !== 'http') && (request.log !== 'system'))
+            ((request.log !== 'nginx_error') && (request.log !== 'nginx_access') && (request.log !== 'system'))
         ) {
-            response.redirect('/admin/logs/http/');
+            request.logger.error('access to unknown log');
+
+            response.redirect('/admin/logs/system/');
         } else {
             next();
         }

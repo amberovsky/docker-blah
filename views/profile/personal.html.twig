@@ -9,7 +9,7 @@
     <form class="form-horizontal" method="post" action="/profile/personal/">
         {% if (error_profile or success_profile) %}
             <div class="form-group form-group-sm">
-                <div class="col-sm-offset-2 col-sm-6">
+                <div class="col-sm-6">
                     {% if error_profile %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -25,25 +25,25 @@
             </div>
         {% endif %}
         <div class="form-group form-group-sm">
-            <label for="name" class="col-sm-3 control-label">Name</label>
-            <div class="col-sm-5">
+            <label for="name" class="col-sm-2 control-label">Name</label>
+            <div class="col-sm-3">
                 <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.user.getName() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label for="login" class="col-sm-3 control-label">Login</label>
-            <div class="col-sm-5">
+            <label for="login" class="col-sm-2 control-label">Login</label>
+            <div class="col-sm-3">
                 <input type="text" class="form-control" id="login" name="login" placeholder="Login" value="{{ request.user.getLogin() }}" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Role</label>
-            <div class="col-sm-5">
+            <label class="col-sm-2 control-label">Role</label>
+            <div class="col-sm-3">
                 <p class="form-control-static">{{ request.userManager.getRoleCaption(request.user) }}</p>
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <div class="col-sm-offset-3 col-sm-2">
+            <div class="col-sm-offset-2 col-sm-2">
                 <button type="submit" name="action" class="btn btn-success" value="personal"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update</button>
             </div>
         </div>
@@ -52,7 +52,7 @@
     <form class="form-horizontal" method="post" action="/profile/personal/">
         {% if (error_password or success_password) %}
             <div class="form-group form-group-sm">
-                <div class="col-sm-offset-2 col-sm-6">
+                <div class="col-sm-6">
                     {% if error_password %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -68,25 +68,25 @@
             </div>
         {% endif %}
         <div class="form-group form-group-sm">
-            <label for="password" class="col-sm-3 control-label">Current password</label>
-            <div class="col-sm-5">
+            <label for="password" class="col-sm-2 control-label">Current password</label>
+            <div class="col-sm-3">
                 <input type="password" class="form-control" id="password" name="password" placeholder="Current password" value="" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label for="new_password1" class="col-sm-3 control-label">New password</label>
-            <div class="col-sm-5">
+            <label for="new_password1" class="col-sm-2 control-label">New password</label>
+            <div class="col-sm-3">
                 <input type="password" class="form-control" id="new_password1" name="new_password1" placeholder="New password" value="" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label for="new_password2" class="col-sm-3 control-label">Retype new password</label>
-            <div class="col-sm-5">
+            <label for="new_password2" class="col-sm-2 control-label">Retype new password</label>
+            <div class="col-sm-3">
                 <input type="password" class="form-control" id="new_password2" name="new_password2" placeholder="Retype new password" value="" required />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <div class="col-sm-offset-3 col-sm-2">
+            <div class="col-sm-offset-2 col-sm-2">
                 <button type="submit" name="action" class="btn btn-primary" value="password"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Change password</button>
             </div>
         </div>

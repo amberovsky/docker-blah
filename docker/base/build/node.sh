@@ -20,7 +20,6 @@ npm install -g \
     sqlite3@3.1.3 \
     nunjucks@2.4.2 \
     connect-redis@3.0.2 \
-    morgan@1.7.0 \
     winston@2.2.0 \
     socket.io@1.4.5 \
     passport@0.3.2 \

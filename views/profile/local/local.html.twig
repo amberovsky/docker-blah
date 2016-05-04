@@ -1,0 +1,63 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-user"></span>&nbsp;&nbsp;Local docker</h1>
+    <form class="form-horizontal" method="post" action="/profile/personal/">
+        {% if (error or success) %}
+            <div class="form-group form-group-sm">
+                <div class="col-sm-6">
+                    {% if error %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ success }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm">
+            <label for="ip" class="col-sm-1 control-label">ip</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="ip" name="ip" placeholder="xxx.xxx.xxx.xxx" value="{{ request.user.getName() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="port" class="col-sm-1 control-label">ip</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="port" name="port" placeholder="12345" value="{{ request.user.getName() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label" for="file_ca">*.ca file</label>
+            <div class="col-sm-3">
+                <input type="file" class="form-control" id="file_ca" name="file_ca" accept="*/*.ca" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label" for="file_cert">*.cert file</label>
+            <div class="col-sm-3">
+                <input type="file" class="form-control" id="file_cert" name="file_cert" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label" for="file_key">*.key file</label>
+            <div class="col-sm-3">
+                <input type="file" class="form-control" id="file_key" name="file_key" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <div class="col-sm-offset-1 col-sm-2">
+                <button type="submit" name="action" class="btn btn-success" value="personal"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update</button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

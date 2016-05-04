@@ -13,13 +13,29 @@ class Project {
      * 
      * @param {number} id - id
      * @param {string} name - name
+     * @param {number} userId - user id if it is local docker project for that user, -1 otherwise
+     * @param {string} CA - ca.pem file to connect to docker engine
+     * @param {string} CERT - cert.pem file to connect to docker engine
+     * @param {string} KEY - key.pem file to connect to docker engine
      */
-    constructor (id, name) {
+    constructor (id, name, userId, CA, CERT, KEY) {
         /** @type {number} id */
         this.id = id;
         
         /** @type {string} name */
         this.name = name;
+        
+        /** @type {number} user id if it is local docker project for that user, -1 otherwise */
+        this.userId = userId;
+        
+        /** @type {string} ca.pem file to connect to docker engine */
+        this.CA = CA;
+        
+        /** @type {string} cert.pem file to connect to docker engine */
+        this.CERT = CERT;
+        
+        /** @type {string} key.pem file to connect to docker engine */
+        this.KEY = KEY;
     };
 
     /**
@@ -61,6 +77,46 @@ class Project {
 
         return this;
     };
+
+    /**
+     * @returns {number} user id if it is local docker project for that user, -1 otherwise
+     */
+    getUserId() {
+        return this.userId;
+    }
+
+    /**
+     * @param {number} userId - user id for local docker project
+     *
+     * @returns {Project}
+     */
+    setUserId(userId) {
+        this.userId = userId;
+
+        return this.userId;
+    }
+
+
+    /**
+     * @returns {string} ca.pem file to connect to docker engine
+     */
+    getCA() {
+        return this.CA;
+    }
+
+    /**
+     * @returns {string} cert.pem file to connect to docker engine
+     */
+    getCERT() {
+        return this.CERT;
+    }
+
+    /**
+     * @returns {string} key.pem file to connect to docker engine
+     */
+    getKEY() {
+        return this.KEY;
+    }
     
 }
 

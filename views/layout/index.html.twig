@@ -26,7 +26,7 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="dropdown {% if (action|match('project\.(.*)')) %}active"{% endif %}">
+                <li class="dropdown {% if (action|match('^project\.(.*)')) %}active"{% endif %}">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% if (request.project) %}Project: {{ request.project.getName() }} {% else %}Select a project{% endif %}&nbsp;<span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         {% for _, project in allProjects %}
@@ -34,6 +34,12 @@
                                 <li {% if (request.project and (request.project.getId() == project.getId())) %}class="active"{% endif %}><a href="/project/{{ project.getId() }}/">{{ project.getName() }}</a></li>
                             {% endif %}
                         {% endfor %}
+                        <li role="separator" class="divider"></li>
+                        {% if (request.user.getLocalId() == -1) %}
+                            <li><a href="/profile/local/">Connect local docker</a></li>
+                        {% else %}
+                            <li {% if (request.project and (request.project.getId() == request.user.getLocalId())) %}class="active"{% endif %}><a href="/project/{{ project.getId() }}/">Local docker</a></li>
+                        {% endif %}
                     </ul>
                 </li>
             </ul>

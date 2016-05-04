@@ -1,37 +1,29 @@
 "use strict";
 
 /**
- * node.js - Node model
+ * registry.js - Registry model
  *
  * (C) Anton Zagorskii aka amberovsky
  */
 
-class Node {
+class Registry {
 
     /**
      * @constructor
      *
      * @param {number} id - id
-     * @param {number} projectId - project id, which this node belongs to
      * @param {string} name - name
      * @param {string} ip - IP in string format
-     * @param {number} port - port
      */
-    constructor (id, projectId, name, ip, port) {
+    constructor (id, name, ip) {
         /** @type {number} id */
         this.id = id;
-
-        /** @type {number} project id */
-        this.projectId = projectId;
 
         /** @type {string} name */
         this.name = name;
 
         /** @type {string} ip */
         this.ip = ip;
-
-        /** @type {number} port */
-        this.port = port;
     };
 
     /***
@@ -53,14 +45,7 @@ class Node {
 
         return this;
     };
-
-    /**
-     * @returns {number} project id
-     */
-    getProjectId() {
-        return this.projectId;
-    }
-
+    
     /**
      * @returns {string} name
      */
@@ -100,34 +85,7 @@ class Node {
 
         return this;
     };
-
-    /**
-     * @returns {number} port
-     */
-    getPort() {
-        return this.port;
-    };
-
-    /**
-     * Set port
-     *
-     * @param {number} port - new port
-     *
-     * @returns {Node}
-     */
-    setPort(port) {
-        this.port = port;
-
-        return this;
-    };
-
-    /**
-     * @returns {number} response time in seconds TODO
-     */
-    getResponseTime() {
-        return 'xxx';
-    }
     
 }
 
-module.exports = Node;
+module.exports = Registry;

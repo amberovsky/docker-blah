@@ -12,7 +12,7 @@ var Node = require('./node.js');
 class NodeManager {
 
     /**
-     * Callback to be used for all database operations
+     * Callback to be used for all operations with Node
      *
      * @callback NodeOperationCallback
      *
@@ -43,8 +43,25 @@ class NodeManager {
      * @returns {Node} new blank node in the given project
      */
     create(projectId) {
-        return new Node(-1, projectId, '', '');
+        return new Node(-1, projectId, '', '', -1);
     };
+
+    /**
+     * Creates a new node from given values from database
+     *
+     * @param {sqlite3.row} row - row from database
+     *
+     * @returns {Node} new node
+     */
+    createForRow(row) {
+        return new Node(
+            row.id,
+            row.project_id,
+            row.name,
+            row.ip,
+            row.port
+        );
+    }
 
     /**
      * Get node by id in given project
@@ -57,7 +74,7 @@ class NodeManager {
         var self = this;
 
         this.sqlite3.get(
-            'SELECT id, name, ip, project_id FROM node WHERE (id = ?) AND (project_id = ?)',
+            'SELECT id, name, ip, project_id, port FROM node WHERE (id = ?) AND (project_id = ?)',
             [
                 id,
                 projectId
@@ -66,7 +83,7 @@ class NodeManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, new Node(row.id, row.project_id, row.name, row.ip));
+                    callback(null, self.createForRow(row));
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -118,11 +135,11 @@ class NodeManager {
             self = this;
 
         this.sqlite3.each(
-            'SELECT id, project_id, name, ip FROM node WHERE (project_id = ?)',
+            'SELECT id, project_id, name, ip, port FROM node WHERE (project_id = ?)',
             [projectId],
             function (error, row) {
                 if (error === null) {
-                    var node = new Node(row.id, row.project_id, row.name, row.ip);
+                    var node = self.createForRow(row);
                     nodes[node.getId()] = node;
                 } else {
                     this.logger.error(error);
@@ -148,11 +165,12 @@ class NodeManager {
         var self = this;
 
         this.sqlite3.run(
-            'INSERT INTO node (name, project_id, ip) VALUES (?, ?, ?)',
+            'INSERT INTO node (name, project_id, ip, port) VALUES (?, ?, ?, ?)',
             [
                 node.getName(),
                 node.getProjectId(),
-                node.getIp()
+                node.getIp(),
+                node.getPort()
             ], function (error) {
                 if (error === null) {
                     node.setId(this.lastID);
@@ -175,10 +193,11 @@ class NodeManager {
         var self = this;
 
         this.sqlite3.run(
-            'UPDATE node SET name = ?, ip = ? WHERE id = ?',
+            'UPDATE node SET name = ?, ip = ?, port = ? WHERE id = ?',
             [
                 node.getName(),
                 node.getIp(),
+                node.getPort(),
                 node.getId()
             ], function (error) {
                 if (error === null) {

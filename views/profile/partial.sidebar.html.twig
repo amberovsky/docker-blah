@@ -2,3 +2,6 @@
     <li {% if (action == 'profile.personal') %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user"></span>&nbsp;Personal</a></li>
     <li {% if (action == 'profile.projects') %}class="active"{% endif %}><a href="/profile/projects/"><span class="fa fa-cubes"></span>&nbsp;Projects</a></li>
 </ul>
+<ul class="nav nav-sidebar">
+    <li {% if (action == 'profile.local') %}class="active"{% endif %}><a href="/profile/local/"><span class="fa fa-plug"></span>&nbsp;Local docker</a></li>
+</ul>

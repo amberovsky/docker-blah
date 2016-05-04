@@ -47,9 +47,6 @@ class Application {
         var express = require('express');
         this.express = express();
 
-        // serving static files
-        this.express.use('/public', express.static('public'));
-
 
         // cookie parser
         var cookieParser = require('cookie-parser');
@@ -63,12 +60,9 @@ class Application {
             extended: true
         }));
 
-
-        // http requests logger
-        var morgan = require('morgan');
-        this.express.use(morgan('combined', {
-            stream: this.fs.createWriteStream(self.getLogsDirectory() + '/http.log', { flags: 'a' })
-        }));
+        // file uploads
+        var multer = require('multer');
+        this.express.use(multer({ dest: '/var/www/docker-blah/uploads/'}).any());
 
         /**
          * @param {string} tid - thread id
@@ -94,10 +88,16 @@ class Application {
                     return value;
                 };
 
-                return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' + leadZero(date.getUTCDate()) +
-                    ' ' + leadZero(date.getUTCHours()) + ':' + leadZero(date.getUTCMinutes()) + ':' +
-                    leadZero(date.getUTCSeconds()) + '.' + leadZero(date.getUTCMilliseconds(), 3) + ' TID: ' + tid +
-                    ' UID: [' + uid + '] - ' + options.level + ': ' + options.message + '; URI: [' + uri + ']';
+                // format timestamp
+                var timestamp = date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' +
+                    leadZero(date.getUTCDate()) + ' ' + leadZero(date.getUTCHours()) + ':' +
+                    leadZero(date.getUTCMinutes()) + ':' + leadZero(date.getUTCSeconds()) + '.' +
+                    leadZero(date.getUTCMilliseconds(), 3);
+
+                return  timestamp + ' TID: ' + tid + ' UID: [' + uid + '] - ' + options.level.toUpperCase() + ': ' +
+                    (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : '' ) +
+                    '; URI: [' + uri + ']';
             };
         };
 
@@ -157,6 +157,8 @@ class Application {
         passport.use(new LocalStrategy((username, password, done) => {
             this.getAuth().auth(username, password, function (error, user) {
                 if (user !== null) {
+                    self.getSystemLogger().info('user logined : [' + user.getId() + ' - ' + user.getName() + ']');
+
                     return done(null, user);
                 } else {
                     self.getSystemLogger().error('unable to auth user with login [' + username + '], error: [' +
@@ -226,6 +228,9 @@ class Application {
             /** @type {NodeManager} - node manager */
             request.nodeManager = new (require('../models/nodeManager.js'))(self, request.logger);
 
+            /** @type {RegistryManager} - registry manager */
+            request.registryManager = new (require('../models/registryManager.js'))(self, request.logger);
+
             if (typeof request.user !== 'undefined') {
                 // for auth'ed user we will add list of available projects
                 request.projectManager.getAll((error, projects) => {
@@ -255,11 +260,15 @@ class Application {
                 'local',
                 function(error, user, info) {
                     if (error) {
+                        self.getSystemLogger().error(error);
+
                         return next(error); // will generate a 500 error
                     }
 
                     // Generate a JSON response reflecting authentication status
                     if (!user) {
+                        self.getSystemLogger().error('no user after auth');
+
                         return response.render('layout/auth.html.twig', { error: 'wrong login or password' });
                     }
 
@@ -271,6 +280,8 @@ class Application {
                     // ***********************************************************************
                     request.login(user, loginErr => {
                         if (loginErr) {
+                            self.getSystemLogger().error(loginErr);
+
                             return next(loginErr);
                         }
 
@@ -284,6 +295,8 @@ class Application {
         // middleware for all requests - check auth
         this.express.use(function (request, response, next) {
             if (!request.isAuthenticated()) {
+                self.getSystemLogger().info('user is not auth\'ed, will redirect to auth');
+
                 response.render('layout/auth.html.twig');
             } else {
                 next();
@@ -304,6 +317,8 @@ class Application {
             /** @type {UserManager} - user manager */
             this.userManager = new (require('../models/userManager.js'))(self, this.systemLogger);
 
+            this.getSystemLogger().info('loading controllers...');
+
             // load controllers
             (function readControllers(dir) {
                 self.fs.readdirSync(dir).forEach(function (file) {
@@ -317,6 +332,8 @@ class Application {
                     }
                 });
             })(__dirname + '/../controllers');
+
+            this.getSystemLogger().info('done');
 
             /**
              * Ta-daaa! The server
@@ -370,17 +387,23 @@ class Application {
         // initialize the database
         this.sqlite3.serialize(function () {
             if (!exists) {
+                self.getSystemLogger().info('database doesn\'t exist, will create...');
+
                 self.sqlite3.exec(
                     self.fs.readFileSync(__dirname + '/../config/docker-blah.sql').toString(),
                     function (error) {
                         if (error === null) {
+                            self.getSystemLogger().info('database was created');
+
                             run();
                         } else {
-                            self.getSystemLogger(error);
+                            self.getSystemLogger().error(error);
                         }
                     }
                 );
             } else {
+                self.getSystemLogger().info('database already exists');
+
                 run();
             }
         });

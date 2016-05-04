@@ -15,7 +15,7 @@ var Project = require('./project.js');
 class UserManager {
 
     /**
-     * Callback to be used for all database operations
+     * Callback to be used for all operations with User
      *
      * @callback UserOperationCallback
      *
@@ -51,7 +51,7 @@ class UserManager {
      * @returns {User} new blank user
      */
     create() {
-        return new User(-1, '', '', '', this.ROLE_USER);
+        return new User(-1, '', '', '', this.ROLE_USER, false);
     };
 
     /**
@@ -136,7 +136,7 @@ class UserManager {
         var self = this;
 
         this.sqlite3.get(
-            'SELECT id, name, login, password_hash, role FROM user WHERE (login = ?) AND (id <> ?)',
+            'SELECT id, name, login, password_hash, role, local_id FROM user WHERE (login = ?) AND (id <> ?)',
             [
                 login,
                 (currentUserId === null ? -1 : currentUserId)
@@ -145,7 +145,10 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, new User(row.id, row.name, row.login, row.password_hash, row.role));
+                    callback(
+                        null,
+                        new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id)
+                    );
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -163,7 +166,7 @@ class UserManager {
         var self = this;
 
         this.sqlite3.get(
-            'SELECT id, name, login, password_hash, role FROM user WHERE (login = ?) AND (password_hash = ?)',
+            'SELECT id, name, login, password_hash, role, local_id FROM user WHERE (login = ?) AND (password_hash = ?)',
             [
                 login,
                 passwordHash
@@ -172,7 +175,10 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, new User(row.id, row.name, row.login, row.password_hash, row.role));
+                    callback(
+                        null,
+                        new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id)
+                    );
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -189,7 +195,7 @@ class UserManager {
         var self = this;
 
         this.sqlite3.get(
-            'SELECT id, name, login, password_hash, role FROM user WHERE (id = ?)',
+            'SELECT id, name, login, password_hash, role, local_id FROM user WHERE (id = ?)',
             [
                 id
             ],
@@ -197,7 +203,10 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, new User(row.id, row.name, row.login, row.password_hash, row.role));
+                    callback(
+                        null,
+                        new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id)
+                    );
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -216,9 +225,9 @@ class UserManager {
             users = {},
             self = this;
 
-        this.sqlite3.each("SELECT id, name, login, password_hash, role FROM user", function (error, row) {
+        this.sqlite3.each("SELECT id, name, login, password_hash, role, local_id FROM user", function (error, row) {
             if (error === null) {
-                var user = new User(row.id, row.name, row.login, row.password_hash, row.role);
+                var user = new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id);
                 users[user.getId()] = user;
             } else {
                 self.logger.error(error);
@@ -332,7 +341,7 @@ class UserManager {
 
         var query = 'SELECT' +
             '   user.id AS u_i, user.name AS u_n, user.login AS u_l, user.password_hash AS u_ph, user.role AS u_r, ' +
-            '   project.id as p_i, project.name as p_n, project_user.role as pu_r ' +
+            '   user.local_id AS u_li, project.id as p_i, project.name as p_n, project_user.role as pu_r ' +
             'FROM ' +
             '   user LEFT JOIN project_user ON (project_user.user_id = user.id) ' +
             '   LEFT JOIN project ON (project.id = project_user.project_id) ' +
@@ -344,7 +353,7 @@ class UserManager {
             params,
             function (error, row) {
                 if (error === null) {
-                    var user = new User(row.u_i, row.u_n, row.u_l, row.u_ph, row.u_r);
+                    var user = new User(row.u_i, row.u_n, row.u_l, row.u_ph, row.u_r, row.u_li);
                     var project = new Project(row.p_i, row.p_n);
 
                     users[user.getId()] = user;
