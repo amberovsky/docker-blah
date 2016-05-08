@@ -19,9 +19,8 @@ module.exports.controller = function (application) {
     application.getExpress().get('/admin/projects/create/', function (request, response) {
         request.project = request.projectManager.create();
 
-        response.render('admin/project/project.html.twig', {
-            action: 'admin.projects',
-            subaction: 'create'
+        response.render('admin/project/project.create.html.twig', {
+            action: 'admin.projects'
         });
     });
 
@@ -53,19 +52,17 @@ module.exports.controller = function (application) {
 
          request.projectUtils.validateProjectActionCreateNewOrUpdateProject(false, (error) => {
              if (error !== null) {
-                 return response.render('admin/project/project.html.twig', {
+                 return response.render('admin/project/project.create.html.twig', {
                      action: 'admin.projects',
-                     error: error,
-                     subaction: 'create'
+                     error: error
                  });
              }
 
              request.projectManager.add(request.project, function (error) {
                  if (error !== null) {
-                     response.render('admin/project/project.html.twig', {
+                     response.render('admin/project/project.create.html.twig', {
                          action: 'admin.projects',
-                         error: 'Got error during create. Contact your system administrator.',
-                         subaction: 'create'
+                         error: 'Got error during create. Contact your system administrator.'
                      });
                  } else {
                      request.logger.info('new project [' + request.project.getName() + '] was created');
@@ -125,14 +122,46 @@ module.exports.controller = function (application) {
     });
 
     /**
-     * Update project info
+     * Handle action "update project files"
+     *
+     * @param {Object} request - expressjs request
+     * @param {Object} response - expressjs response
      */
-    application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
+    function handleActionFiles(request, response) {
+        request.projectUtils.validateProjectActionUpdateCerts((error) => {
+            if (error === null) {
+                request.projectManager.update(request.project, (error) => {
+                    if (error === null) {
+                        return routeToAllProjects(
+                            request, response, 'Project [' + request.project.getName() + '] files were updated.', null
+                        );
+                    } else {
+                        return response.render('admin/project/project.html.twig', {
+                            action: 'admin.projects',
+                            error: 'Got error. Contact your system administrator'
+                        });
+                    }
+                });
+            } else {
+                return response.render('admin/project/project.html.twig', {
+                    action: 'admin.projects',
+                    error: error
+                });
+            }
+        });
+    }
+
+    /**
+     * Handle action "update project info"
+     *
+     * @param {Object} request - expressjs request
+     * @param {Object} response - expressjs response
+     */
+    function handleActionInfo(request, response) {
         request.projectUtils.validateProjectActionCreateNewOrUpdateProject(true, (error) => {
             if (error !== null) {
                 return response.render('admin/project/project.html.twig', {
                     action: 'admin.projects',
-                    subaction: 'edit',
                     error: error
                 });
             }
@@ -147,13 +176,48 @@ module.exports.controller = function (application) {
                 } else {
                     return response.render('admin/project/project.html.twig', {
                         action: 'admin.projects',
-                        subaction: 'edit',
                         error: 'Got error during update. Contact your system administrator.'
                     });
                 }
             });
 
         });
+    }
+
+    /**
+     * Update project info
+     */
+    application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
+        const   ACTION_INFO     = 'info'; // action == update project info (name, etc)
+        const   ACTION_FILES    = 'files'; // action == update project files
+
+        var action = request.body.action;
+
+        if (typeof action === 'undefined') {
+            request.logger.error('No action in the request');
+            return response.render('admin/project/project.html.twig', {
+                action: 'admin.projects',
+                error: 'Wrong request'
+            });
+        }
+
+        switch (action) {
+            case ACTION_FILES:
+                return handleActionFiles(request, response);
+                break;
+
+            case ACTION_INFO:
+                return handleActionInfo(request, response);
+                break;
+
+            default:
+                request.logger.error('Wrong action [' + action + ']');
+
+                return response.render('admin/project/project.html.twig', {
+                    action: 'admin.projects',
+                    error: 'Wrong request'
+                });
+        }
     });
 
     /**
