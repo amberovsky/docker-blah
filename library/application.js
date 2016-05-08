@@ -225,21 +225,38 @@ class Application {
                 request.logger
             );
 
+            /** @type {projectUtils} - projectUtils */
+            request.projectUtils = new (require('./projectUtils.js'))(request);
+
             /** @type {NodeManager} - node manager */
             request.nodeManager = new (require('../models/nodeManager.js'))(self, request.logger);
+
+            /** @type {nodeUtils} - nodeUtils */
+            request.nodeUtils = new (require('./nodeUtils.js'))(request);
 
             /** @type {RegistryManager} - registry manager */
             request.registryManager = new (require('../models/registryManager.js'))(self, request.logger);
 
             if (typeof request.user !== 'undefined') {
                 // for auth'ed user we will add list of available projects
-                request.projectManager.getAll((error, projects) => {
+                request.projectManager.getAllExceptLocal((error, projects) => {
                     environment.addGlobal('allProjects', projects);
-                    
+
+                    // this controls what projects user have access to (except admin/super)
                     request.projectManager.getAllForUser(request.user, (error, projectsWithAccess) => {
                         request.projectsWithAccess = projectsWithAccess;
 
-                        return next();
+                        // if user has local docker - add it to the request
+                        if (request.user.getLocalId() !== -1) {
+                            request.projectManager.getById(request.user.getLocalId(), (error, local) => {
+                                request.local = local;
+                                request.projectsWithAccess[local.getId()] = local;
+
+                                return next();
+                            });
+                        } else {
+                            return next();
+                        }
                     });
                 });
             } else {

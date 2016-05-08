@@ -29,7 +29,7 @@ module.exports.controller = function (application) {
 
                 if (request.userManager.isUserUser(request.user)) {
                     if (!request.projectsWithAccess.hasOwnProperty(project.getId())) {
-                        response.logger.error('user [' + request.user.getId() + '] tried to access project [' +
+                        request.logger.error('user [' + request.user.getId() + '] tried to access project [' +
                             project.getId() + '] where he doesn\'t have access.');
 
                         return response.redirect('/');

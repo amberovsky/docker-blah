@@ -22,7 +22,7 @@ module.exports.controller = function (application) {
      * @param {(string|null)} error - error message, if present
      */
     function routeToAllNodes(request, response, success, error) {
-        return request.nodeManager.filterByProjectId(request.project.getId(), (allNodesError, nodes) => {
+        return request.nodeManager.getByProjectId(request.project.getId(), (allNodesError, nodes) => {
             response.render('project/nodes/nodes.html.twig', {
                 action: 'project.nodes',
                 nodes: nodes,
@@ -60,63 +60,6 @@ module.exports.controller = function (application) {
     });
 
     /**
-     * Validate request for create new project or update existing
-     *
-     * @param {Object} request - express request
-     * @param {boolean} isUpdate - is it update operation or create new
-     * @param {DatabaseOperationCallback} callback - database operation callback
-     */
-    function validateNodeActionCreateNewOrUpdate(request, isUpdate, callback) {
-        var
-            name = request.body.name,
-            ip = request.body.ip,
-            port = request.body.port;
-        
-        request.node
-            .setName(name)
-            .setIp(ip)
-            .setPort(port);
-
-        if ((typeof name === 'undefined') || (typeof ip === 'undefined') || (typeof port === 'undefined')) {
-            return callback('Not enough data in the request.');
-        }
-
-        name = name.trim();
-        ip = ip.trim();
-        port = port.trim();
-
-        if (name.length < request.nodeManager.MIN_TEXT_FIELD_LENGTH) {
-            return callback('Name should be at least ' + request.nodeManager.MIN_TEXT_FIELD_LENGTH + ' characters.');
-        }
-
-        var IP = require('ip');
-
-        if (!IP.isV4Format(ip) || (IP.fromLong(IP.toLong(ip)) !== ip)) {
-            return callback('IP has to be in v4 format');
-        }
-
-        port = parseInt(port);
-        if (Number.isNaN(port)) {
-            return callback('Port has to be positive integer');
-        }
-
-        var nodeId = (isUpdate === true) ? request.node.getId() : -1;
-
-        request.nodeManager.doesExistWithSameNameOrIpInProject(name, ip, nodeId, request.project, (error, check) => {
-            if (check) {
-                return callback('Node with name [' + name + '] or ip [' + ip + '] already exists in this project.');
-            }
-
-            request.node
-                .setName(name)
-                .setIp(ip)
-                .setPort(port);
-
-            return callback(null);
-        });
-    }
-
-    /**
      * Create a new node - handler
      */
     application.getExpress().post('/project/:projectId/nodes/create/', function (request, response) {
@@ -128,7 +71,7 @@ module.exports.controller = function (application) {
 
         request.node = request.nodeManager.create(request.project.getId());
 
-        validateNodeActionCreateNewOrUpdate(request, false, (error) => {
+        request.nodeUtils.validateNodeActionCreateNewOrUpdate(false, (error) => {
             if (error === null) {
                 request.nodeManager.add(request.node, (error) => {
                     if (error === null) {
@@ -207,7 +150,7 @@ module.exports.controller = function (application) {
             return routeToAllNodes(request, response, null, null);
         }
 
-        validateNodeActionCreateNewOrUpdate(request, true, (error) => {
+        request.nodeUtils.validateNodeActionCreateNewOrUpdate(true, (error) => {
             if (error !== null) {
                 return response.render('project/nodes/node.html.twig', {
                     action: 'project.nodes',

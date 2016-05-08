@@ -6,4 +6,5 @@ set -e
 /build-development/ssh.sh
 /build-development/redis.sh
 /build-development/services.sh
+/build-development/sqlite3.sh
 /build-development/cleanup.sh

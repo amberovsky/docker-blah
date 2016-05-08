@@ -55,25 +55,11 @@ class ProjectManager {
      * Creates a new project from given values from database
      *
      * @param {sqlite3.row} row - row from database
-     * @param {(string|undefined)} prefix - prefix added to columns name, in joins, for example
      *
      * @returns {Project} new project
      */
-    createForRow(row, prefix) {
-        if (typeof prefix === 'undefined') {
-            prefix = '';
-        } else {
-            prefix += '.';
-        }
-        
-        return new Project(
-            row[prefix + 'id'],
-            row[prefix + 'name'],
-            row[prefix + 'user_id'],
-            row[prefix + 'ca'],
-            row[prefix + 'cert'],
-            row[prefix + 'key']
-        );
+    createForRow(row) {
+        return new Project(row.id, row.name, row.user_id, row.ca, row.cert, row.key);
     }
 
     /**
@@ -122,7 +108,7 @@ class ProjectManager {
      */
     getById(id, callback) {
         var self = this;
-        
+
         this.sqlite3.get(
             'SELECT id, name, user_id, ca, cert, key FROM project WHERE (id = ?)',
             [
@@ -142,30 +128,33 @@ class ProjectManager {
     };
 
     /**
-     * Fetch all projects
+     * Fetch all projects except local dockers
      *
      * @param {ProjectOperationCallback} callback - project operation callback
      */
-    getAll(callback) {
+    getAllExceptLocal(callback) {
         var
             projects = {},
             self = this;
 
-        this.sqlite3.each("SELECT id, name, user_id, ca, cert, key FROM project", function (error, row) {
-            if (error === null) {
-                var project = self.createForRow(row);
-                projects[project.getId()] = project;
-            } else {
-                self.logger.error(error);
-                callback(error, {});
+        this.sqlite3.each(
+            'SELECT id, name, user_id, ca, cert, key FROM project WHERE (user_id = -1)',
+            function (error, row) {
+                if (error === null) {
+                    var project = self.createForRow(row);
+                    projects[project.getId()] = project;
+                } else {
+                    self.logger.error(error);
+                    callback(error, {});
+                }
+            }, function (error) {
+                if (error !== null) {
+                    self.logger.error(error);
+                }
+
+                callback(error, projects);
             }
-        }, function (error) {
-            if (error !== null) {
-                self.logger.error(error);
-            }
-            
-            callback(error, projects);
-        });
+        );
     };
 
     /**
@@ -218,7 +207,7 @@ class ProjectManager {
                     callback(null);
                 } else {
                     self.logger.error(error);
-                    callback(true);
+                    callback(error);
                 }
             }
         );
@@ -245,14 +234,14 @@ class ProjectManager {
             ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        self.logger.info('No rows were updated');
-                        callback(true)
+                        self.logger.error('No rows were updated');
+                        callback('No rows were updated')
                     } else {
                         callback(null);
                     }
                 } else {
                     self.logger.error(error);
-                    callback(true);
+                    callback(error);
                 }
             }
         );
@@ -275,7 +264,8 @@ class ProjectManager {
             function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        callback('no rows were updated');
+                        self.logger.error('No rows were deleted');
+                        callback('No rows were deleted');
                     } else {
                         callback(null);
                     }
@@ -338,19 +328,19 @@ class ProjectManager {
 
         this.sqlite3.each(
             'SELECT' +
-            '   role, project.id, project.name, project.user_id, project_ca, project.cert, project.key ' +
+            '   role, project.id, project.name, project.user_id, project.ca, project.cert, project.key ' +
             'FROM ' +
             '   project_user LEFT JOIN project ' +
             'ON ' +
             '   (project_user.project_id = project.id) ' +
             'WHERE ' +
-            '   (user_id = ?)',
+            '   (project_user.user_id = ?)',
             [
                 user.getId()
             ],
             function (error, row) {
                 if (error === null) {
-                    var project = self.createForRow(row, 'project');
+                    var project = self.createForRow(row);
 
                     projects[project.getId()] = {
                         project: project,
@@ -364,7 +354,7 @@ class ProjectManager {
                 if (error !== null) {
                     self.logger.error(error);
                 }
-                
+
                 callback(error, projects);
             }
         );

@@ -187,7 +187,7 @@ module.exports.controller = function (application) {
                 return callback('New role is invalid.', null);
             }
 
-            request.projectManager.getAll((error, projects) => {
+            request.projectManager.getAllExceptLocal((error, projects) => {
                 for (var projectId in projects) {
                     var roleInProject = request.body['role_' + projectId];
 

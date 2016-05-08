@@ -6,7 +6,7 @@ CREATE TABLE project(
   cert    BLOB          NOT NULL,
   key     BLOB          NOT NULL,
 
-  UNIQUE (name)
+  UNIQUE (user_id, name)
 );
 
 INSERT INTO project (id, name, user_id, ca, cert, key) VALUES (1, 'Prj1', -1, '', '', '');

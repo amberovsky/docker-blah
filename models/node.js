@@ -62,6 +62,17 @@ class Node {
     }
 
     /**
+     * @param {number} projectId - project id
+     *
+     * @returns Node
+     */
+    setProjectId(projectId) {
+        this.projectId = projectId;
+
+        return this;
+    }
+
+    /**
      * @returns {string} name
      */
     getName() {

@@ -43,7 +43,7 @@ class NodeManager {
      * @returns {Node} new blank node in the given project
      */
     create(projectId) {
-        return new Node(-1, projectId, '', '', -1);
+        return new Node(-1, projectId, '', '', '');
     };
 
     /**
@@ -96,17 +96,17 @@ class NodeManager {
      * @param {string} name - node's name
      * @param {string} ip - node's ip
      * @param {number} currentNodeId - which node to skip
-     * @param {Project} project - what project given node belongs to
+     * @param {number} projectId - what project given node belongs to
      * @param {NodeOperationCallback} callback - node operation callback
      */
-    doesExistWithSameNameOrIpInProject(name, ip, currentNodeId, project, callback) {
+    doesExistWithSameNameOrIpInProject(name, ip, currentNodeId, projectId, callback) {
         var self = this;
 
         this.sqlite3.get(
             'SELECT id FROM node WHERE (id <> ?) AND (project_id = ? ) AND ((name = ?) OR (ip = ?)) ',
             [
                 currentNodeId,
-                project.getId(),
+                projectId,
                 name,
                 ip
             ],
@@ -129,7 +129,7 @@ class NodeManager {
      * @param {number} projectId - project id
      * @param {NodeOperationCallback} callback - node operation callback
      */
-    filterByProjectId(projectId, callback) {
+    getByProjectId(projectId, callback) {
         var
             nodes = {},
             self = this;
@@ -202,8 +202,8 @@ class NodeManager {
             ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        self.logger.info('No rows were updated');
-                        callback(error)
+                        self.logger.error('No rows were updated');
+                        callback('No rows were updated')
                     } else {
                         callback(null);
                     }
@@ -233,6 +233,26 @@ class NodeManager {
             }
         });
     };
+
+    /**
+     * Delete all nodes in the given project
+     *
+     * @param {number} projectId - project id
+     * @param {DatabaseOperationCallback} callback - database operations callback
+     */
+    deleteByProjectId(projectId, callback) {
+        var self = this;
+
+        this.sqlite3.run('DELETE FROM node WHERE project_id = ?', [projectId], function (error) {
+            if (error === null) {
+                callback(null);
+            } else {
+                self.logger.error(error);
+                callback(error);
+            }
+        });
+    };
+
 
 }
 

@@ -93,15 +93,25 @@ class Project {
     setUserId(userId) {
         this.userId = userId;
 
-        return this.userId;
+        return this;
     }
-
-
+    
     /**
      * @returns {string} ca.pem file to connect to docker engine
      */
     getCA() {
         return this.CA;
+    }
+
+    /**
+     * @param {string} CA - ca.pem file to connect to docker engine
+     * 
+     * @returns {Project}
+     */
+    setCA(CA) {
+        this.CA = CA;
+        
+        return this;
     }
 
     /**
@@ -112,12 +122,34 @@ class Project {
     }
 
     /**
+     * @param {string} CERT - cert.pem file to connect to docker engine 
+     * 
+     * @returns {Project}
+     */
+    setCERT(CERT) {
+        this.CERT = CERT;
+        
+        return this;
+    }
+    
+    /**
      * @returns {string} key.pem file to connect to docker engine
      */
     getKEY() {
         return this.KEY;
     }
-    
+
+    /**
+     * @param {string} KEY - key.pem file to connect to docker engine 
+     * 
+     * @returns {Project}
+     */
+    setKEY(KEY) {
+        this.KEY = KEY;
+        
+        return this;
+    }
+
 }
 
 module.exports = Project;

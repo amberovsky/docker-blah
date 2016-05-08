@@ -51,7 +51,7 @@ class UserManager {
      * @returns {User} new blank user
      */
     create() {
-        return new User(-1, '', '', '', this.ROLE_USER, false);
+        return new User(-1, '', '', '', this.ROLE_USER, -1);
     };
 
     /**
@@ -64,12 +64,13 @@ class UserManager {
         var self = this;
 
         this.sqlite3.run(
-            'INSERT INTO user (name, login, password_hash, role) VALUES (?, ?, ?, ?)',
+            'INSERT INTO user (name, login, password_hash, role, local_id) VALUES (?, ?, ?, ?, ?)',
             [
                 user.getName(),
                 user.getLogin(),
                 user.getPasswordHash(),
-                user.getRole()
+                user.getRole(),
+                user.getLocalId()
             ], function (error) {
                 if (error === null) {
                     user.setId(this.lastID);
@@ -252,19 +253,20 @@ class UserManager {
         var self = this;
 
         this.sqlite3.run(
-            'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ? WHERE id = ?',
+            'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ?, local_id = ? WHERE id = ?',
             [
                 user.getName(),
                 user.getLogin(),
                 user.getRole(),
                 user.getPasswordHash(),
+                user.getLocalId(),
                 user.getId()
             ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        callback(true)
+                        self.logger.error('No rows were updated');
+                        callback('No rows were updated');
                     } else {
-                        self.logger.error(error);
                         callback(null);
                     }
                 } else {
@@ -292,8 +294,8 @@ class UserManager {
             function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
-                        self.logger.info('No rows were deleted');
-                        callback('no rows were deleted');
+                        self.logger.error('No rows were deleted');
+                        callback('No rows were deleted');
                     } else {
                         self.logger.error(error);
                         callback(null);

@@ -34,7 +34,7 @@ module.exports.controller = function (application) {
      * @param {(string|null)} error - error message, if present
      */
     function routeToAllProjects(request, response, success, error) {
-        request.projectManager.getAll((getAllError, projects) => {
+        request.projectManager.getAllExceptLocal((getAllError, projects) => {
             response.render('admin/project/projects.html.twig', {
                 action: 'admin.projects',
                 projects: projects,
@@ -51,7 +51,7 @@ module.exports.controller = function (application) {
     application.getExpress().post('/admin/projects/create/', function (request, response) {
         request.project = request.projectManager.create();
 
-         validateProjectActionCreateNewOrUpdateProject(request, false, (error) => {
+         request.projectUtils.validateProjectActionCreateNewOrUpdateProject(false, (error) => {
              if (error !== null) {
                  return response.render('admin/project/project.html.twig', {
                      action: 'admin.projects',
@@ -96,6 +96,12 @@ module.exports.controller = function (application) {
 
                 return routeToAllProjects(request, response, null, 'Project with given id doesn\'t exist');
             }
+
+            if (project.getUserId() != -1) {
+                request.logger.info('local docker as project [' + projectId + '] was requested in admin');
+
+                return routeToAllProjects(request, response, null, 'Project with given id doesn\'t exist');
+            }
             
             request.project = project;
             return next();
@@ -119,45 +125,10 @@ module.exports.controller = function (application) {
     });
 
     /**
-     * Validate request for create new project or update existing
-     * 
-     * @param {Object} request - express request
-     * @param {boolean} isUpdate - is it update operation or create new
-     * @param {DatabaseOperationCallback} callback - database operation callback
-     */
-    function validateProjectActionCreateNewOrUpdateProject(request, isUpdate, callback) {
-        var name = request.body.name;
-
-        request.project.setName(name);
-
-        if (typeof name === 'undefined') {
-            return callback('Not enough data in the request.');
-        }
-
-        name = name.trim();
-
-        if (name.length < request.projectManager.MIN_TEXT_FIELD_LENGTH) {
-            return callback('Name should be at least ' + request.projectManager.MIN_TEXT_FIELD_LENGTH + ' characters.');
-        }
-
-        var projectId = (isUpdate === true) ? request.project.getId() : -1;
-
-        request.projectManager.doesExistWithSameName(name, projectId, (error, check) => {
-            if (check) {
-                return callback('Project with name [' + name + '] already exists.');
-            }
-
-            request.project.setName(name);
-
-            return callback(null);
-        });
-    };
-
-    /**
      * Update project info
      */
     application.getExpress().post('/admin/projects/:projectId/', function (request, response) {
-        validateProjectActionCreateNewOrUpdateProject(request, true, (error) => {
+        request.projectUtils.validateProjectActionCreateNewOrUpdateProject(true, (error) => {
             if (error !== null) {
                 return response.render('admin/project/project.html.twig', {
                     action: 'admin.projects',
