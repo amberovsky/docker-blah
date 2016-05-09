@@ -131,13 +131,6 @@ class Node {
 
         return this;
     };
-
-    /**
-     * @returns {number} response time in seconds TODO
-     */
-    getResponseTime() {
-        return 'xxx';
-    }
     
 }
 

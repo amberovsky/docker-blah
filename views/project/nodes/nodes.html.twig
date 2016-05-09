@@ -30,7 +30,6 @@
                 <th>#</th>
                 <th>Name</th>
                 <th>IP</th>
-                <th>Response time/status</th>
                 {% if (request.isUserAdminForThisProject) %}
                 <th>Actions</th>
                 {% endif %}
@@ -41,11 +40,11 @@
                 <td>{{ node.getId() }}</td>
                 <td>{{ node.getName() }}</td>
                 <td>{{ node.getIp() }}:{{ node.getPort() }}</td>
-                <td>{{ node.getResponseTime() }}</td>
                 {% if (request.isUserAdminForThisProject) %}
                 <td>
-                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/" class="btn btn-primary" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
-                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/delete/" class="btn btn-danger" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                    <a href="/node/{{ node.getId() }}/containers/" class="btn btn-success btn-sm" role="button"><span class="fa fa-wrench"></span>&nbsp;&nbsp;Inspect</a>&nbsp;&nbsp;
+                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
                 </td>
                 {% endif %}
             </tr>

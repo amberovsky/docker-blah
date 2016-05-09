@@ -14,11 +14,16 @@
 module.exports.controller = function (application) {
     
     /**
-     * Project overview
+     * Overview
      */
-    application.getExpress().get('/project/:projectId/', function (request, response) {
-        response.render('project/index.html.twig', {
-            action: 'project.index'
+    application.getExpress().get('/project/:projectId/overview', function (request, response) {
+        request.userManager.searchByCriteria(-1, request.project.getId(), -1, (error, data) => {
+            console.log(data);
+            response.render('project/overview.html.twig', {
+                action: 'project.index',
+                users: data.users,
+                roles: data.roles
+            });
         });
     });
 

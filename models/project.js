@@ -17,8 +17,9 @@ class Project {
      * @param {string} CA - ca.pem file to connect to docker engine
      * @param {string} CERT - cert.pem file to connect to docker engine
      * @param {string} KEY - key.pem file to connect to docker engine
+     * @param {number} created - created timestamp
      */
-    constructor (id, name, userId, CA, CERT, KEY) {
+    constructor (id, name, userId, CA, CERT, KEY, created) {
         /** @type {number} id */
         this.id = id;
         
@@ -36,6 +37,9 @@ class Project {
         
         /** @type {string} key.pem file to connect to docker engine */
         this.KEY = KEY;
+
+        /** @type {number} created timestamp */
+        this.created = created;
     };
 
     /**
@@ -150,6 +154,24 @@ class Project {
         return this;
     }
 
+    /**
+     * @returns {number} created timestamp
+     */
+    getCreated() {
+        return this.created;
+    }
+
+    /**
+     * @param {number} created - created timestamp
+     *
+     * @returns {Project}
+     */
+    setCreated(created) {
+        this.created = created;
+
+        return this;
+    }
+    
 }
 
 module.exports = Project;

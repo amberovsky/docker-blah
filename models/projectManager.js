@@ -48,7 +48,7 @@ class ProjectManager {
      * @returns {Project} new blank project
      */
     create() {
-        return new Project(-1, '', -1, '', '', '');
+        return new Project(-1, '', -1, '', '', '', 0);
     };
 
     /**
@@ -58,8 +58,8 @@ class ProjectManager {
      *
      * @returns {Project} new project
      */
-    createForRow(row) {
-        return new Project(row.id, row.name, row.user_id, row.ca, row.cert, row.key);
+    createFromRow(row) {
+        return new Project(row.id, row.name, row.user_id, row.ca, row.cert, row.key, row.created);
     }
 
     /**
@@ -110,7 +110,7 @@ class ProjectManager {
         var self = this;
 
         this.sqlite3.get(
-            'SELECT id, name, user_id, ca, cert, key FROM project WHERE (id = ?)',
+            'SELECT id, name, user_id, ca, cert, key, created FROM project WHERE (id = ?)',
             [
                 id
             ],
@@ -118,7 +118,7 @@ class ProjectManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, self.createForRow(row));
+                    callback(null, self.createFromRow(row));
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -138,10 +138,10 @@ class ProjectManager {
             self = this;
 
         this.sqlite3.each(
-            'SELECT id, name, user_id, ca, cert, key FROM project WHERE (user_id = -1)',
+            'SELECT id, name, user_id, ca, cert, key, created FROM project WHERE (user_id = -1)',
             function (error, row) {
                 if (error === null) {
-                    var project = self.createForRow(row);
+                    var project = self.createFromRow(row);
                     projects[project.getId()] = project;
                 } else {
                     self.logger.error(error);
@@ -194,13 +194,14 @@ class ProjectManager {
         var self = this;
         
         this.sqlite3.run(
-            'INSERT INTO project (name, user_id, ca, cert, key) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO project (name, user_id, ca, cert, key, created) VALUES (?, ?, ?, ?, ?, ?)',
             [
                 project.getName(),
                 project.getUserId(),
                 project.getCA(),
                 project.getCERT(),
-                project.getKEY()
+                project.getKEY(),
+                project.getCreated()
             ], function (error) {
                 if (error === null) {
                     project.setId(this.lastID);
@@ -223,14 +224,15 @@ class ProjectManager {
         var self = this;
         
         this.sqlite3.run(
-            'UPDATE project SET name = ?, user_id = ?, ca = ?, cert = ?, key = ? WHERE id = ?',
+            'UPDATE project SET name = ?, user_id = ?, ca = ?, cert = ?, key = ?, created = ? WHERE id = ?',
             [
                 project.getName(),
                 project.getUserId(),
                 project.getCA(),
                 project.getCERT(),
                 project.getKEY(),
-                project.getId()
+                project.getId(),
+                project.getCreated()
             ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
@@ -328,7 +330,7 @@ class ProjectManager {
 
         this.sqlite3.each(
             'SELECT' +
-            '   role, project.id, project.name, project.user_id, project.ca, project.cert, project.key ' +
+            '   role, project.id, project.name, project.user_id, project.ca, project.cert, project.key, project.created ' +
             'FROM ' +
             '   project_user LEFT JOIN project ' +
             'ON ' +
@@ -340,7 +342,7 @@ class ProjectManager {
             ],
             function (error, row) {
                 if (error === null) {
-                    var project = self.createForRow(row);
+                    var project = self.createFromRow(row);
 
                     projects[project.getId()] = {
                         project: project,

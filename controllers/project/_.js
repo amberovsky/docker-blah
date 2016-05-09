@@ -23,30 +23,33 @@ module.exports.controller = function (application) {
             return response.redirect('/');
         }
 
-        request.projectManager.getById(projectId, (error, project) => {
-            if (project !== null) {
-                request.project = project;
+        if (request.userManager.isUserUser(request.user)) {
+            if (!request.projectsWithAccess.hasOwnProperty(projectId)) {
+                request.logger.error('user [' + request.user.getId() + '] tried to access project [' +
+                    project.getId() + '] where he doesn\'t have access.');
 
-                if (request.userManager.isUserUser(request.user)) {
-                    if (!request.projectsWithAccess.hasOwnProperty(project.getId())) {
-                        request.logger.error('user [' + request.user.getId() + '] tried to access project [' +
-                            project.getId() + '] where he doesn\'t have access.');
-
-                        return response.redirect('/');
-                    }
-
-                    request.isUserAdminForThisProject =
-                        (request.projectsWithAccess[project.getId()].role == request.projectManager.ROLE_ADMIN);
-
-                    return next();
-                } else {
-                    request.isUserAdminForThisProject = true;
-                    return next();
-                }
-            } else {
                 return response.redirect('/');
             }
-        });
+
+            request.project = request.projectsWithAccess[projectId];
+            request.isUserAdminForThisProject =
+                (request.projectsWithAccess[project.getId()].role == request.projectManager.ROLE_ADMIN);
+
+            return next();
+        } else {
+            request.projectManager.getById(projectId, (error, project) => {
+                if (error === null) {
+                    request.project = project;
+
+                    request.isUserAdminForThisProject = true;
+                    return next();
+
+                } else {
+                    request.logger.error('Request to non-existed project [' + projectId + ']');
+                    return response.redirect('/');
+                }
+            });
+        }
     });
 
 };

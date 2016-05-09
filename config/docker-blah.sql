@@ -5,6 +5,7 @@ CREATE TABLE project(
   ca      BLOB          NOT NULL,
   cert    BLOB          NOT NULL,
   key     BLOB          NOT NULL,
+  created INTEGER       NOT NULL    DEFAULT (datetime('now')),
 
   UNIQUE (user_id, name)
 );

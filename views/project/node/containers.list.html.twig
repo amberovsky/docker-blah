@@ -1,0 +1,29 @@
+{% if (error) %}
+    <div class="form-group form-group-sm">
+        <div class="col-sm-12">
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                {{ error }}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <table class="table table-striped">
+        <tr>
+            <th>ID</th>
+            <th>Image</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+        {% for container in containers %}
+            <tr>
+                <td>{{ container.Id|truncate(12, True, '') }}</td>
+                <td>{{ container.Image }}</td>
+                <td>{{ container.Status }}</td>
+                <td>{{ container.Created|date }}</td>
+                <td><a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-success btn-sm" role="button"><span class="fa fa-wrench"></span>&nbsp;&nbsp;Inspect</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}

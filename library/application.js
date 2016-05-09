@@ -76,12 +76,8 @@ class Application {
                 var date = new Date();
 
                 // add leading zeroes
-                var leadZero = function (value, count) {
-                    if (typeof count === 'undefined') {
-                        count = 2;
-                    }
-
-                    while (value.toString().length < count) {
+                var leadZero = function (value) {
+                    while (value.toString().length < 2) {
                         value = '0' + value;
                     }
 
@@ -124,8 +120,32 @@ class Application {
             noCache: true // TODO
         });
 
+        // filter: check regexp
         environment.addFilter('match', function (input, pattern) {
             return (input.match(new RegExp(pattern)) !== null);
+        });
+
+        // filter: slice string
+        environment.addFilter('slice', function (input, start, end) {
+            return input.slice(start, end);
+        });
+
+        // filter: format timestamp to date
+        environment.addFilter('date', function (input, start, end) {
+            var date = new Date(parseInt(input) * 1000);
+
+            // add leading zeroes
+            var leadZero = function (value) {
+                while (value.toString().length < 2) {
+                    value = '0' + value;
+                }
+
+                return value;
+            };
+
+            return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' +
+                leadZero(date.getUTCDate()) + ' ' + leadZero(date.getUTCHours()) + ':' +
+                leadZero(date.getUTCMinutes()) + ':' + leadZero(date.getUTCSeconds());
         });
 
 

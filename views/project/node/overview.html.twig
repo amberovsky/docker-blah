@@ -1,0 +1,13 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-sitemap"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back to nodes in <strong>{{ request.project.getName() }}</strong></a>&nbsp;&nbsp;Node #{{ request.node.getId() }} {{ request.node.getName() }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+{% endblock %}

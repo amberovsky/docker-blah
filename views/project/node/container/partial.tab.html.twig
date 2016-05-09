@@ -1,0 +1,5 @@
+<ul class="nav nav-tabs">
+    <li role="presentation" {% if (subaction == 'overview') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/"><span class="fa fa-paragraph"></span>&nbsp;&nbsp;OVERVIEW</a></li>
+    <li role="presentation" {% if (subaction == 'containers') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/logs/"><span class="fa fa-th"></span>&nbsp;&nbsp;LOGS</a></li>
+    <li role="presentation" {% if (subaction == 'run') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/run/"><span class="fa fa-terminal"></span>&nbsp;&nbsp;RUN COMMAND</a></li>
+</ul>

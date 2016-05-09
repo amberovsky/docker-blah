@@ -39,8 +39,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/project/:projectId/nodes/', function (request, response) {
         return routeToAllNodes(request, response, null, null);
     });
-
-
+    
     /**
      * Create a new node - page
      */

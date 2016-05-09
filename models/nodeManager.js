@@ -53,15 +53,33 @@ class NodeManager {
      *
      * @returns {Node} new node
      */
-    createForRow(row) {
-        return new Node(
-            row.id,
-            row.project_id,
-            row.name,
-            row.ip,
-            row.port
-        );
+    createFromRow(row) {
+        return new Node(row.id, row.project_id, row.name, row.ip, row.port);
     }
+
+    /**
+     * Get node by id
+     *
+     * @param {number} id - node's id
+     * @param {NodeOperationCallback} callback - node operation callback
+     */
+    getById(id, callback) {
+        var self = this;
+
+        this.sqlite3.get(
+            'SELECT id, name, ip, project_id, port FROM node WHERE (id = ?)', [id], function (error, row) {
+                if (typeof row === 'undefined') {
+                    callback(null, null);
+                } else if (error === null) {
+                    callback(null, self.createFromRow(row));
+                }  else {
+                    self.logger.error(error);
+                    callback(error, null);
+                }
+            }
+        );
+    };
+
 
     /**
      * Get node by id in given project
@@ -83,7 +101,7 @@ class NodeManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(null, self.createForRow(row));
+                    callback(null, self.createFromRow(row));
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -139,7 +157,7 @@ class NodeManager {
             [projectId],
             function (error, row) {
                 if (error === null) {
-                    var node = self.createForRow(row);
+                    var node = self.createFromRow(row);
                     nodes[node.getId()] = node;
                 } else {
                     this.logger.error(error);

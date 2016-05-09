@@ -1,0 +1,86 @@
+{% extends '../../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-th"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }}</strong></a>&nbsp;&nbsp;Container #{{ container.Id|truncate(12, True, '') }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+
+    {% if (error) %}
+        <div class="form-group form-group-sm">
+            <div class="col-sm-12">
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    {{ error }}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <h3>Volumes</h3>
+        <table class="table table-bordered table-condensed">
+            <tr>
+                <th>Source</th>
+                <th>Destination</th>
+            </tr>
+            {% for volume in container.Mounts %}
+                <tr>
+                    <td>{{ volume.Source }}</td>
+                    <td>{{ volume.Destination }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Ports</h3>
+        <table class="table table-bordered table-condensed">
+            <tr>
+                <th>Container</th>
+                <th>Host IP</th>
+                <th>Host port</th>
+            </tr>
+            {% for id, port in container.HostConfig.PortBindings %}
+                <tr>
+                    <td>{{ id }}</td>
+                    <td>
+                    {% for portInfo in port %}
+                        {{ portInfo.HostIp }}<br />
+                    {% endfor %}
+                    </td>
+                    <td>
+                        {% for portInfo in port %}
+                            {{ portInfo.HostPort }}<br />
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Processes</h3>
+        <table class="table table-bordered table-condensed">
+            <tr>
+                <th>Container</th>
+                <th>Host IP</th>
+                <th>Host port</th>
+            </tr>
+            {% for id, port in container.HostConfig.PortBindings %}
+                <tr>
+                    <td>{{ id }}</td>
+                    <td>
+                        {% for portInfo in port %}
+                            {{ portInfo.HostIp }}<br />
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for portInfo in port %}
+                            {{ portInfo.HostPort }}<br />
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}

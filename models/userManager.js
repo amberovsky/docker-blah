@@ -343,7 +343,8 @@ class UserManager {
 
         var query = 'SELECT' +
             '   user.id AS u_i, user.name AS u_n, user.login AS u_l, user.password_hash AS u_ph, user.role AS u_r, ' +
-            '   user.local_id AS u_li, project.id as p_i, project.name as p_n, project_user.role as pu_r ' +
+            '   user.local_id AS u_li, project.id as p_i, project.name as p_n, project.created as p_c, ' +
+            '   project_user.role as pu_r ' +
             'FROM ' +
             '   user LEFT JOIN project_user ON (project_user.user_id = user.id) ' +
             '   LEFT JOIN project ON (project.id = project_user.project_id) ' +

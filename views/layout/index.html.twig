@@ -31,14 +31,14 @@
                     <ul class="dropdown-menu">
                         {% for _, project in allProjects %}
                             {% if (request.projectsWithAccess[project.getId()] or (not request.userManager.isUserUser(request.user))) %}
-                                <li {% if (request.project and (action|match('^project\.(.*)')) and (request.project.getId() == project.getId())) %}class="active"{% endif %}><a href="/project/{{ project.getId() }}/">{{ project.getName() }}</a></li>
+                                <li {% if (request.project and (action|match('^project\.(.*)')) and (request.project.getId() == project.getId())) %}class="active"{% endif %}><a href="/project/{{ project.getId() }}/nodes/">{{ project.getName() }}</a></li>
                             {% endif %}
                         {% endfor %}
                         <li role="separator" class="divider"></li>
                         {% if (request.user.getLocalId() == -1) %}
                             <li><a href="/profile/local/">Connect local docker</a></li>
                         {% else %}
-                            <li {% if (request.local and request.projct and (request.local.getId() == request.project.getId())) %}class="active"{% endif %}><a href="/project/{{ request.local.getId() }}/">{{ request.local.getName() }}</a></li>
+                            <li {% if (request.local and request.project and (request.local.getId() == request.project.getId())) %}class="active"{% endif %}><a href="/project/{{ request.local.getId() }}/nodes/">{{ request.local.getName() }}</a></li>
                         {% endif %}
                     </ul>
                 </li>
