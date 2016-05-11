@@ -21,6 +21,34 @@
             </div>
         </div>
     {% else %}
+        <h3>Base info</h3>
+        <table class="table table-bordered table-condensed">
+            <tr>
+                <th>Option</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>Command</td>
+                <td>{{ container.Config.Cmd }}</td>
+            </tr>
+            <tr>
+                <td>Image</td>
+                <td>{{ container.Config.Image }}</td>
+            </tr>
+            <tr>
+                <td>Hostname</td>
+                <td>{{ container.Config.Hostname }}</td>
+            </tr>
+            <tr>
+                <td>IP</td>
+                <td>{{ container.NetworkSettings.IPAddress }}</td>
+            </tr>
+            <tr>
+                <td>Started at</td>
+                <td>{{ container.State.StartedAt }}</td>
+            </tr>
+        </table>
+
         <h3>Volumes</h3>
         <table class="table table-bordered table-condensed">
             <tr>
@@ -59,26 +87,24 @@
             {% endfor %}
         </table>
 
-        <h3>Processes</h3>
+        <h3>Processes: {{ topCount }}</h3>
         <table class="table table-bordered table-condensed">
             <tr>
-                <th>Container</th>
-                <th>Host IP</th>
-                <th>Host port</th>
+                <th>PID</th>
+                <th>USER</th>
+                <th>%CPU</th>
+                <th>%MEM</th>
+                <th>TIME</th>
+                <th>COMMAND</th>
             </tr>
-            {% for id, port in container.HostConfig.PortBindings %}
+            {% for process in top %}
                 <tr>
-                    <td>{{ id }}</td>
-                    <td>
-                        {% for portInfo in port %}
-                            {{ portInfo.HostIp }}<br />
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for portInfo in port %}
-                            {{ portInfo.HostPort }}<br />
-                        {% endfor %}
-                    </td>
+                    <td>{{ process[1] }}</td>
+                    <td>{{ process[0] }}</td>
+                    <td>{{ process[2] }}</td>
+                    <td>{{ process[3] }}</td>
+                    <td>{{ process[9] }}</td>
+                    <td>{{ process[10] }}</td>
                 </tr>
             {% endfor %}
         </table>

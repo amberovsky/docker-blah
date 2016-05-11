@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * node.js - all about a node: containers, images, etc
+ * node._.js - main actions about node
  *
  * /node/:nodeId/
  *
@@ -67,21 +67,6 @@ module.exports.controller = function (application) {
     });
 
     /**
-     * @param {Object} request - expressjs request
-     * @returns {Object} Docker
-     */
-    function getDocker(request) {
-        return new Docker({
-            host: request.node.getIp(),
-            protocol: 'https',
-            ca: request.project.getCA(),
-            cert: request.project.getCERT(),
-            key: request.project.getKEY(),
-            port: request.node.getPort()
-        });
-    }
-
-    /**
      * Overview
      */
     application.getExpress().get('/node/:nodeId/overview/', function (request, response) {
@@ -98,77 +83,6 @@ module.exports.controller = function (application) {
         response.render('project/node/containers.html.twig', {
             action: 'project.nodes',
             subaction: 'containers'
-        });
-    });
-
-    /**
-     * Containers - list
-     */
-    application.getExpress().get('/node/:nodeId/containers/list/', function (request, response) {
-        getDocker(request).listContainers((error, containers) => {
-            if (error === null) {
-                response.render('project/node/containers.list.html.twig', {
-                    containers: containers
-                });
-            } else {
-                response.render('project/node/containers.list.html.twig', {
-                    containers: {},
-                    error: error
-                });
-            }
-        });
-    });
-
-    /**
-     * Container - overview
-     */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/overview/', function (request, response) {
-        var container = getDocker(request).getContainer(request.params.containerId);
-
-        container.inspect((error, containerInfo) => {
-            if (error === null) {
-                container.top((error, top) => {
-                    if (error === null) {
-                        response.render('project/node/container/overview.html.twig', {
-                            action: 'project.nodes',
-                            subaction: 'overview',
-                            container: containerInfo
-                        });
-                    } else {
-                        response.render('project/node/container/overview.html.twig', {
-                            action: 'project.nodes',
-                            subaction: 'overview',
-                            container: {},
-                            error: error
-                        });
-                    }
-                });
-            } else {
-                response.render('project/node/container/overview.html.twig', {
-                    action: 'project.nodes',
-                    subaction: 'overview',
-                    container: {},
-                    error: error
-                });
-            }
-        });
-    });
-
-    /**
-     * Images - list
-     */
-    application.getExpress().get('/node/:nodeId/images/list/', function (request, response) {
-        getDocker(request).listImages((error, images) => {
-            if (error === null) {
-                response.render('project/node/images.list.html.twig', {
-                    images: images
-                });
-            } else {
-                response.render('project/node/images.list.html.twig', {
-                    images: {},
-                    error: error
-                });
-            }
         });
     });
 

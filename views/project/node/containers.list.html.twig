@@ -12,6 +12,7 @@
         <tr>
             <th>ID</th>
             <th>Image</th>
+            <th>Name</th>
             <th>Status</th>
             <th>Created</th>
             <th>Actions</th>
@@ -20,9 +21,22 @@
             <tr>
                 <td>{{ container.Id|truncate(12, True, '') }}</td>
                 <td>{{ container.Image }}</td>
+                <td>
+                    {% for name in container.Names %}
+                        {{ name|slice(1) }}<br>
+                    {% endfor %}
+                </td>
                 <td>{{ container.Status }}</td>
                 <td>{{ container.Created|date }}</td>
-                <td><a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-success btn-sm" role="button"><span class="fa fa-wrench"></span>&nbsp;&nbsp;Inspect</a></td>
+                <td>
+                    {% if (container.State == 'running') %}
+                        <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" title="Inspect"><span class="fa fa-wrench"></span></a>
+                        <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-success btn-sm" role="button" title="Stop"><span class="fa fa-stop"></span></a>
+                    {% else %}
+                        <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-success btn-sm" role="button" title="Start"><span class="fa fa-play"></span></a>
+                    {% endif %}
+                    <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-danger btn-sm" role="button" title="Delete"><span class="fa fa-trash-o"></span></a>
+                </td>
             </tr>
         {% endfor %}
     </table>
