@@ -1,10 +1,8 @@
 {% if (error) %}
-    <div class="form-group form-group-sm">
-        <div class="col-sm-12">
-            <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                {{ error }}
-            </div>
+    <div class="col-sm-12">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ error }}
         </div>
     </div>
 {% else %}
@@ -13,8 +11,8 @@
             <th>ID</th>
             <th>Tags</th>
             <th>Created</th>
-            <th>Size</th>
-            <th>Virtual size</th>
+            <th>Size (MiB)</th>
+            <th>Virtual size (MiB)</th>
             <th>Actions</th>
         </tr>
         {% for image in images %}
@@ -26,8 +24,8 @@
                     {% endfor %}
                 </td>
                 <td>{{ image.Created|date }}</td>
-                <td>{{ (image.Size/1024/1024)|round(2) }} MiB</td>
-                <td>{{ (image.VirtualSize/1024/1024)|round(2) }} MiB</td>
+                <td>{{ (image.Size/1024/1024)|round(2) }}</td>
+                <td>{{ (image.VirtualSize/1024/1024)|round(2) }}</td>
                 <td><a href="/node/{{ request.node.getId() }}/images/{{ image.Id|slice(7) }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a></td>
             </tr>
         {% endfor %}

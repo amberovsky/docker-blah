@@ -304,7 +304,6 @@ module.exports.controller = function (application) {
      */
     function fetchUsersByCriteria(request, response, role, projectId, projectRole, successMessage, errorMessage) {
         request.userManager.searchByCriteria(role, projectId, projectRole, (error, result) => {
-
             return response.render('admin/user/users.html.twig', {
                 action: 'admin.users',
                 users: result.users,

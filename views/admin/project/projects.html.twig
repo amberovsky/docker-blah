@@ -7,7 +7,7 @@
 {% block content %}
     <h1 class="page-header"><span class="fa fa-cubes"></span>&nbsp;&nbsp;<a href="/admin/projects/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Projects : {{ projectsCount }}</h1>
     {% if (error or success) %}
-        <div class="form-group row">
+        <div class="row">
             <div class="col-sm-8">
                 {% if (error) %}
                     <div class="alert alert-danger alert-dismissible" role="alert">

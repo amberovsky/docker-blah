@@ -10,12 +10,10 @@
     </h1>
     <form class="form-horizontal" method="post" action="/admin/projects/{{ request.project.getId() }}/">
         {% if (error) %}
-            <div class="form-group form-group-sm">
-                <div class="col-sm-6">
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        {{ error }}
-                    </div>
+            <div class="col-sm-6">
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    {{ error }}
                 </div>
             </div>
         {% endif %}

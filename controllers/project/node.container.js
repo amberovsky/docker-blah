@@ -118,4 +118,119 @@ module.exports.controller = function (application) {
         });
     });
 
+    /**
+     * Stop
+     */
+    application.getExpress().get('/node/:nodeId/containers/:containerId/stop/', function (request, response) {
+        request.container.stop((error) => {
+            if (error === null) {
+                getDocker(request).listContainers({ all: true }, (error, containers) => {
+                    if (error === null) {
+                        var found = false;
+                        for (var index in containers) {
+                            if (containers[index].Id === request.container.id) {
+                                found = true;
+                                application.getExpress().render(
+                                    'project/node/containers.list.partial.html.twig',
+                                    { container: containers[index] },
+                                    (error, html) => {
+                                        if (error === null) {
+                                            request.logger.info('Container [' + request.container.id + '] was stopped');
+                                            
+                                            return response.json({
+                                                success: 1,
+                                                containerInfo: html
+                                            });
+                                        } else {
+                                            request.logger.error(error);
+                                            
+                                            return response.json({
+                                                error: 'Got error rendering template. Contact your system administrator.'
+                                            });
+                                        }
+                                    }
+                                );
+                            }
+                        }
+
+                        if (!found) {
+                            request.logger.error('Unable to found container in the list after applied operation.');
+                            
+                            return response.json({
+                                error: 'Unable to found container in the list after applied operation.'
+                            });
+                        }
+                    } else {
+                        request.logger.error(error);
+                        
+                        return response.json({
+                            error: 'Unable to list containers on the node.'
+                        });
+                    }
+                });
+            } else {
+                request.logger.error(error);
+                
+                response.json({ error: error });
+            }
+        })
+    });
+
+    /**
+     * Start
+     */
+    application.getExpress().get('/node/:nodeId/containers/:containerId/start/', function (request, response) {
+        request.container.start((error) => {
+            if (error === null) {
+                getDocker(request).listContainers({ all: true }, (error, containers) => {
+                    if (error === null) {
+                        var found = false;
+                        for (var index in containers) {
+                            if (containers[index].Id === request.container.id) {
+                                found = true;
+                                application.getExpress().render(
+                                    'project/node/containers.list.partial.html.twig',
+                                    { container: containers[index] },
+                                    (error, html) => {
+                                        if (error === null) {
+                                            request.logger.info('Container [' + request.container.id + '] was started');
+                                            return response.json({
+                                                success: 1,
+                                                containerInfo: html
+                                            });
+                                        } else {
+                                            request.logger.error(error);
+                                            
+                                            return response.json({
+                                                error: 'Got error rendering template. Contact your system administrator.'
+                                            });
+                                        }
+                                    }
+                                );
+                            }
+                        }
+
+                        if (!found) {
+                            request.logger.error('Unable to found container in the list after applied operation.');
+                            
+                            return response.json({
+                                error: 'Unable to found container in the list after applied operation.'
+                            });
+                        }
+                    } else {
+                        request.logger.error(error);
+                        
+                        return response.json({
+                            error: 'Unable to list containers on the node.'
+                        });
+                    }
+                });
+            } else {
+                request.logger.error(error);
+                
+                response.json({ error: error });
+            }
+        })
+    });
+
 };

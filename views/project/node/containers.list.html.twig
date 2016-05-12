@@ -1,13 +1,12 @@
 {% if (error) %}
-    <div class="form-group form-group-sm">
-        <div class="col-sm-12">
-            <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                {{ error }}
-            </div>
+    <div class="col-sm-12">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ error }}
         </div>
     </div>
 {% else %}
+    <div class="for_errors"></div>
     <table class="table table-striped">
         <tr>
             <th>ID</th>
@@ -18,26 +17,62 @@
             <th>Actions</th>
         </tr>
         {% for container in containers %}
-            <tr>
-                <td>{{ container.Id|truncate(12, True, '') }}</td>
-                <td>{{ container.Image }}</td>
-                <td>
-                    {% for name in container.Names %}
-                        {{ name|slice(1) }}<br>
-                    {% endfor %}
-                </td>
-                <td>{{ container.Status }}</td>
-                <td>{{ container.Created|date }}</td>
-                <td>
-                    {% if (container.State == 'running') %}
-                        <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" title="Inspect"><span class="fa fa-wrench"></span></a>
-                        <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-success btn-sm" role="button" title="Stop"><span class="fa fa-stop"></span></a>
-                    {% else %}
-                        <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-success btn-sm" role="button" title="Start"><span class="fa fa-play"></span></a>
-                    {% endif %}
-                    <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-danger btn-sm" role="button" title="Delete"><span class="fa fa-trash-o"></span></a>
-                </td>
-            </tr>
+            {% include './containers.list.partial.html.twig' %}
         {% endfor %}
     </table>
+    <script>
+        /**
+         * Create new div with error
+         *
+         * @param {string} error - error text
+         */
+        function addError(error) {
+            $('.for_errors').append('<div class="col-sm-12"><div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + error + '</div></div>');
+        }
+
+        /**
+         * Send request to the server and process results
+         *
+         * @param {jQuery} self - clicked button
+         * @param {string} command - can be either start or stop
+         */
+        function processRequest(self, command) {
+            var
+                containerInfo = self.closest('td').find('.container-info'),
+                containerLoad = self.closest('td').find('.container-load');
+
+            containerInfo.hide();
+            containerLoad.show();
+
+            $.ajax({
+                url: '/node/{{ request.node.getId() }}/containers/' + self.data('container-info') + '/' + command + '/'
+            }).done(function (data) {
+                if (data.success) {
+                    containerLoad.hide();
+                    self.closest('td').parent().replaceWith(data.containerInfo);
+                } else {
+                    addError(data.error);
+                }
+            }).fail(function (jqXHR) {
+                addError(jqXHR.responseText);
+            });
+        }
+
+        $(document).ready(function () {
+            /**
+             * Handle click on "stop" button
+             */
+            $(document).on('click', '.container-action-stop', function () {
+                processRequest($(this), 'stop');
+            });
+
+            /**
+             * Handle click on "start" button
+             */
+            $(document).on('click', '.container-action-run', function () {
+                processRequest($(this), 'start');
+            });
+
+        });
+    </script>
 {% endif %}

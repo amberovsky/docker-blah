@@ -1,0 +1,29 @@
+<tr>
+    <td>{{ container.Id|truncate(12, True, '') }}</td>
+    <td>{{ container.Image }}</td>
+    <td>
+        {% for name in container.Names %}
+            {{ name|slice(1) }}<br>
+        {% endfor %}
+    </td>
+    <td>{{ container.Status }}</td>
+    <td>{{ container.Created|date }}</td>
+    <td>
+        <div class="container-load" style="display: none;">
+            <i class="fa fa-refresh fa-spin fa-3x fa-fw margin-bottom"></i>
+        </div>
+        {% if (container.State == 'running') %}
+            <div class="container-info">
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench"></span></a>
+                <button type="button" class="btn btn-success container-action-stop" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Stop"><span class="fa fa-stop"></span></button>
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-danger btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o"></span></a>
+            </div>
+        {% else %}
+            <div class="container-info">
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench"></span></a>
+                <button type="button" class="btn btn-success container-action-run" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Run"><span class="fa fa-play"></span></button>
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-danger btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o"></span></a>
+            </div>
+        {% endif %}
+    </td>
+</tr>

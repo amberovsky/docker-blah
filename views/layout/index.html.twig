@@ -62,11 +62,16 @@
             {%  block sidebar %}{% endblock %}
         </div>
 
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2">
             {% block content %}{% endblock %}
         </div>
     </div>
 </div>
 <script src="/public/bootstrap/js/bootstrap.min.js"></script>
+<script>
+    $('body').tooltip({
+        selector: '[data-toggle="tooltip"]'
+    });
+</script>
 </body>
 </html>
