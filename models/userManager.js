@@ -357,15 +357,18 @@ class UserManager {
             function (error, row) {
                 if (error === null) {
                     var user = new User(row.u_i, row.u_n, row.u_l, row.u_ph, row.u_r, row.u_li);
-                    var project = new Project(row.p_i, row.p_n);
 
                     users[user.getId()] = user;
 
-                    projects[user.getId()] = projects[user.getId()] || {};
-                    projects[user.getId()][project.getId()] = project;
+                    if (row.p_i !== null) {
+                        var project = new Project(row.p_i, row.p_n);
 
-                    roles[user.getId()] = roles[user.getId()] || {};
-                    roles[user.getId()][project.getId()] = row.pu_r;
+                        projects[user.getId()] = projects[user.getId()] || {};
+                        projects[user.getId()][project.getId()] = project;
+
+                        roles[user.getId()] = roles[user.getId()] || {};
+                        roles[user.getId()][project.getId()] = row.pu_r;
+                    }
                 } else {
                     self.logger.error(error);
                     callback(error, { users: {}, projects: {}, roles: {} });

@@ -90,8 +90,10 @@
                     {% endif %}
                 </td>
                 <td class="text-center">
-                    <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
-                    <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                    {% if (request.userManager.isUserSuper(request.user) or (not request.userManager.isUserSuper(user))) %}
+                        <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                        <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}

@@ -13,8 +13,6 @@
  */
 module.exports.controller = function (application) {
 
-    var Docker = require('dockerode');
-
     /**
      * Middleware to preload node
      */
@@ -70,10 +68,23 @@ module.exports.controller = function (application) {
      * Overview
      */
     application.getExpress().get('/node/:nodeId/overview/', function (request, response) {
-        response.render('project/node/overview.html.twig', {
-            action: 'project.nodes',
-            subaction: 'overview'
-        });
+        request.dockerUtils.getDocker().info((error, info) => {
+            if (error === null) {
+                response.render('project/node/overview.html.twig', {
+                    action: 'project.nodes',
+                    subaction: 'overview',
+                    info: info
+                });
+            } else {
+                request.logger.error(error);
+
+                response.render('project/node/overview.html.twig', {
+                    action: 'project.nodes',
+                    subaction: 'overview',
+                    error: 'Got error. Contact your system adminstrator'
+                });
+            }
+        })
     });
 
     /**

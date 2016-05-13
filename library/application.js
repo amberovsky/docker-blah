@@ -251,8 +251,11 @@ class Application {
             /** @type {NodeManager} - node manager */
             request.nodeManager = new (require('../models/nodeManager.js'))(self, request.logger);
 
-            /** @type {nodeUtils} - nodeUtils */
+            /** @type {NodeUtils} - nodeUtils */
             request.nodeUtils = new (require('./nodeUtils.js'))(request);
+
+            /** @type {DockerUtils} - dockerUtils */
+            request.dockerUtils = new (require('./dockerUtils.js'))(request);
 
             /** @type {RegistryManager} - registry manager */
             request.registryManager = new (require('../models/registryManager.js'))(self, request.logger);

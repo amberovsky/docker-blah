@@ -12,29 +12,12 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-
-    var Docker = require('dockerode');
-
-    /**
-     * @param {Object} request - expressjs request
-     * @returns {Object} Docker
-     */
-    function getDocker(request) {
-        return new Docker({
-            host: request.node.getIp(),
-            protocol: 'https',
-            ca: request.project.getCA(),
-            cert: request.project.getCERT(),
-            key: request.project.getKEY(),
-            port: request.node.getPort()
-        });
-    }
-
+    
     /**
      * Middleware to set image in the request
      */
     application.getExpress().all('/node/:nodeId/images/:imageId/*', function (request, response, next) {
-        request.image = getDocker(request).getImage(request.params.imageId);
+        request.image = request.dockerUtils.getDocker().getImage(request.params.imageId);
 
         return next();
     });
@@ -43,7 +26,7 @@ module.exports.controller = function (application) {
      * List
      */
     application.getExpress().get('/node/:nodeId/images/list/', function (request, response) {
-        getDocker(request).listImages((error, images) => {
+        request.dockerUtils.getDocker().listImages((error, images) => {
             if (error === null) {
                 response.render('project/node/images.list.html.twig', {
                     images: images
@@ -72,7 +55,7 @@ module.exports.controller = function (application) {
      * Delete - handler
      */
     application.getExpress().post('/node/:nodeId/images/:imageId/delete/', function (request, response) {
-        getDocker(request).getImage(request.image.name).remove((error) => {
+        request.dockerUtils.getDocker().getImage(request.image.name).remove((error) => {
             if (error === null) {
                 request.logger.info('Image [' + request.image.name + '] in project [' + request.project.getId() +
                     ' - ' + request.project.getName() + '] in node [' + request.node.getId() + ' - ' +

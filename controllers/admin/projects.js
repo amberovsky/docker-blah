@@ -60,9 +60,11 @@ module.exports.controller = function (application) {
 
              request.projectManager.add(request.project, function (error) {
                  if (error !== null) {
+                     request.logger.error(error);
+                     
                      response.render('admin/project/project.create.html.twig', {
                          action: 'admin.projects',
-                         error: 'Got error during create. Contact your system administrator.'
+                         error: 'Got error. Contact your system administrator.'
                      });
                  } else {
                      request.logger.info('new project [' + request.project.getName() + '] was created');
@@ -174,9 +176,11 @@ module.exports.controller = function (application) {
                         request, response, 'Project [' + request.project.getName() + '] info was updated.', null
                     );
                 } else {
+                    request.logger.error(error);
+                    
                     return response.render('admin/project/project.html.twig', {
                         action: 'admin.projects',
-                        error: 'Got error during update. Contact your system administrator.'
+                        error: 'Got error. Contact your system administrator.'
                     });
                 }
             });
@@ -241,8 +245,10 @@ module.exports.controller = function (application) {
                     request, response, 'Project [' + request.project.getName() + '] was deleted.', null
                 );
             } else {
+                request.logger.error(error);
+                
                 return routeToAllProjects(
-                    request, response, null, 'Got error during update. Contact your system administrator.'
+                    request, response, null, 'Got error. Contact your system administrator.'
                 );
             }
         });

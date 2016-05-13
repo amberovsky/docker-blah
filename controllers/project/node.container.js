@@ -12,29 +12,12 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
-
-    var Docker = require('dockerode');
-
-    /**
-     * @param {Object} request - expressjs request
-     * @returns {Object} Docker
-     */
-    function getDocker(request) {
-        return new Docker({
-            host: request.node.getIp(),
-            protocol: 'https',
-            ca: request.project.getCA(),
-            cert: request.project.getCERT(),
-            key: request.project.getKEY(),
-            port: request.node.getPort()
-        });
-    }
-
+    
     /**
      * Middleware to set container in the request
      */
     application.getExpress().all('/node/:nodeId/containers/:containerId/*', function (request, response, next) {
-        request.container = getDocker(request).getContainer(request.params.containerId);
+        request.container = request.dockerUtils.getDocker().getContainer(request.params.containerId);
 
         return next();
     });
@@ -43,15 +26,15 @@ module.exports.controller = function (application) {
      * List
      */
     application.getExpress().get('/node/:nodeId/containers/list/', function (request, response) {
-        getDocker(request).listContainers({ all: true }, (error, containers) => {
+        request.dockerUtils.getDocker().listContainers({ all: true }, (error, containers) => {
             if (error === null) {
-                response.render('project/node/containers.list.html.twig', {
+                return response.render('project/node/containers.list.html.twig', {
                     containers: containers
                 });
             } else {
                 request.logger.error(error);
                 
-                response.render('project/node/containers.list.html.twig', {
+                return response.render('project/node/containers.list.html.twig', {
                     containers: {},
                     error: error
                 });
@@ -67,7 +50,7 @@ module.exports.controller = function (application) {
             if (error === null) {
                 request.container.top({ ps_args: 'aux' }, (error, top) => {
                     if (error === null) {
-                        response.render('project/node/container/overview.html.twig', {
+                        return response.render('project/node/container/overview.html.twig', {
                             action: 'project.nodes',
                             subaction: 'overview',
                             container: containerInfo,
@@ -77,7 +60,7 @@ module.exports.controller = function (application) {
                     } else {
                         request.logger.error(error);
                         
-                        response.render('project/node/container/overview.html.twig', {
+                        return response.render('project/node/container/overview.html.twig', {
                             action: 'project.nodes',
                             subaction: 'overview',
                             container: {},
@@ -88,7 +71,7 @@ module.exports.controller = function (application) {
             } else {
                 request.logger.error(error);
                 
-                response.render('project/node/container/overview.html.twig', {
+                return response.render('project/node/container/overview.html.twig', {
                     action: 'project.nodes',
                     subaction: 'overview',
                     container: {},
@@ -102,7 +85,7 @@ module.exports.controller = function (application) {
      * Logs
      */
     application.getExpress().get('/node/:nodeId/containers/:containerId/logs/', function (request, response) {
-        response.render('project/node/container/logs.html.twig', {
+        return response.render('project/node/container/logs.html.twig', {
             action: 'project.nodes',
             subaction: 'logs'
         });
@@ -112,7 +95,7 @@ module.exports.controller = function (application) {
      * Run a command
      */
     application.getExpress().get('/node/:nodeId/containers/:containerId/run/', function (request, response) {
-        response.render('project/node/container/run.html.twig', {
+        return response.render('project/node/container/run.html.twig', {
             action: 'project.nodes',
             subaction: 'run'
         });
@@ -124,7 +107,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/node/:nodeId/containers/:containerId/stop/', function (request, response) {
         request.container.stop((error) => {
             if (error === null) {
-                getDocker(request).listContainers({ all: true }, (error, containers) => {
+                request.dockerUtils.getDocker().listContainers({ all: true }, (error, containers) => {
                     if (error === null) {
                         var found = false;
                         for (var index in containers) {
@@ -145,7 +128,7 @@ module.exports.controller = function (application) {
                                             request.logger.error(error);
                                             
                                             return response.json({
-                                                error: 'Got error rendering template. Contact your system administrator.'
+                                                error: 'Got error. Contact your system administrator.'
                                             });
                                         }
                                     }
@@ -171,7 +154,7 @@ module.exports.controller = function (application) {
             } else {
                 request.logger.error(error);
                 
-                response.json({ error: error });
+                return response.json({ error: JSON.stringify(error) });
             }
         })
     });
@@ -182,7 +165,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/node/:nodeId/containers/:containerId/start/', function (request, response) {
         request.container.start((error) => {
             if (error === null) {
-                getDocker(request).listContainers({ all: true }, (error, containers) => {
+                request.dockerUtils.getDocker().listContainers({ all: true }, (error, containers) => {
                     if (error === null) {
                         var found = false;
                         for (var index in containers) {
@@ -202,7 +185,7 @@ module.exports.controller = function (application) {
                                             request.logger.error(error);
                                             
                                             return response.json({
-                                                error: 'Got error rendering template. Contact your system administrator.'
+                                                error: 'Got error. Contact your system administrator.'
                                             });
                                         }
                                     }
@@ -228,7 +211,27 @@ module.exports.controller = function (application) {
             } else {
                 request.logger.error(error);
                 
-                response.json({ error: error });
+                return response.json({ error: JSON.stringify(error) });
+            }
+        })
+    });
+
+    /**
+     * Delete
+     */
+    application.getExpress().get('/node/:nodeId/containers/:containerId/delete/', function (request, response) {
+        request.container.remove({ v: true }, (error) => {
+            if (error === null) {
+                request.logger.info('Container [' + request.container.id + '] was deleted');
+
+                return response.json({
+                    success: 1,
+                    containerInfo: ''
+                });
+            } else {
+                request.logger.error(error);
+
+                return response.json({ error: JSON.stringify(error) });
             }
         })
     });

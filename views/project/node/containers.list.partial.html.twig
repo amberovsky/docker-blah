@@ -16,13 +16,12 @@
             <div class="container-info">
                 <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench"></span></a>
                 <button type="button" class="btn btn-success container-action-stop" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Stop"><span class="fa fa-stop"></span></button>
-                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-danger btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o"></span></a>
             </div>
         {% else %}
             <div class="container-info">
                 <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench"></span></a>
                 <button type="button" class="btn btn-success container-action-run" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Run"><span class="fa fa-play"></span></button>
-                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-danger btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o"></span></a>
+                <button type="button" class="btn btn-danger container-action-delete" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o"></span></button>
             </div>
         {% endif %}
     </td>

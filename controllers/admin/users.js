@@ -12,6 +12,22 @@
  * @param {Application} application - application
  */
 module.exports.controller = function (application) {
+
+    /**
+     * Render "Create user" page
+     *
+     * @param {Object} response - expressjs response object
+     * @param {(null|object)} roles - roles, @see UserUpdateOrCreateCallback
+     * @param {(null|string)} error - error message, if present
+     */
+    function routeToUserCreate(response, roles, error) {
+        return response.render('admin/user/user.html.twig', {
+            action: 'admin.users',
+            roles: roles,
+            subaction: 'create',
+            error: error
+        });
+    }
     
     /**
      * Create a user - page
@@ -19,11 +35,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/admin/users/create/', function (request, response) {
         request.requestedUser = request.userManager.create();
         
-        response.render('admin/user/user.html.twig', {
-            action: 'admin.users',
-            roles: {},
-            subaction: 'create'
-        });
+        return routeToUserCreate(response, {}, null);
     });
 
     /**
@@ -34,12 +46,7 @@ module.exports.controller = function (application) {
 
         validateUserActionCreateNewOrUpdateUser(request, false, function (error, roles) {
             if (error !== null) {
-                return response.render('admin/user/user.html.twig', {
-                    action: 'admin.users',
-                    roles: roles,
-                    subaction: 'create',
-                    error: error
-                });
+                return routeToUserCreate(response, roles, error);
             }
 
             request.userManager.add(request.requestedUser, function (error) {
@@ -63,21 +70,15 @@ module.exports.controller = function (application) {
                                 null
                             );
                         } else {
-                            return response.render('admin/user/user.html.twig', {
-                                action: 'admin.users',
-                                roles: roles,
-                                subaction: 'create',
-                                error: 'Got error during create. Contact your system administrator.'
-                            });
+                            request.logger.error(error);
+                            
+                            return routeToUserCreate(response, roles, 'Got error. Contact your system administrator.');
                         }
                     });
                 } else {
-                    return response.render('admin/user/user.html.twig', {
-                        action: 'admin.users',
-                        roles: roles,
-                        subaction: 'create',
-                        error: 'Got error during create. Contact your system administrator.'
-                    });
+                    request.logger.error(error);
+                    
+                    return routeToUserCreate(response, roles, 'Got error. Contact your system administrator.');
                 }
             });
         });
@@ -220,61 +221,72 @@ module.exports.controller = function (application) {
     };
 
     /**
+     * Render "Edit user" page
+     * 
+     * @param {Object} response - expressjs response object
+     * @param {(null|object)} roles - roles, @see UserUpdateOrCreateCallback
+     * @param {(null|string)} error - error message, if present
+     */
+    function routeToUserEdit(response, roles, error) {
+        return response.render('admin/user/user.html.twig', {
+            action: 'admin.users',
+            roles: roles,
+            subaction: 'edit',
+            error: error
+        });
+    }
+
+    /**
      * Update user info
      */
     application.getExpress().post('/admin/users/:userId/', function (request, response) {
-        request.userManager.getAll((error, users) => {
-            validateUserActionCreateNewOrUpdateUser(request, true, function (error, roles) {
-                if (error !== null) {
-                    return response.render('admin/user/user.html.twig', {
-                        action: 'admin.users',
-                        roles: roles,
-                        subaction: 'edit',
-                        error: error
-                    });
-                }
+        if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
+            request.logger.error('attempt to update super user data while current user is not super');
 
-                request.userManager.update(request.requestedUser, function (error) {
-                    if (error === null) {
-                        request.logger.info('user [' + request.requestedUser.getName() + '] info was updated.');
-                        
-                        request.projectManager.setUserRoleInProject(
-                            request.requestedUser.getId(),
-                            roles,
-                            function (error) {
-                                if (error === null) {
-                                    request.logger.info(
-                                        'user [' + request.requestedUser.getName() + '] roles were updated.'
-                                    );
-                                    
-                                    return fetchUsersByCriteria(
-                                        request,
-                                        response,
-                                        -1,
-                                        -1,
-                                        -1,
-                                        'User [' + request.requestedUser.getLogin() + '] info was updated.',
-                                        null
-                                    );
-                                } else {
-                                    return response.render('admin/user/user.html.twig', {
-                                        action: 'admin.users',
-                                        roles: roles,
-                                        subaction: 'edit',
-                                        error: 'Got error during update. Contact your system administrator.'
-                                    });
-                                }
+            return fetchUsersByCriteria(request, response, -1, -1, -1, null, null);
+        }
+        
+        validateUserActionCreateNewOrUpdateUser(request, true, function (error, roles) {
+            if (error !== null) {
+                return routeToUserEdit(response, roles, error);
+            }
+
+            request.userManager.update(request.requestedUser, function (error) {
+                if (error === null) {
+                    request.logger.info('user [' + request.requestedUser.getName() + '] info was updated.');
+                    
+                    request.projectManager.setUserRoleInProject(
+                        request.requestedUser.getId(),
+                        roles,
+                        function (error) {
+                            if (error === null) {
+                                request.logger.info(
+                                    'user [' + request.requestedUser.getName() + '] roles were updated.'
+                                );
+                                
+                                return fetchUsersByCriteria(
+                                    request,
+                                    response,
+                                    -1,
+                                    -1,
+                                    -1,
+                                    'User [' + request.requestedUser.getLogin() + '] info was updated.',
+                                    null
+                                );
+                            } else {
+                                request.logger.error(error);
+                                
+                                return routeToUserEdit(
+                                    response, roles, 'Got error. Contact your system administrator.'
+                                );
                             }
-                        );
-                    } else {
-                        return response.render('admin/user/user.html.twig', {
-                            action: 'admin.users',
-                            roles: roles,
-                            subaction: 'edit',
-                            error: 'Got error during update. Contact your system administrator.'
-                        });
-                    }
-                });
+                        }
+                    );
+                } else {
+                    request.logger.error(error);
+                    
+                    return routeToUserEdit(response, roles, 'Got error. Contact your system administrator.');
+                }
             });
         });
     });
@@ -283,11 +295,14 @@ module.exports.controller = function (application) {
      * View/Edit user
      */
     application.getExpress().get('/admin/users/:userId/', function (request, response) {
+        if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
+            request.logger.error('attempt to open edit page for super user while current user is not super');
+
+            return fetchUsersByCriteria(request, response, -1, -1, -1, null, null);
+        }
+
         request.projectManager.getUserRoleInProjects(request.requestedUser.getId(), (error, roles) => {
-            response.render('admin/user/user.html.twig', {
-                action: 'admin.users',
-                roles: roles
-            });
+            return routeToUserEdit(response, roles, null);
         });
     });
 
@@ -377,26 +392,18 @@ module.exports.controller = function (application) {
                             null
                         );
                     } else {
+                        request.logger.error(error);
+                        
                         return fetchUsersByCriteria(
-                            request,
-                            response,
-                            -1,
-                            -1,
-                            -1,
-                            null,
-                            'Got error during delete. Contact your system administrator.'
+                            request, response, -1, -1, -1, null, 'Got error. Contact your system administrator.'
                         );
                     }
                 });
             } else {
+                request.logger.error(error);
+                
                 return fetchUsersByCriteria(
-                    request,
-                    response,
-                    -1,
-                    -1,
-                    -1,
-                    null,
-                    'Got error during delete. Contact your system administrator.'
+                    request, response, -1, -1, -1, null, 'Got error. Contact your system administrator.'
                 );
             }
         });

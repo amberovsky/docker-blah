@@ -146,10 +146,12 @@ module.exports.controller = function (application) {
                             success_profile: 'Profile was updated.'
                         });
                     } else {
+                        request.logger.error(error);
+                        
                         request.user = currentUser;
                         response.render('profile/personal.html.twig', {
                             action: 'profile.personal',
-                            error_profile: 'Got error during update. Contact your system administrator.'
+                            error_profile: 'Got error. Contact your system administrator.'
                         });
                     }
                 });
@@ -172,10 +174,12 @@ module.exports.controller = function (application) {
                         success_password: 'Password was changed.'
                     });
                 } else {
+                    request.logger.error(error);
+                    
                     request.user = currentUser;
                     response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
-                        error_password: 'Got error during update. Contact your system administrator.'
+                        error_password: 'Got error. Contact your system administrator.'
                     });
                 }
             });

@@ -81,10 +81,12 @@ module.exports.controller = function (application) {
                             request, response, 'Node [' + request.node.getName() + '] was created', error
                         );
                     } else {
+                        request.logger.error(error);
+
                         return response.render('project/nodes/node.html.twig', {
                             action: 'project.nodes',
                             subaction: 'create',
-                            error: 'Got error during create. Contact your system administrator.'
+                            error: 'Got error. Contact your system administrator.'
                         });
                     }
                 });
@@ -167,10 +169,12 @@ module.exports.controller = function (application) {
                         request, response, 'Node [' + request.node.getName() + '] info was updated.', null
                     );
                 } else {
+                    request.logger.error(error);
+
                     return response.render('project/nodes/node.html.twig', {
                         action: 'project.nodes',
                         subaction: 'edit',
-                        error: 'Got error during update. Contact your system administrator.'
+                        error: 'Got error. Contact your system administrator.'
                     });
                 }
             });
@@ -211,8 +215,10 @@ module.exports.controller = function (application) {
                     request, response, 'Node [' + request.node.getName() + '] was deleted.', null
                 );
             } else {
+                request.logger.error(error);
+
                 return routeToAllNodes(
-                    request, response, null, 'Got error during update. Contact your system administrator.'
+                    request, response, null, 'Got error. Contact your system administrator.'
                 );
             }
         });

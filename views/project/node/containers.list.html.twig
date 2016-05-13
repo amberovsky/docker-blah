@@ -73,6 +73,13 @@
                 processRequest($(this), 'start');
             });
 
+            /**
+             * Handle click on "delete" button
+             */
+            $(document).on('click', '.container-action-delete', function () {
+                processRequest($(this), 'delete');
+            });
+
         });
     </script>
 {% endif %}

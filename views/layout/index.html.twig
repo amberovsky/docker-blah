@@ -45,7 +45,7 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
-                {% if (request.user.getRole() == 1) %}
+                {% if (not request.userManager.isUserUser(request.user)) %}
                     <li {% if action|match('admin\.(.*)') %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
                 {% endif %}
 
