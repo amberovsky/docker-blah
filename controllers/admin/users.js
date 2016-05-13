@@ -365,6 +365,12 @@ module.exports.controller = function (application) {
      * Delete user - page
      */
     application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
+        if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
+            request.logger.error('attempt to open delete page for super user while current user is not super');
+
+            return fetchUsersByCriteria(request, response, -1, -1, -1, null, null);
+        }
+
         response.render('admin/user/delete.html.twig', {
             action: 'admin.users'
         });
@@ -374,6 +380,12 @@ module.exports.controller = function (application) {
      * Delete user - handler
      */
     application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
+        if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
+            request.logger.error('attempt to delete super user while current user is not super');
+
+            return fetchUsersByCriteria(request, response, -1, -1, -1, null, null);
+        }
+        
         request.projectManager.deleteUserFromAllProjects(request.requestedUser.getId(), function (error) {
             request.logger.info('user [' + request.requestedUser.getName() + '] was deleted form all projects.');
             
