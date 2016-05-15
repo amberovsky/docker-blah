@@ -6,7 +6,7 @@
 
 {% block content %}
     <h1 class="page-header">
-        <span class="fa fa-sitemap"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
+        <span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
         {% if (subaction == 'create') %}
             Create a new node in project [{{ request.project.getName() }}]
         {% else %}
@@ -51,9 +51,9 @@
             <div class="col-sm-offset-1 col-sm-3">
                 <button type="submit" name="action" id="action" class="btn btn-success" value="projects">
                     {% if (subaction == 'create') %}
-                        <span class="fa fa-check-circle-o"></span>&nbsp;&nbsp;Create
+                        <span class="fa fa-check-circle-o fa-lg"></span>&nbsp;&nbsp;Create
                     {% else %}
-                        <span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update
+                        <span class="fa fa-floppy-o fa-lg"></span>&nbsp;&nbsp;Update
                     {% endif %}
                 </button>
             </div>

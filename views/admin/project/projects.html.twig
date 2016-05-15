@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-cubes"></span>&nbsp;&nbsp;<a href="/admin/projects/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Projects : {{ projectsCount }}</h1>
+    <h1 class="page-header"><span class="fa fa-cubes fa-fw"></span>&nbsp;&nbsp;<a href="/admin/projects/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus fa-lg"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Projects : {{ projectsCount }}</h1>
     {% if (error or success) %}
         <div class="row">
             <div class="col-sm-8">
@@ -36,11 +36,11 @@
                 <td>{{ project.getId() }}</td>
                 <td>{{ project.getName() }}</td>
                 <td>
-                    <a href="/admin/projects/{{ project.getId() }}/" class="btn btn-primary" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
-                    <a class="btn btn-info onClickForViewUsers" role="button" data-value="{{ project.getId() }}"><span class="fa fa-external-link"></span>&nbsp;&nbsp;Users</a>&nbsp;&nbsp;
-                    <a href="/project/{{ project.getId() }}/nodes/" class="btn btn-info" role="button"><span class="fa fa-external-link"></span>&nbsp;&nbsp;Nodes</a>&nbsp;&nbsp;
-                    <a href="/project/{{ project.getId() }}/settings/" class="btn btn-info" role="button"><span class="fa fa-external-link"></span>&nbsp;&nbsp;Settings</a>&nbsp;&nbsp;
-                    <a href="/admin/projects/{{ project.getId() }}/delete/" class="btn btn-danger" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                    <a href="/admin/projects/{{ project.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil fa-lg"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                    <a class="btn btn-info onClickForViewUsers btn-sm" role="button" data-value="{{ project.getId() }}"><span class="fa fa-external-link fa-lg"></span>&nbsp;&nbsp;Users</a>&nbsp;&nbsp;
+                    <a href="/project/{{ project.getId() }}/nodes/" class="btn btn-info btn-sm" role="button"><span class="fa fa-external-link fa-lg"></span>&nbsp;&nbsp;Nodes</a>&nbsp;&nbsp;
+                    <a href="/project/{{ project.getId() }}/settings/" class="btn btn-info btn-sm" role="button"><span class="fa fa-external-link fa-lg"></span>&nbsp;&nbsp;Settings</a>&nbsp;&nbsp;
+                    <a href="/admin/projects/{{ project.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a>
                 </td>
             </tr>
         {% endfor %}

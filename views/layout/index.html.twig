@@ -22,7 +22,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/"><span class="fa fa-ship"></span>&nbsp;docker-blah</a>
+            <a class="navbar-brand" href="/"><span class="fa fa-ship fa-fw"></span>&nbsp;docker-blah</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -46,12 +46,12 @@
 
             <ul class="nav navbar-nav navbar-right">
                 {% if (not request.userManager.isUserUser(request.user)) %}
-                    <li {% if action|match('admin\.(.*)') %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket"></span>&nbsp;Admin</a></li>
+                    <li {% if action|match('admin\.(.*)') %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket fa-fw"></span>&nbsp;Admin</a></li>
                 {% endif %}
 
-                <li {% if action|match('profile\.(.*)') %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user"></span>&nbsp;Profile</a></li>
-                <li {% if action|match('help\.(.*)') %}class="active"{% endif %}><a href="/help/"><span class="fa fa-question-circle"></span>&nbsp;Help</a></li>
-                <li><a href="/logout/"><span class="fa fa-sign-out"></span>&nbsp;Logout ({{ request.user.getLogin() }})</a></li>
+                <li {% if action|match('profile\.(.*)') %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user fa-fw"></span>&nbsp;Profile</a></li>
+                <li {% if action|match('help\.(.*)') %}class="active"{% endif %}><a href="/help/"><span class="fa fa-question-circle fa-fw"></span>&nbsp;Help</a></li>
+                <li><a href="/logout/"><span class="fa fa-sign-out fa-fw"></span>&nbsp;Logout ({{ request.user.getLogin() }})</a></li>
             </ul>
         </div>
     </div>

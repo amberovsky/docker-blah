@@ -1,5 +1,6 @@
 <ul class="nav nav-tabs">
-    <li role="presentation" {% if (subaction == 'overview') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/overview/"><span class="fa fa-paragraph"></span>&nbsp;&nbsp;OVERVIEW</a></li>
-    <li role="presentation" {% if (subaction == 'logs') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/logs/"><span class="fa fa-list-alt"></span>&nbsp;&nbsp;LOGS</a></li>
-    <li role="presentation" {% if (subaction == 'run') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/run/"><span class="fa fa-terminal"></span>&nbsp;&nbsp;RUN COMMAND</a></li>
+    <li role="presentation" {% if (subaction == 'overview') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/overview/"><span class="fa fa-paragraph fa-fw"></span>&nbsp;&nbsp;OVERVIEW</a></li>
+    <li role="presentation" {% if (subaction == 'stats') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/stats/"><span class="fa fa-refresh {% if (subaction == 'stats') %}fa-spin {% endif %} fa-fw"></span>&nbsp;&nbsp;STATS</a></li>
+    <li role="presentation" {% if (subaction == 'logs') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/logs/"><span class="fa fa-list-alt fa-fw"></span>&nbsp;&nbsp;LOGS</a></li>
+    <li role="presentation" {% if (subaction == 'run') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/run/"><span class="fa fa-terminal fa-fw"></span>&nbsp;&nbsp;RUN COMMAND</a></li>
 </ul>

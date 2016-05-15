@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-users"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ usersCount }}</h1>
+    <h1 class="page-header"><span class="fa fa-users fa-fw"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus fa-lg"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ usersCount }}</h1>
     <form method="post" action="/admin/users/">
         {% if (error or success) %}
             <div class="row">
@@ -55,11 +55,11 @@
             <div class="col-lg-3 col-md-4 col-sm-12">
                 <div class="col-sm-6">
                     <label class="control-label" for="filter">&nbsp;</label>
-                    <button type="submit" id="filter" name="filter" class="form-control btn btn-success"><span class="fa fa-filter"></span>&nbsp;&nbsp;Filter</button>
+                    <button type="submit" id="filter" name="filter" class="form-control btn btn-success"><span class="fa fa-filter fa-lg"></span>&nbsp;&nbsp;Filter</button>
                 </div>
                 <div class="col-sm-6">
                     <label class="control-label" for="reset">&nbsp;</label>
-                    <a href="/admin/users/" id="reset" name="reset" class="btn btn-primary form-control" role="button"><span class="fa fa-undo"></span>&nbsp;&nbsp;Reset</a>
+                    <a href="/admin/users/" id="reset" name="reset" class="btn btn-primary form-control" role="button"><span class="fa fa-undo fa-lg"></span>&nbsp;&nbsp;Reset</a>
                 </div>
             </div>
         </div>
@@ -91,8 +91,8 @@
                 </td>
                 <td class="text-center">
                     {% if (request.userManager.isUserSuper(request.user) or (not request.userManager.isUserSuper(user))) %}
-                        <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
-                        <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                        <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil fa-lg"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                        <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a>
                     {% endif %}
                 </td>
             </tr>

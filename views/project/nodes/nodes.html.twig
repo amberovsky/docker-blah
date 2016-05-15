@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-sitemap"></span>&nbsp;&nbsp;{% if (request.isUserAdminForThisProject) %}<a href="/project/{{ request.project.getId() }}/nodes/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;{% endif %}Nodes : {{ nodesCount }}</h1>
+    <h1 class="page-header"><span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;{% if (request.isUserAdminForThisProject) %}<a href="/project/{{ request.project.getId() }}/nodes/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus fa-lg"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;{% endif %}Nodes : {{ nodesCount }}</h1>
     {% if (error or success) %}
         <div class="row">
             <div class="col-sm-8">
@@ -42,9 +42,9 @@
                 <td>{{ node.getIp() }}:{{ node.getPort() }}</td>
                 {% if (request.isUserAdminForThisProject) %}
                 <td>
-                    <a href="/node/{{ node.getId() }}/containers/" class="btn btn-success btn-sm" role="button"><span class="fa fa-wrench"></span>&nbsp;&nbsp;Inspect</a>&nbsp;&nbsp;
-                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
-                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a>
+                    <a href="/node/{{ node.getId() }}/containers/" class="btn btn-success btn-sm" role="button"><span class="fa fa-wrench fa-lg"></span>&nbsp;&nbsp;Inspect</a>&nbsp;&nbsp;
+                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil fa-lg"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                    <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a>
                 </td>
                 {% endif %}
             </tr>

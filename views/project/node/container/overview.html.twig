@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-th"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }}</strong></a>&nbsp;&nbsp;Container #{{ container.Id|truncate(12, True, '') }}</h1>
+    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }}</strong></a>&nbsp;&nbsp;Container #{{ container.Id|truncate(12, True, '') }}</h1>
 
     {% block tabs %}
         {% include './partial.tab.html.twig' %}

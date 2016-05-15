@@ -5,13 +5,13 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete node #{{ request.node.getId() }} in project [{{ request.project.getName() }}]</h1>
+    <h1 class="page-header"><span class="fa fa-trash-o fa-fw"></span>&nbsp;&nbsp;Delete node #{{ request.node.getId() }} in project [{{ request.project.getName() }}]</h1>
     <form class="form-horizontal" method="post" action="/project/{{ request.project.getId() }}/nodes/{{ request.node.getId() }}/delete/">
         <h4>Are you sure you want to delete the node {{ request.node.getName() }}?</h4>
         <div class="form-group">
             <div class="col-sm-3">
-                <button type="submit" name="action" id="action" class="btn btn-success" value="Yes"><span class="fa fa-frown-o"></span>&nbsp;&nbsp;Yes</button>&nbsp;&nbsp;
-                <a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger" role="button"><span class="fa fa-smile-o"></span>&nbsp;&nbsp;No</a>
+                <button type="submit" name="action" id="action" class="btn btn-success" value="Yes"><span class="fa fa-frown-o fa-lg"></span>&nbsp;&nbsp;Yes</button>&nbsp;&nbsp;
+                <a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger" role="button"><span class="fa fa-smile-o fa-lg"></span>&nbsp;&nbsp;No</a>
             </div>
         </div>
     </form>

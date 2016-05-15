@@ -14,14 +14,14 @@
         </div>
         {% if (container.State == 'running') %}
             <div class="container-info">
-                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench"></span></a>
-                <button type="button" class="btn btn-success container-action-stop" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Stop"><span class="fa fa-stop"></span></button>
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench fa-lg"></span></a>
+                <button type="button" class="btn btn-success container-action-stop btn-sm" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Stop"><span class="fa fa-stop fa-lg"></span></button>
             </div>
         {% else %}
             <div class="container-info">
-                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench"></span></a>
-                <button type="button" class="btn btn-success container-action-run" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Run"><span class="fa fa-play"></span></button>
-                <button type="button" class="btn btn-danger container-action-delete" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o"></span></button>
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench fa-lg"></span></a>
+                <button type="button" class="btn btn-success container-action-run btn-sm" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Run"><span class="fa fa-play fa-lg"></span></button>
+                <button type="button" class="btn btn-danger container-action-delete btn-sm" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o fa-lg"></span></button>
             </div>
         {% endif %}
     </td>

@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-user"></span>&nbsp;&nbsp;Personal</h1>
+    <h1 class="page-header"><span class="fa fa-user fa-fw"></span>&nbsp;&nbsp;Personal</h1>
     <form class="form-horizontal" method="post" action="/profile/personal/">
         {% if (error_profile or success_profile) %}
             <div class="form-group form-group-sm">
@@ -44,7 +44,7 @@
         </div>
         <div class="form-group form-group-sm">
             <div class="col-sm-offset-2 col-sm-2">
-                <button type="submit" name="action" class="btn btn-success" value="personal"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Update</button>
+                <button type="submit" name="action" class="btn btn-success" value="personal"><span class="fa fa-floppy-o fa-lg"></span>&nbsp;&nbsp;Update</button>
             </div>
         </div>
     </form>
@@ -87,7 +87,7 @@
         </div>
         <div class="form-group form-group-sm">
             <div class="col-sm-offset-2 col-sm-2">
-                <button type="submit" name="action" class="btn btn-primary" value="password"><span class="fa fa-floppy-o"></span>&nbsp;&nbsp;Change password</button>
+                <button type="submit" name="action" class="btn btn-primary" value="password"><span class="fa fa-floppy-o fa-lg"></span>&nbsp;&nbsp;Change password</button>
             </div>
         </div>
     </form>

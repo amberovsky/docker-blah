@@ -26,7 +26,7 @@
                 <td>{{ image.Created|date }}</td>
                 <td>{{ (image.Size/1024/1024)|round(2) }}</td>
                 <td>{{ (image.VirtualSize/1024/1024)|round(2) }}</td>
-                <td><a href="/node/{{ request.node.getId() }}/images/{{ image.Id|slice(7) }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o"></span>&nbsp;&nbsp;Delete</a></td>
+                <td><a href="/node/{{ request.node.getId() }}/images/{{ image.Id|slice(7) }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a></td>
             </tr>
         {% endfor %}
     </table>

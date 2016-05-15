@@ -236,4 +236,82 @@ module.exports.controller = function (application) {
         })
     });
 
+    /**
+     * Stats - page
+     */
+    application.getExpress().get('/node/:nodeId/containers/:containerId/stats/', function (request, response) {
+        response.render('project/node/container/stats.html.twig', {
+            action: 'project.nodes',
+            subaction: 'stats'
+        });
+    });
+
+    /**
+     * Stats - data
+     */
+    application.getExpress().post('/node/:nodeId/containers/:containerId/stats/', function (request, response) {
+        var
+            cpuTotalUsage = parseFloat(request.body.cpu_totalusage),
+            cpuSystemUsage = parseFloat(request.body.cpu_systemusage),
+            cpuPercent = 0.0;
+
+        request.container.stats({ stream: 0 }, (error, stream) => {
+            if (error === null) {
+                var buffer = '';
+
+                stream.on('data', (chunk) => {
+                    buffer += chunk;
+                });
+
+                stream.on('end', () => {
+                    var stats = JSON.parse(buffer);
+                    
+                    if (!Number.isNaN(cpuTotalUsage)) {
+                        // if it is not a first request then we have previous data in the request
+
+                        // calculate CPU usage
+                        var
+                            cpuDelta = stats.cpu_stats.cpu_usage.total_usage - cpuTotalUsage,
+                            systemDelta = stats.cpu_stats.system_cpu_usage - cpuSystemUsage;
+
+                        if ((cpuDelta > 0.0) && (systemDelta > 0.0)) {
+                            cpuPercent = (cpuDelta / systemDelta) * stats.cpu_stats.cpu_usage.percpu_usage.length * 100.0;
+                        }
+                    }
+
+                    // calculate Bulk IO
+                    var
+                        blkRead = 0,
+                        blkWrite = 0;
+
+                    for (var index in stats.blkio_stats.io_service_bytes_recursive) {
+                        switch (stats.blkio_stats.io_service_bytes_recursive[index].op) {
+                            case 'Read':
+                                blkRead += stats.blkio_stats.io_service_bytes_recursive[index].value;
+                                break;
+
+                            case 'Write':
+                                blkWrite += stats.blkio_stats.io_service_bytes_recursive[index].value;
+                                break;
+                        }
+                    }
+
+                    return response.render('project/node/container/stats.data.html.twig', {
+                        stats: stats,
+                        cpuPercent: cpuPercent,
+                        blkRead: blkRead,
+                        blkWrite: blkWrite
+                    });
+                });
+
+            } else {
+                request.logger.error(error);
+
+                return response.render('project/node/container/stats.data.html.twig', {
+                    error: error
+                });
+            }
+        });
+    });
+
 };

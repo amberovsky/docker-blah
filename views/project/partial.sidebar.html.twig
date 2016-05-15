@@ -1,9 +1,9 @@
 <ul class="nav nav-sidebar">
-    <li {% if (action == 'project.index') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/overview/"><span class="fa fa-paragraph"></span>&nbsp;&nbsp;Overview</a></li>
-    <li {% if (action == 'project.nodes') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/nodes/"><span class="fa fa-sitemap"></span>&nbsp;&nbsp;Nodes</a></li>
+    <li {% if (action == 'project.index') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/overview/"><span class="fa fa-paragraph fa-fw"></span>&nbsp;&nbsp;Overview</a></li>
+    <li {% if (action == 'project.nodes') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/nodes/"><span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;Nodes</a></li>
 </ul>
 {% if (request.isUserAdminForThisProject) %}
     <ul class="nav nav-sidebar">
-        <li {% if (action == 'project.settings') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/settings/"><span class="fa fa-sliders"></span>&nbsp;&nbsp;Project settings</a></li>
+        <li {% if (action == 'project.settings') %}class="active"{% endif %}><a href="/project/{{ request.project.getId() }}/settings/"><span class="fa fa-sliders fa-fw"></span>&nbsp;&nbsp;Project settings</a></li>
     </ul>
 {% endif %}
