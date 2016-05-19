@@ -5,3 +5,10 @@
 .checkbox-label-p45 {
     padding-left: 45px !important;
 }
+
+.textarea-terminal[readonly] {
+    font-family: monospace;
+    color: green;
+    background-color: black;
+    overflow-y: scroll;
+}

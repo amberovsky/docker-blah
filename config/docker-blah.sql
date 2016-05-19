@@ -52,3 +52,13 @@ CREATE TABLE project_user(
 );
 
 INSERT INTO project_user(project_id, user_id, role) VALUES (1, 1, 1);
+
+CREATE TABLE project_log(
+  id          INTEGER     PRIMARY KEY AUTOINCREMENT,
+  project_id  INTEGER     NOT NULL,
+  name        VARCHAR(16) NOT NULL    DEFAULT '',
+  path        VARCHAR(16) NOT NULL,
+
+  UNIQUE (project_id, name),
+  UNIQUE (project_id, path)
+);

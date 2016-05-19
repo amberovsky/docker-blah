@@ -3,7 +3,7 @@
 /**
  * userManager.js - Manager for User. Responsible for saving, retrieving, search
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /** @type {User} */

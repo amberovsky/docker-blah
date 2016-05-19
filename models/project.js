@@ -3,7 +3,7 @@
 /**
  * project.js - Project model
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 class Project {

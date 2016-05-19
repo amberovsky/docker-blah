@@ -4,7 +4,7 @@
  * projectManager.js - Manager for Project. Responsible for saving, retrieving, search. Also knows about roles in
  * all projects
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /** @type {Project} */

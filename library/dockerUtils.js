@@ -3,40 +3,61 @@
 /**
  * dockerUtils.js - Common parts for dockerode
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 class DockerUtils {
 
     /**
      * @constructor
-     *
-     * @param {Object} request - expressjs request
      */
-    constructor(request) {
-        this.request = request;
-        this.docker = null;
+    constructor() {
+        this.Docker = require('dockerode');
     };
 
     /**
-     * @returns {Object} Docker object for current request
+     * @param {Object} request - expressjs request
+     * @returns {Function} - docker instance for a request
      */
-    getDocker() {
-        if (this.docker === null) {
-            var Docker = require('dockerode');
+    createDockerForRequest(request) {
+        var self = this;
 
-            this.docker = new Docker({
-                host: this.request.node.getIp(),
-                protocol: 'https',
-                ca: this.request.project.getCA(),
-                cert: this.request.project.getCERT(),
-                key: this.request.project.getKEY(),
-                port: this.request.node.getPort()
-            });
+        return function() {
+            if (typeof request.docker === 'undefined') {
+                request.docker = new self.Docker({
+                    host: request.node.getIp(),
+                    protocol: 'https',
+                    ca: request.project.getCA(),
+                    cert: request.project.getCERT(),
+                    key: request.project.getKEY(),
+                    port: request.node.getPort()
+                });
+            }
+
+            return request.docker;
         }
-
-        return this.docker;
     }
+
+    /**
+     * Create docker object by custom parameters
+     *
+     * @param {number} ip - node IP
+     * @param {number} port - node port
+     * @param {string} CA - CA
+     * @param {string} CERT - CERT
+     * @param {string} KEY - KEY
+     */
+    createDockerCustom(ip, port, CA, CERT, KEY) {
+        return new this.Docker({
+            host: ip,
+            protocol: 'https',
+            ca: CA,
+            cert: CERT,
+            key: KEY,
+            port: port
+        });
+    }
+    
 }
 
 module.exports = DockerUtils;

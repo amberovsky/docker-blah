@@ -3,7 +3,7 @@
 /**
  * nodeManager.js - Manager for Node. Responsible for saving, retrieving, search.
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /** @type {Node} */
@@ -270,8 +270,7 @@ class NodeManager {
             }
         });
     };
-
-
+    
 }
 
 module.exports = NodeManager;

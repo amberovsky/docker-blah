@@ -3,7 +3,7 @@
 /**
  * nodeUtils.js - Common parts for nodes
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 class NodeUtils {

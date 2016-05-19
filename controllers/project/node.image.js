@@ -5,7 +5,7 @@
  *
  * /node/:nodeId/
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /**
@@ -17,7 +17,7 @@ module.exports.controller = function (application) {
      * Middleware to set image in the request
      */
     application.getExpress().all('/node/:nodeId/images/:imageId/*', function (request, response, next) {
-        request.image = request.dockerUtils.getDocker().getImage(request.params.imageId);
+        request.image = request.getDocker().getImage(request.params.imageId);
 
         return next();
     });
@@ -26,7 +26,7 @@ module.exports.controller = function (application) {
      * List
      */
     application.getExpress().get('/node/:nodeId/images/list/', function (request, response) {
-        request.dockerUtils.getDocker().listImages((error, images) => {
+        request.getDocker().listImages((error, images) => {
             if (error === null) {
                 response.render('project/node/images.list.html.twig', {
                     images: images
@@ -55,7 +55,7 @@ module.exports.controller = function (application) {
      * Delete - handler
      */
     application.getExpress().post('/node/:nodeId/images/:imageId/delete/', function (request, response) {
-        request.dockerUtils.getDocker().getImage(request.image.name).remove((error) => {
+        request.getDocker().getImage(request.image.name).remove((error) => {
             if (error === null) {
                 request.logger.info('Image [' + request.image.name + '] in project [' + request.project.getId() +
                     ' - ' + request.project.getName() + '] in node [' + request.node.getId() + ' - ' +

@@ -5,7 +5,7 @@
  *
  * /project/:projectId/settings/* 
  * 
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /**
@@ -21,8 +21,21 @@ module.exports.controller = function (application) {
             return response.redirect('/');
         }
 
-        response.render('project/settings.html.twig', {
-            action: 'project.settings'
+        request.projectLogManager.getAllForProject(request.project.getId(), (error, projectLogs) => {
+            if (error === null) {
+                response.render('project/settings.html.twig', {
+                    action: 'project.settings',
+                    projectLogs: projectLogs
+                });
+            } else {
+                request.logger.error(error);
+
+                response.render('project/settings.html.twig', {
+                    action: 'project.settings',
+                    projectLogs: {},
+                    error: 'Got error. Contact your system administrator'
+                });
+            }
         });
     });
     

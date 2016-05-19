@@ -5,7 +5,7 @@
  *
  * /node/:nodeId/
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /**
@@ -68,7 +68,7 @@ module.exports.controller = function (application) {
      * Overview
      */
     application.getExpress().get('/node/:nodeId/overview/', function (request, response) {
-        request.dockerUtils.getDocker().info((error, info) => {
+        request.getDocker().info((error, info) => {
             if (error === null) {
                 response.render('project/node/overview.html.twig', {
                     action: 'project.nodes',

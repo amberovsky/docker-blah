@@ -3,7 +3,7 @@
 /**
  * application.js - bootstrapping, project itself
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 class Application {
@@ -38,6 +38,23 @@ class Application {
      */
     constructor() {
         var self = this;
+
+
+        /**
+         * @type {Utils} - project utils
+         */
+        this.utils = new (require('./utils.js'))();
+
+        /**
+         * @type {DockerUtils} - docker utils
+         */
+        this.dockerUtils = new (require('./dockerUtils.js'));
+
+        /**
+         * @type {WebSocketEventEmitter} - websocket event emitter
+         */
+        this.webSocketEventEmitter = new (require('./webSocketEventEmitter.js'))();
+
 
         // filesystem
         this.fs = require('fs');
@@ -75,20 +92,11 @@ class Application {
             return function(options) {
                 var date = new Date();
 
-                // add leading zeroes
-                var leadZero = function (value) {
-                    while (value.toString().length < 2) {
-                        value = '0' + value;
-                    }
-
-                    return value;
-                };
-
                 // format timestamp
-                var timestamp = date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' +
-                    leadZero(date.getUTCDate()) + ' ' + leadZero(date.getUTCHours()) + ':' +
-                    leadZero(date.getUTCMinutes()) + ':' + leadZero(date.getUTCSeconds()) + '.' +
-                    leadZero(date.getUTCMilliseconds(), 3);
+                var timestamp = date.getUTCFullYear() + '-' + self.utils.leadZero(date.getUTCMonth()) + '-' +
+                    self.utils.leadZero(date.getUTCDate()) + ' ' + self.utils.leadZero(date.getUTCHours()) + ':' +
+                    self.utils.leadZero(date.getUTCMinutes()) + ':' + self.utils.leadZero(date.getUTCSeconds()) + '.' +
+                    self.utils.leadZero(date.getUTCMilliseconds(), 3);
 
                 return  timestamp + ' TID: ' + tid + ' UID: [' + uid + '] - ' + options.level.toUpperCase() + ': ' +
                     (undefined !== options.message ? options.message : '') +
@@ -131,21 +139,12 @@ class Application {
         });
 
         // filter: format timestamp to date
-        environment.addFilter('date', function (input, start, end) {
+        environment.addFilter('date', function (input) {
             var date = new Date(parseInt(input) * 1000);
 
-            // add leading zeroes
-            var leadZero = function (value) {
-                while (value.toString().length < 2) {
-                    value = '0' + value;
-                }
-
-                return value;
-            };
-
-            return date.getUTCFullYear() + '-' + leadZero(date.getUTCMonth()) + '-' +
-                leadZero(date.getUTCDate()) + ' ' + leadZero(date.getUTCHours()) + ':' +
-                leadZero(date.getUTCMinutes()) + ':' + leadZero(date.getUTCSeconds());
+            return date.getUTCFullYear() + '-' + self.utils.leadZero(date.getUTCMonth()) + '-' +
+                self.utils.leadZero(date.getUTCDate()) + ' ' + self.utils.leadZero(date.getUTCHours()) + ':' +
+                self.utils.leadZero(date.getUTCMinutes()) + ':' + self.utils.leadZero(date.getUTCSeconds());
         });
 
 
@@ -251,11 +250,14 @@ class Application {
             /** @type {NodeManager} - node manager */
             request.nodeManager = new (require('../models/nodeManager.js'))(self, request.logger);
 
+            /** @type {ProjectLogManager} - project log manager */
+            request.projectLogManager = new (require('../models/projectLogManager.js'))(self, request.logger);
+
             /** @type {NodeUtils} - nodeUtils */
             request.nodeUtils = new (require('./nodeUtils.js'))(request);
 
-            /** @type {DockerUtils} - dockerUtils */
-            request.dockerUtils = new (require('./dockerUtils.js'))(request);
+            /** function to get docker instance */
+            request.getDocker = self.dockerUtils.createDockerForRequest(request);
 
             /** @type {RegistryManager} - registry manager */
             request.registryManager = new (require('../models/registryManager.js'))(self, request.logger);
@@ -357,6 +359,13 @@ class Application {
             /** @type {UserManager} - user manager */
             this.userManager = new (require('../models/userManager.js'))(self, this.systemLogger);
 
+            /** @type {ProjectManager} - project manager */
+            this.projectManager = new (require('../models/projectManager.js'))(self, this.systemLogger);
+
+            /** @type {NodeManager} - node manager */
+            this.nodeManager = new (require('../models/nodeManager.js'))(self, this.systemLogger);
+
+
             this.getSystemLogger().info('loading controllers...');
 
             // load controllers
@@ -378,41 +387,59 @@ class Application {
             /**
              * Ta-daaa! The server
              */
-            var server = this.express.listen(3000, function () {
-                self.systemLogger.info('docker-blah has started');
-                console.log('hello');
-            });
+            this.express.listen(3000, function () {
+                // socket.io & passportjs
+                var passportSocketIo = require("passport.socketio");
+                var io = require('socket.io').listen(this);
 
-            // socket.io & passportjs
-            var passportSocketIo = require("passport.socketio");
-            var io = require('socket.io').listen(server);
+                // passportjs for auth
+                io.use(passportSocketIo.authorize({
+                    cookieParser: cookieParser, // the same middleware you register in express
+                    key:          'express.sid', // the name of the cookie where express/connect stores its session_id
+                    secret:       sessionSecret, // the session_secret to parse the cookie
+                    store:        sessionStore, // we NEED to use a sessionstore. no memorystore please
+                    success:      function(data, accept) {
+                        console.log('socket-acc');
+                        accept();
+                    },
+                    fail:         function (data, message, error, accept) {
+                        // TODO more detailed logs
+                        console.log('failed socket connection');
 
-            // passportjs for auth
-            io.use(passportSocketIo.authorize({
-                cookieParser: cookieParser, // the same middleware you register in express
-                key:          'express.sid', // the name of the cookie where express/connect stores its session_id
-                secret:       sessionSecret, // the session_secret to parse the cookie
-                store:        sessionStore, // we NEED to use a sessionstore. no memorystore please
-                success:      function(data, accept) {
-                    console.log('socket-acc');
-                    accept();
-                },
-                fail:         function (data, message, error, accept) {
-                    // TODO more detailed logs
-                    console.log('failed socket connection');
+                        // error indicates whether the fail is due to an error or just a unauthorized client
+                        if (error) {
+                            throw new Error(message);
+                        }
 
-                    // error indicates whether the fail is due to an error or just a unauthorized client
-                    if (error) {
-                        throw new Error(message);
+                        // send the (not-fatal) error-message to the client and deny the connection
+                        return accept(new Error(message));
                     }
+                }));
 
-                    // send the (not-fatal) error-message to the client and deny the connection
-                    return accept(new Error(message));
-                }
-            }));
+                io.on('connection', function (socket) {
+                    
+                    // authe'ed user
+                    var user = socket.request.user;
+                    
+                    var websocketLogger = new (winston.Logger)({
+                        transports: [
+                            new (winston.transports.File)({
+                                filename: self.getLogsDirectory() + '/system.log',
+                                json: false,
+                                formatter: loggerFormatter(
+                                    '[WEBSOCKET]',
+                                    '[' + user.getId() + ' - '  + user.getName() + ']',
+                                    'N/A'
+                                )
+                            })
+                        ]
+                    });
+                    
+                    self.getWebSocketEventEmitter().emit('connection', socket, user, websocketLogger);
+                });
 
-            io.on('connection', function (socket) {
-                // TODO
+                self.systemLogger.info('docker-blah has started');
+                console.log('docker-blah has started');
             });
         };
 
@@ -481,6 +508,21 @@ class Application {
     }
 
     /**
+     * @returns {NodeManager}
+     */
+    getNodeManager() {
+        return this.nodeManager;
+    }
+
+
+    /**
+     * @returns {ProjectManager}
+     */
+    getProjectManager() {
+        return this.projectManager;
+    }
+
+    /**
      * @returns {UserManager}
      */
     getUserManager() {
@@ -514,6 +556,14 @@ class Application {
             enumerable: true
         });
     };
+
+    /**
+     * @returns {WebSocketEventEmitter} - websocket event emitter
+     */
+    getWebSocketEventEmitter() {
+        return this.webSocketEventEmitter;
+    }
+    
 }
 
 module.exports = Application;

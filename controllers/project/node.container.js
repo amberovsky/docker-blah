@@ -5,7 +5,7 @@
  *
  * /node/:nodeId/
  *
- * (C) Anton Zagorskii aka amberovsky
+ * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
  */
 
 /**
@@ -17,7 +17,7 @@ module.exports.controller = function (application) {
      * Middleware to set container in the request
      */
     application.getExpress().all('/node/:nodeId/containers/:containerId/*', function (request, response, next) {
-        request.container = request.dockerUtils.getDocker().getContainer(request.params.containerId);
+        request.container = request.getDocker().getContainer(request.params.containerId);
 
         return next();
     });
@@ -26,7 +26,7 @@ module.exports.controller = function (application) {
      * List
      */
     application.getExpress().get('/node/:nodeId/containers/list/', function (request, response) {
-        request.dockerUtils.getDocker().listContainers({ all: true }, (error, containers) => {
+        request.getDocker().listContainers({ all: true }, (error, containers) => {
             if (error === null) {
                 return response.render('project/node/containers.list.html.twig', {
                     containers: containers
@@ -82,12 +82,130 @@ module.exports.controller = function (application) {
     });
 
     /**
-     * Logs
+     * Stream container's "main" log
+     *
+     * @param {Object} socket - socket.io websocket
+     * @param {Object} params - request params
+     * @param {User} user - request author
+     * @param {winston.logger} websocketLogger - loger instance
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/logs/', function (request, response) {
-        return response.render('project/node/container/logs.html.twig', {
+    function streamContainerLog(socket, params, user, websocketLogger) {
+        var
+            nodeId = parseInt(params.nodeId),
+            containerId = params.containerId;
+
+        if (Number.isNaN(nodeId)) {
+            websocketLogger.error('[' + 'containerlog' + '] wrong nodeId [' + params.nodeId + ']');
+            return socket.disconnect();
+        }
+
+        if ((typeof containerId === 'undefined') || (containerId === null)) {
+            websocketLogger.error('[' + 'containerlog' + '] no containerId in the request');
+            return socket.disconnect();
+        }
+
+        application.getNodeManager().getById(nodeId, (error, node) => {
+            if (node === null) {
+                websocketLogger.error('[' + 'containerlog' + '] node with id [' + nodeId + '] does not exist');
+                return socket.disconnect();
+            }
+
+            if (error === null) {
+                application.getProjectManager().getById(node.getProjectId(), (error, project) => {
+                    if (project === null) {
+                        websocketLogger.error('[' + 'containerlog' + '] project with id [' + node.getProjectId() +
+                            '] does ' + 'not exist in the node [' + node.getId() + ' - ' + node.getName() + ']');
+                        return socket.disconnect();
+                    }
+
+                    if (error === null) {
+                        var process = () => {
+                            var
+                                docker = application.dockerUtils.createDockerCustom(
+                                    node.getIp(), node.getPort(), project.getCA(), project.getCERT(), project.getKEY()
+                                ),
+                                container = docker.getContainer(containerId);
+
+                            container.logs({ follow: true, stdout: true, stderr: true }, (error, dockerStream) => {
+                                if (error === null) {
+                                    const StringDecoder = require('string_decoder').StringDecoder;
+                                    const decoder = new StringDecoder('utf8');
+
+                                    dockerStream.on('end', function () {
+                                        socket.emit('data', { data: 'Lost connection. Container was stopped?' });
+                                        return socket.disconnect();
+                                    });
+
+                                    dockerStream.on('data', function (chunk) {
+                                        socket.emit('data', { data: decoder.write(chunk) });
+                                    });
+
+                                } else {
+                                    websocketLogger.error(error);
+                                    socket.emit('data', { error: error });
+                                    return socket.disconnect();
+                                }
+                            })
+                        };
+
+                        // check does user have access to this node
+                        if (application.getUserManager().isUserUser(user)) {
+                            application.getProjectManager().getUserRoleInProjects(user.getId, (error, roles) => {
+                                if (error === null) {
+                                    if (roles.hasOwnProperty(project.getId())) {
+                                        process();
+                                    } else {
+                                        websocketLogger.error('[' + 'containerlog' + '] user tried to read logs ' +
+                                            'from project [' + project.getId() + '] where he does not have access');
+                                        return socket.disconnect();
+                                    }
+                                }
+                            });
+                        } else {
+                            process();
+                        }
+                    } else {
+                        // super- or admin- users always have access
+                        websocketLogger.error(error);
+                        return socket.disconnect();
+                    }
+                });
+            } else {
+                websocketLogger.error(error);
+                return socket.disconnect();
+            }
+        });
+    }
+
+    /**
+     * Websocket events
+     */
+    application.getWebSocketEventEmitter().on('connection', (socket, user, websocketLogger) => {
+        /**
+         * Stream container's "main" log
+         */
+        socket.on('containerlog', (params) => {
+            return streamContainerLog(socket, params, user, websocketLogger)
+        });
+    });
+
+    /**
+     * Container log
+     */
+    application.getExpress().get('/node/:nodeId/containers/:containerId/containerlog/', function (request, response) {
+        return response.render('project/node/container/containerlog.html.twig', {
             action: 'project.nodes',
-            subaction: 'logs'
+            subaction: 'containerlog'
+        });
+    });
+
+    /**
+     * Custom logs
+     */
+    application.getExpress().get('/node/:nodeId/containers/:containerId/customlogs/', function (request, response) {
+        return response.render('project/node/container/customlogs.html.twig', {
+            action: 'project.nodes',
+            subaction: 'customlogs'
         });
     });
 
@@ -107,7 +225,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/node/:nodeId/containers/:containerId/stop/', function (request, response) {
         request.container.stop((error) => {
             if (error === null) {
-                request.dockerUtils.getDocker().listContainers({ all: true }, (error, containers) => {
+                request.getDocker().listContainers({ all: true }, (error, containers) => {
                     if (error === null) {
                         var found = false;
                         for (var index in containers) {
@@ -165,7 +283,7 @@ module.exports.controller = function (application) {
     application.getExpress().get('/node/:nodeId/containers/:containerId/start/', function (request, response) {
         request.container.start((error) => {
             if (error === null) {
-                request.dockerUtils.getDocker().listContainers({ all: true }, (error, containers) => {
+                request.getDocker().listContainers({ all: true }, (error, containers) => {
                     if (error === null) {
                         var found = false;
                         for (var index in containers) {
