@@ -13,16 +13,16 @@
 
     <br />
 
-    <div class="for_errors"></div>
-
-    <form class="form-inline">
-        <div class="form-group form-group-sm">
-            <label for="exampleInputName2">Command:</label>
-            <input type="text" class="form-control" style="width: 700px;" id="command" placeholder="Jane Doe">
+    <form class='run-command-container'>
+        <div class='run-command'>
+            <input type="text" class="form-control" id="command" placeholder="Command">
         </div>
-        <button type="button" id="container-run" class="btn btn-success btn-sm">Run</button>
-        <button type="button" id="container-detach" class="btn btn-primary btn-sm" disabled>Detach</button>
-        <button type="button" id="container-stop" class="btn btn-danger btn-sm" disabled>Stop</button>
+
+        <div class='run-command-buttons text-right'>
+            <button type="button" id="container-run" class="btn btn-success btn-sm">Run</button>
+            <button type="button" id="container-detach" class="btn btn-primary btn-sm" disabled>Detach</button>
+            <button type="button" id="container-stop" class="btn btn-danger btn-sm" disabled>Stop</button>
+        <div>
     </form>
 
     <br />
