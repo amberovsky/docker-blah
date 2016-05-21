@@ -59,12 +59,15 @@
 </nav>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
-            {%  block sidebar %}{% endblock %}
-        </div>
-
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2">
+        <div class="content-container">
+            <div class="content">
+        {#<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2">#}
             {% block content %}{% endblock %}
+            </div>
+        </div>
+        <div class="left-sidebar sidebar">
+            {#<div class="col-sm-3 col-md-2 sidebar">#}
+            {%  block sidebar %}{% endblock %}
         </div>
     </div>
 </div>

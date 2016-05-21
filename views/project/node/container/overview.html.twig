@@ -22,9 +22,9 @@
         </div>
     {% else %}
         <h3>Base info</h3>
-        <table class="table table-bordered table-condensed">
+        <table class="table table-bordered table-super-condensed">
             <tr>
-                <th>Option</th>
+                <th width="100px">Option</th>
                 <th>Value</th>
             </tr>
             <tr>
@@ -50,7 +50,7 @@
         </table>
 
         <h3>Volumes</h3>
-        <table class="table table-bordered table-condensed">
+        <table class="table table-bordered table-super-condensed">
             <tr>
                 <th>Source</th>
                 <th>Destination</th>
@@ -64,7 +64,7 @@
         </table>
 
         <h3>Ports</h3>
-        <table class="table table-bordered table-condensed">
+        <table class="table table-bordered table-super-condensed">
             <tr>
                 <th>Container</th>
                 <th>Host IP</th>
@@ -88,13 +88,13 @@
         </table>
 
         <h3>Processes: {{ topCount }}</h3>
-        <table class="table table-bordered table-condensed">
+        <table class="table table-bordered table-super-condensed">
             <tr>
-                <th>PID</th>
-                <th>USER</th>
-                <th>%CPU</th>
-                <th>%MEM</th>
-                <th>TIME</th>
+                <th width="50px">PID</th>
+                <th width="70px">USER</th>
+                <th width="50px">%CPU</th>
+                <th width="60px">%MEM</th>
+                <th width="60px">TIME</th>
                 <th>COMMAND</th>
             </tr>
             {% for process in top %}
@@ -109,4 +109,5 @@
             {% endfor %}
         </table>
     {% endif %}
+
 {% endblock %}
