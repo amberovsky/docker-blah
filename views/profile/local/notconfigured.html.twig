@@ -6,20 +6,22 @@
 
 {% block content %}
     <h1 class="page-header"><span class="fa fa-plug fa-fw"></span>&nbsp;&nbsp;Local docker status : <span class="label label-danger">not configured</span></h1>
-    <form class="form-horizontal" method="post"  action="/profile/local/">
+    <form class="form-horizontal" method="post" enctype="multipart/form-data" action="/profile/local/">
         {% if (error or success) %}
-            <div class="col-sm-6">
-                {% if error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        {{ error }}
-                    </div>
-                {% else %}
-                    <div class="alert alert-success alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        {{ success }}
-                    </div>
-                {% endif %}
+            <div class="form-group">
+                <div class="col-sm-6">
+                    {% if error %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ success }}
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         {% endif %}
         <p class="lead">Connect your docker from your machine / laptop to the docker-blah</p>

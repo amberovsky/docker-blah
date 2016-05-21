@@ -213,7 +213,7 @@ module.exports.controller = function (application) {
     function handleActionLocal(request, response) {
         if (request.user.getLocalId() == -1) {
             request.logger.error('Trying to update info in local docker when it is not configured');
-            return routeToLocalNotConfigured(request, response, 'Local docker is not configured');
+            return routeToLocalNotConfigured(request, response, 'Local docker is not configured', null);
         }
 
         request.projectUtils.validateProjectActionCreateNewOrUpdateProject(true, (error) => {
@@ -256,7 +256,7 @@ module.exports.controller = function (application) {
     function handleActionFiles(request, response) {
         if (request.user.getLocalId() == -1) {
             request.logger.error('Trying to update files in local docker when it is not configured');
-            return routeToLocalNotConfigured(request, response, 'Local docker is not configured');
+            return routeToLocalNotConfigured(request, response, 'Local docker is not configured', null);
         }
 
         request.projectUtils.validateProjectActionUpdateCerts((error) => {

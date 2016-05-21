@@ -231,8 +231,8 @@ class ProjectManager {
                 project.getCA(),
                 project.getCERT(),
                 project.getKEY(),
-                project.getId(),
-                project.getCreated()
+                project.getCreated(),
+                project.getId()
             ], function (error) {
                 if (error === null) {
                     if (this.changes === 0) {
