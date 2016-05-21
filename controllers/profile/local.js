@@ -224,6 +224,8 @@ module.exports.controller = function (application) {
                             if (error === null) {
                                 request.nodeManager.update(request.node, (error) => {
                                     if (error == null) {
+                                        request.local = request.project;
+                                        
                                         return routeToLocal(request, response, null, 'Info was updated');
                                     } else {
                                         return routeToLocalConfigured(
