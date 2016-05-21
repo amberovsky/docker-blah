@@ -11,13 +11,24 @@
         {% include './partial.tab.html.twig' %}
     {% endblock %}
 
-    {% if (error) %}
-        <div class="col-sm-12">
-            <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                {{ error }}
-            </div>
+    <br />
+
+    <form class="form-inline">
+        <div class="form-group form-group-sm">
+            <label for="exampleInputName2">Command:</label>
+            <input type="text" class="form-control" style="width: 700px;" id="exampleInputName2" placeholder="Jane Doe">
         </div>
-    {% else %}
-    {% endif %}
+        <button type="button" class="btn btn-success btn-sm">Run</button>
+        <button type="button" class="btn btn-primary btn-sm">Detach</button>
+        <button type="button" class="btn btn-danger btn-sm" disabled>Stop</button>
+    </form>
+
+    <br />
+
+    <div class="for_errors"></div>
+
+    <div id="terminal" class="form-control terminal"></div>
+
+    <br />
+
 {% endblock %}
