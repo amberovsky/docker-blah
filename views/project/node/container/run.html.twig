@@ -13,17 +13,29 @@
 
     <br />
 
-    <form class="form-inline">
-        <div class="form-group form-group-sm">
-            <label for="exampleInputName2">Command:</label>
-            <input type="text" class="form-control" style="width: 700px;" id="exampleInputName2" placeholder="Jane Doe">
+    <div class='run-command-container'>
+        <div class='run-command'>
+            <input type="text" class="form-control" id="exampleInputName2" placeholder="Command">
         </div>
-        <button type="button" class="btn btn-success btn-sm">Run</button>
-        <button type="button" class="btn btn-primary btn-sm">Detach</button>
-        <button type="button" class="btn btn-danger btn-sm" disabled>Stop</button>
-    </form>
-
+        <div class='run-command-buttons text-right'>
+            <button type="button" class="btn btn-success btn-sm">Run</button>
+            <button type="button" class="btn btn-primary btn-sm">Detach</button>
+            <button type="button" class="btn btn-danger btn-sm" disabled>Stop</button>
+        </div>
+    </div>
     <br />
+
+    {#<div class="run-command-container">#}
+        {#<div class="run-command">#}
+            {#bla#}
+            {#<input type="text" class="form-control" id="exampleInputName2" placeholder="Command">#}
+        {#</div>#}
+        {#<div class="run-command-buttons">#}
+            {#<button type="button" class="btn btn-success btn-sm">Run</button>#}
+            {#<button type="button" class="btn btn-primary btn-sm">Detach</button>#}
+            {#<button type="button" class="btn btn-danger btn-sm" disabled>Stop</button>#}
+        {#</div>#}
+    {#</div>#}
 
     <div class="for_errors"></div>
 

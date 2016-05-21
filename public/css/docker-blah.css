@@ -63,3 +63,20 @@ h1 {
 .page-header {
     margin-top: 20px;
 }
+
+.run-command-container {
+    position:relative;
+    height:100%;
+    margin-bottom: 30px;
+}
+.run-command {
+    position:absolute;
+    left:0;
+    right:190px;
+    height: 100%;
+}
+.run-command-buttons {
+    width: 180px;
+    height: 100%;
+    float:right;
+}
