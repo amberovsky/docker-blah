@@ -13,22 +13,41 @@
 
     <br />
 
+    <div class="for_errors"></div>
+
     <form class="form-inline">
         <div class="form-group form-group-sm">
             <label for="exampleInputName2">Command:</label>
-            <input type="text" class="form-control" style="width: 700px;" id="exampleInputName2" placeholder="Jane Doe">
+            <input type="text" class="form-control" style="width: 700px;" id="command" placeholder="Jane Doe">
         </div>
-        <button type="button" class="btn btn-success btn-sm">Run</button>
-        <button type="button" class="btn btn-primary btn-sm">Detach</button>
-        <button type="button" class="btn btn-danger btn-sm" disabled>Stop</button>
+        <button type="button" id="container-run" class="btn btn-success btn-sm">Run</button>
+        <button type="button" id="container-detach" class="btn btn-primary btn-sm" disabled>Detach</button>
+        <button type="button" id="container-stop" class="btn btn-danger btn-sm" disabled>Stop</button>
     </form>
 
     <br />
-
-    <div class="for_errors"></div>
 
     <div id="terminal" class="form-control terminal"></div>
 
     <br />
 
+    <script>
+        var
+            terminal = $('#terminal'),
+            command = $('#command'),
+            containerRun = $('#container-run'),
+            containerDetach = $('#container-detach'),
+            containerStop = $('#container-stop');
+
+        /**
+         * Handle click on "stop" button
+         */
+        containerRun.on('click', function () {
+            if (command.val().trim().length == 0) {
+                addError('Empty command!');
+            } else {
+                containerRun.prop('disabled', true);
+            }
+        });
+    </script>
 {% endblock %}

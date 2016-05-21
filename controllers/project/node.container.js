@@ -247,7 +247,9 @@ module.exports.controller = function (application) {
                 return response.render('project/node/container/customlogs.html.twig', {
                     action: 'project.nodes',
                     subaction: 'customlogs',
-                    projectLog: projectLog
+                    projectLog: (projectLog === null
+                        ? request.projectLogManager.create(request.project.getId())
+                        : projectLog)
                 });
             } else {
                 request.loger.error(error);
