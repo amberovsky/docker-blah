@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to nodes in <strong>{{ request.project.getName() }}</strong></a>&nbsp;&nbsp;Node #{{ request.node.getId() }} {{ request.node.getName() }}</h1>
+    <h1 class="page-header"><span class="fa fa-sitemap fa-fwe"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to nodes in <strong>{{ request.project.getName() }}</strong></a>&nbsp;&nbsp;Node #{{ request.node.getId() }} {{ request.node.getName() }}</h1>
 
     {% block tabs %}
         {% include './partial.tab.html.twig' %}

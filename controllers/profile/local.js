@@ -96,12 +96,12 @@ module.exports.controller = function (application) {
      *
      * @param {Object} request - expressjs request
      * @param {Object} response - expressjs response
-     * @param {(null|string)} error - error message, if present
-     * @param {(null|string)} success - success message, if present
+     * @param {(null|string)} errorMsg - error message, if present
+     * @param {(null|string)} successMsg - success message, if present
      */
     function routeToLocal(request, response, errorMsg, successMsg) {
         if (request.user.getLocalId() === -1) {
-            routeToLocalNotConfigured(requst, response, errorMsg, successMsg);
+            routeToLocalNotConfigured(request, response, errorMsg, successMsg);
         } else {
             routeToLocalConfigured(response, errorMsg, successMsg);
         }

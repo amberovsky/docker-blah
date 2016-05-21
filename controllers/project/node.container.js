@@ -81,41 +81,29 @@ module.exports.controller = function (application) {
         });
     });
 
-    /**
-     * Stream container's "main" log
-     *
-     * @param {Object} socket - socket.io websocket
-     * @param {Object} params - request params
-     * @param {User} user - request author
-     * @param {winston.logger} websocketLogger - loger instance
-     */
-    function streamContainerLog(socket, params, user, websocketLogger) {
+    function validateLogRequestAndGetContainer(params, user, callback) {
         var
             nodeId = parseInt(params.nodeId),
             containerId = params.containerId;
 
         if (Number.isNaN(nodeId)) {
-            websocketLogger.error('[' + 'containerlog' + '] wrong nodeId [' + params.nodeId + ']');
-            return socket.disconnect();
+            return callback('wrong nodeId [' + params.nodeId + ']', null);
         }
 
-        if ((typeof containerId === 'undefined') || (containerId === null)) {
-            websocketLogger.error('[' + 'containerlog' + '] no containerId in the request');
-            return socket.disconnect();
+        if ((typeof containerId === 'undefined') || (containerId === null) || (containerId.trim().length == 0)) {
+            return callback('no containerId in the request', null);
         }
 
         application.getNodeManager().getById(nodeId, (error, node) => {
             if (node === null) {
-                websocketLogger.error('[' + 'containerlog' + '] node with id [' + nodeId + '] does not exist');
-                return socket.disconnect();
+                return callback('node with id [' + nodeId + '] does not exist', null);
             }
 
             if (error === null) {
                 application.getProjectManager().getById(node.getProjectId(), (error, project) => {
                     if (project === null) {
-                        websocketLogger.error('[' + 'containerlog' + '] project with id [' + node.getProjectId() +
-                            '] does ' + 'not exist in the node [' + node.getId() + ' - ' + node.getName() + ']');
-                        return socket.disconnect();
+                        return callback('project with id [' + node.getProjectId() + '] does not exist in the node [' +
+                            node.getId() + ' - ' + node.getName() + ']', null);
                     }
 
                     if (error === null) {
@@ -126,26 +114,7 @@ module.exports.controller = function (application) {
                                 ),
                                 container = docker.getContainer(containerId);
 
-                            container.logs({ follow: true, stdout: true, stderr: true }, (error, dockerStream) => {
-                                if (error === null) {
-                                    const StringDecoder = require('string_decoder').StringDecoder;
-                                    const decoder = new StringDecoder('utf8');
-
-                                    dockerStream.on('end', function () {
-                                        socket.emit('data', { data: 'Lost connection. Container was stopped?' });
-                                        return socket.disconnect();
-                                    });
-
-                                    dockerStream.on('data', function (chunk) {
-                                        socket.emit('data', { data: decoder.write(chunk) });
-                                    });
-
-                                } else {
-                                    websocketLogger.error(error);
-                                    socket.emit('data', { error: error });
-                                    return socket.disconnect();
-                                }
-                            })
+                            callback(null, container);
                         };
 
                         // check does user have access to this node
@@ -155,23 +124,85 @@ module.exports.controller = function (application) {
                                     if (roles.hasOwnProperty(project.getId())) {
                                         process();
                                     } else {
-                                        websocketLogger.error('[' + 'containerlog' + '] user tried to read logs ' +
-                                            'from project [' + project.getId() + '] where he does not have access');
-                                        return socket.disconnect();
+                                        return callback('user tried to read logs from project [' + project.getId() +
+                                            '] where he does not have access', null);
                                     }
                                 }
                             });
                         } else {
                             process();
                         }
+
                     } else {
-                        // super- or admin- users always have access
-                        websocketLogger.error(error);
-                        return socket.disconnect();
+                        return callback(error, null);
                     }
                 });
             } else {
-                websocketLogger.error(error);
+                return callback(error, null);
+            }
+        });
+    }
+
+    /**
+     * Stream container's "main" log
+     *
+     * @param {Object} socket - socket.io websocket
+     * @param {Object} params - request params
+     * @param {User} user - request author
+     * @param {winston.logger} websocketLogger - logger instance
+     */
+    function streamContainerLog(socket, params, user, websocketLogger) {
+        validateLogRequestAndGetContainer(params, user, (error, container) => {
+            if (error === null) {
+                container.logs({ follow: true, stdout: true, stderr: true }, (error, dockerStream) => {
+                    if (error === null) {
+                        const StringDecoder = require('string_decoder').StringDecoder;
+                        const decoder = new StringDecoder('utf8');
+
+                        dockerStream.on('end', () => {
+                            socket.emit('data', { data: 'Lost connection. Container was stopped?' });
+                            return socket.disconnect();
+                        });
+
+                        dockerStream.on('data', (chunk) => {
+                            socket.emit('data', { data: decoder.write(chunk) });
+                        });
+
+                    } else {
+                        websocketLogger.error(error);
+                        socket.emit('data', { error: error });
+                        return socket.disconnect();
+                    }
+                })
+
+            } else {
+                websocketLogger.error('[containerlog] ' + error);
+                return socket.disconnect();
+            }
+        });
+    }
+
+    /**
+     * Stream container's custom log
+     *
+     * @param {Object} socket - socket.io websocket
+     * @param {Object} params - request params
+     * @param {User} user - request author
+     * @param {winston.logger} websocketLogger - logger instance
+     */
+    function streamCustomLog(socket, params, user, websocketLogger) {
+        var log = params.log;
+
+        if ((typeof log === 'undefined') || (log === null) || (log.trim().length == 0)) {
+            websocketLogger.error('[customlog] no log in the request');
+            return socket.disconnect();
+        }
+
+        validateLogRequestAndGetContainer(params, user, (error, container) => {
+            if (error === null) {
+                
+            } else {
+                websocketLogger.error('[customlog] ' + error);
                 return socket.disconnect();
             }
         });
@@ -187,6 +218,14 @@ module.exports.controller = function (application) {
         socket.on('containerlog', (params) => {
             return streamContainerLog(socket, params, user, websocketLogger)
         });
+
+        /**
+         * Stream container's custom log
+         */
+        socket.on('customlog', (params) => {
+            return streamCustomLog(socket, params, user, websocketLogger)
+        });
+
     });
 
     /**
@@ -203,9 +242,22 @@ module.exports.controller = function (application) {
      * Custom logs
      */
     application.getExpress().get('/node/:nodeId/containers/:containerId/customlogs/', function (request, response) {
-        return response.render('project/node/container/customlogs.html.twig', {
-            action: 'project.nodes',
-            subaction: 'customlogs'
+        request.projectLogManager.getByProjectId(request.project.getId(), (error, projectLog) => {
+            if (error === null) {
+                return response.render('project/node/container/customlogs.html.twig', {
+                    action: 'project.nodes',
+                    subaction: 'customlogs',
+                    projectLog: projectLog
+                });
+            } else {
+                request.loger.error(error);
+
+                return response.render('project/node/container/customlogs.html.twig', {
+                    action: 'project.nodes',
+                    subaction: 'customlogs',
+                    error: 'Got error. Contact your system administrator'
+                });
+            }
         });
     });
 

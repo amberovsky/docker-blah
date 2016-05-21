@@ -237,16 +237,28 @@ module.exports.controller = function (application) {
      * Delete project - handler
      */
     application.getExpress().post('/admin/projects/:projectId/delete/', function (request, response) {
-        request.projectManager.deleteProject(request.project.getId(), function (error) {
+        request.projectLogManager.deleteByProjectId(request.project.getId(), (error) => {
             if (error === null) {
-                request.logger.info('project [' + request.project.getName() + '] was deleted.');
+                request.logger.info('project_log for [' + request.project.getName() + '] was deleted.');
 
-                return routeToAllProjects(
-                    request, response, 'Project [' + request.project.getName() + '] was deleted.', null
-                );
+                request.projectManager.deleteProject(request.project.getId(), (error) => {
+                    if (error === null) {
+                        request.logger.info('project [' + request.project.getName() + '] was deleted.');
+
+                        return routeToAllProjects(
+                            request, response, 'Project [' + request.project.getName() + '] was deleted.', null
+                        );
+                    } else {
+                        request.logger.error(error);
+
+                        return routeToAllProjects(
+                            request, response, null, 'Got error. Contact your system administrator.'
+                        );
+                    }
+                });
             } else {
                 request.logger.error(error);
-                
+
                 return routeToAllProjects(
                     request, response, null, 'Got error. Contact your system administrator.'
                 );

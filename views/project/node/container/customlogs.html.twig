@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }}</strong></a>&nbsp;&nbsp;Container #</h1>
+    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }} / {{ request.node.getIp() }}:{{ request.node.getPort() }}</strong></a>&nbsp;&nbsp;Container #{{ request.container.id|truncate(12, True, '') }}</h1>
 
     {% block tabs %}
         {% include './partial.tab.html.twig' %}
@@ -13,19 +13,75 @@
 
     <br />
 
-    <div class="btn-group">
-        <button type="button" class="btn btn-danger">Log: SYSTEM</button>
-        <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="caret"></span>
-            <span class="sr-only">Toggle Dropdown</span>
-        </button>
-        <ul class="dropdown-menu">
-            <li><a href="#">Action</a></li>
-            <li><a href="#">Another action</a></li>
-            <li><a href="#">Something else here</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href="#">Separated link</a></li>
-        </ul>
+    {% if (error) %}
+        <div class="col-sm-6">
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                {{ error }}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="btn-group" data-toggle="buttons">
+        {% set index = 0 %}
+        {% for log in projectLog.getParsedLogs() %}
+            {% set index = index + 1 %}
+            <label class="btn btn-primary label-log" id="label_log_{{ index }}" data-log="{{ log }}">
+                <input type="radio" name="log_{{ index }}" id="log_{{ index }}" autocomplete="off" checked>{{ log }}
+            </label>
+        {% endfor %}
     </div>
 
+
+    <br />
+
+    <div class="for_errors"></div>
+
+    <div id="terminal" class="form-control terminal"></div>
+
+    <br />
+
+    <script>
+        var
+            socket = null,
+            terminal = $('#terminal');
+
+        $('.label-log').on('click', function () {
+            if (socket !== null) {
+                socket.disconnect();
+            }
+
+            terminal.html('');
+
+            var log = $(this).data('log');
+
+            addTextToLogTerminal(
+                terminal, '<span class="terminal-system-event">*** CONNECTING TO DOCKER-BLAH ***\n*** REQUESTING ' + log + ' ... ***</span>\n\n'
+            );
+
+            socket = io.connect('/');
+
+            socket.emit('customlog', {
+                nodeId: {{ request.node.getId() }},
+                containerId: '{{ request.container.id }}',
+                log: log
+            });
+
+            socket.on('disconnect', function () {
+                addTextToLogTerminal(
+                    terminal,
+                    '<span class="terminal-system-event">\n\n*** DISCONNECTED FROM DOCKER-BLAH ***</span>\n\n'
+                );
+            });
+
+            socket.on('data', function (response) {
+                if (!response.error) {
+                    addTextToLogTerminal(terminal, response.data);
+                } else {
+                    addError(response.error);
+                    socket.disconnect();
+                }
+            });
+        });
+    </script>
 {% endblock %}

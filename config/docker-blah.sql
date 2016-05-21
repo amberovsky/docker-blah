@@ -1,4 +1,4 @@
-CREATE TABLE project(
+CREATE TABLE project (
   id      INTEGER       PRIMARY KEY AUTOINCREMENT,
   name    VARCHAR(100)  NOT NULL    DEFAULT '',
   user_id INTEGER       NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE project(
 INSERT INTO project (id, name, user_id, ca, cert, key) VALUES (1, 'Prj1', -1, '', '', '');
 INSERT INTO project (id, name, user_id, ca, cert, key) VALUES (2, 'Prj2', -1, '', '', '');
 
-CREATE TABLE node(
+CREATE TABLE node (
   id          INTEGER       PRIMARY KEY AUTOINCREMENT,
   project_id  INTEGER       NOT NULL,
   name        VARCHAR(100)  NOT NULL    DEFAULT '',
@@ -30,7 +30,7 @@ INSERT INTO node (id, project_id, name, ip, port) VALUES (3, 1, 'RC APP', '125',
 INSERT INTO node (id, project_id, name, ip, port) VALUES (4, 1, 'RC DB', '126', -1);
 INSERT INTO node (id, project_id, name, ip, port) VALUES (5, 2, 'qwe', 'eee', -1);
 
-CREATE TABLE user(
+CREATE TABLE user (
   id            INTEGER         PRIMARY KEY AUTOINCREMENT,
   name          VARCHAR(100)    NOT NULL    DEFAULT '',
   login         VARCHAR(16)     NOT NULL,
@@ -51,14 +51,9 @@ CREATE TABLE project_user(
   UNIQUE (project_id, user_id, role)
 );
 
-INSERT INTO project_user(project_id, user_id, role) VALUES (1, 1, 1);
+INSERT INTO project_user (project_id, user_id, role) VALUES (1, 1, 1);
 
-CREATE TABLE project_log(
-  id          INTEGER     PRIMARY KEY AUTOINCREMENT,
-  project_id  INTEGER     NOT NULL,
-  name        VARCHAR(16) NOT NULL    DEFAULT '',
-  path        VARCHAR(16) NOT NULL,
-
-  UNIQUE (project_id, name),
-  UNIQUE (project_id, path)
+CREATE TABLE project_log (
+  project_id  INTEGER       PRIMARY KEY,
+  logs        VARCHAR(1024) NOT NULL    DEFAULT ''
 );

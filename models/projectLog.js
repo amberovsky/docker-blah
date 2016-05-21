@@ -10,44 +10,21 @@ class ProjectLog {
 
     /**
      * @constructor
-     * 
-     * @param {number} id - id
+     *
      * @param {number} projectId - project id 
-     * @param {string} name - name
-     * @param {string} path - system path to a log
+     * @param {string} logs - unparsed list of logs
      */
-    constructor (id, projectId, name, path) {
-        /** @type {number} id */
-        this.id = id;
-
+    constructor (projectId, logs) {
         /** @type {number} project id */
         this.projectId = projectId;
 
-        /** @type {string} name */
-        this.name = name;
+        /** @type {string} unparsed list of logs */
+        this.logs = '';
 
-        /** @type {string} system path to a log */
-        this.path = path;
-    };
+        /** @type {string[]} parsed list of logs */
+        this.parsedLogs = [];
 
-    /**
-     * @returns {number} id
-     */
-    getId() {
-        return this.id;
-    };
-
-    /**
-     * Set new id
-     *
-     * @param {number} id - new id
-     *
-     * @returns {Project}
-     */
-    setId(id) {
-        this.id = id;
-
-        return this;
+        this.setLogs(logs);
     };
 
     /**
@@ -72,41 +49,31 @@ class ProjectLog {
     
 
     /**
-     * @returns {string} name
+     * @returns {string} unparsed list of logs
      */
-    getName() {
-        return this.name;
+    getLogs() {
+        return this.logs;
     };
 
     /**
-     * Set new name
-     * 
-     * @param {string} name - new name
+     * @returns {string[]} parsed list of logs
+     */
+    getParsedLogs() {
+        return this.parsedLogs;
+    }
+
+    /**
+     * @param {string} logs - new unparsed list of logs
      * 
      * @returns {ProjectLog}
      */
-    setName(name) {
-        this.name = name;
+    setLogs(logs) {
+        this.parsedLogs = logs
+            .split(/\r?\n/)
+            .map((value) => { return value.trim(); })
+            .filter((value) => { return value.length > 0; });
 
-        return this;
-    };
-
-    /**
-     * @returns {string} system path to a log
-     */
-    getPath() {
-        return this.path;
-    };
-
-    /**
-     * Set new system path to a log
-     *
-     * @param {string} path - new system path to a log
-     *
-     * @returns {ProjectLog}
-     */
-    setPath(path) {
-        this.path = path;
+        this.logs = this.parsedLogs.join('\n');
 
         return this;
     };

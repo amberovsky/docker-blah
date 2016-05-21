@@ -17,7 +17,7 @@ class ProjectLogManager {
      * @callback ProjectLogOperationCallback
      *
      * @param {(null|string)} error - error message
-     * @param {(null|boolean|ProjectLog|Object.<number, ProjectLog>)} projectLog - projet log (or list of project logs)
+     * @param {(null|boolean|ProjectLog|Object.<number, ProjectLog>)} projectLog - project log (or list of project logs)
      *        after applied operation or null if no project log with given criteria or boolean for check/if/does
      *        operations
      */
@@ -38,6 +38,15 @@ class ProjectLogManager {
     };
 
     /**
+     * @param {number} projectId - project id
+     *
+     * @returns {ProjectLog} - new projectLog for given project
+     */
+    create(projectId) {
+        return new ProjectLog(projectId, '');
+    }
+
+    /**
      * Creates a new project log from given values from database
      *
      * @param {sqlite3.row} row - row from database
@@ -45,40 +54,80 @@ class ProjectLogManager {
      * @returns {ProjectLog} new project log
      */
     createFromRow(row) {
-        return new ProjectLog(row.id, row.project_id, row.name, row.path);
+        return new ProjectLog(row.project_id, row.logs);
     }
 
     /**
-     * Get list of all project logs in the given project
+     * Get project logs in the given project
      *
      * @param {number} projectId - project id
      * @param {ProjectLogOperationCallback} callback - project log operation callback
      */
-    getAllForProject(projectId, callback) {
+    getByProjectId(projectId, callback) {
         var
             projectLogs = {},
             self = this;
 
-        this.sqlite3.each(
-            'SELECT id, project_id, name, path FROM project_log WHERE (project_id = ?)',
+        this.sqlite3.get(
+            'SELECT project_id, logs FROM project_log WHERE (project_id = ?)',
             [projectId],
             function (error, row) {
-                if (error === null) {
-                    var projectLog = self.createFromRow(row);
-                    projectLogs[projectLog.getId()] = projectLog;
-                } else {
-                    this.logger.error(error);
-                    callback(error, {});
-                }
-            }, function (error) {
-                if (error !== null) {
-                    self.logger.error(error);
+                if (typeof row === 'undefined') {
+                    return callback(null, null);
                 }
 
-                callback(error, projectLogs);
+                if (error === null) {
+                    callback(null, self.createFromRow(row));
+                } else {
+                    this.logger.error(error);
+                    callback(error, null);
+                }
             }
         );
     }
+
+    /**
+     * Create or update project log
+     *
+     * @param {ProjectLog} projectLog - projectLog
+     * @param {DatabaseOperationCallback} callback - database operations callback
+     */
+    update(projectLog, callback) {
+        this.sqlite3.run(
+            'INSERT OR REPLACE INTO project_log (project_id, logs) VALUES (?, ?)',
+            [
+                projectLog.getProjectId(),
+                projectLog.getLogs()
+            ],
+            function (error) {
+                if (error === null) {
+                    return callback(null);
+                } else {
+                    self.logger.error(error);
+                    return callback(error);
+                }
+            }
+        );
+    }
+
+    /**
+     * Delete project log in the given project
+     *
+     * @param {number} projectId - project id
+     * @param {DatabaseOperationCallback} callback - database operations callback
+     */
+    deleteByProjectId(projectId, callback) {
+        var self = this;
+
+        this.sqlite3.run('DELETE FROM project_log WHERE project_id = ?', [projectId], function (error) {
+            if (error === null) {
+                callback(null);
+            } else {
+                self.logger.error(error);
+                callback(error);
+            }
+        });
+    };
 
 }
 

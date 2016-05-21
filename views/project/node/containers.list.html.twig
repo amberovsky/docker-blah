@@ -22,15 +22,6 @@
     </table>
     <script>
         /**
-         * Create new div with error
-         *
-         * @param {string} error - error text
-         */
-        function addError(error) {
-            $('.for_errors').append('<div class="col-sm-12"><div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + error + '</div></div>');
-        }
-
-        /**
          * Send request to the server and process results
          *
          * @param {jQuery} self - clicked button
