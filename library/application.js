@@ -426,11 +426,7 @@ class Application {
                             new (winston.transports.File)({
                                 filename: self.getLogsDirectory() + '/system.log',
                                 json: false,
-                                formatter: loggerFormatter(
-                                    '[WEBSOCKET]',
-                                    '[' + user.getId() + ' - '  + user.getName() + ']',
-                                    'N/A'
-                                )
+                                formatter: loggerFormatter('[WEBSOCKET]', user.getId() + ' - '  + user.getName(), 'N/A')
                             })
                         ]
                     });

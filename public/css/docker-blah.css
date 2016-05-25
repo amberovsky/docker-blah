@@ -1,6 +1,12 @@
 html, body {
     font-family: Tahoma;
-    font-size: 13px !important;
+    font-size: 15px !important;
+}
+
+@media screen and (max-width: 1280px) {
+    html, body {
+        font-size: 13px !important;
+    }
 }
 
 h1 {
@@ -38,7 +44,7 @@ h1 {
 }
 
 .table-vcenter td {
-    vertical-align: middle!important;
+    vertical-align: middle !important;
 }
 
 .checkbox-label-p45 {
@@ -49,34 +55,51 @@ h1 {
     border: 1px inset #ccc;
     background-color: black;
     font-family: monospace;
-    font-size: 11px;
+    font-size: 11pt;
     resize: both;
     height: 63vh;
     overflow-y: scroll;
     padding-bottom: 25px;
+    color: #c7c7c7;
+}
+
+@media screen and (max-width: 1280px) {
+    .terminal {
+        font-size: 9pt;
+    }
 }
 
 .terminal-system-event {
     color: yellow;
 }
 
+.terminal-system-info {
+    color: lightgreen;
+}
+
+.terminal-system-error {
+    color: red;
+}
+
 .page-header {
-    margin-top: 20px;
+    margin-top: 15px;
 }
 
 .run-command-container {
-    position:relative;
-    height:100%;
+    position: relative;
+    height: 100%;
     margin-bottom: 50px;
 }
+
 .run-command {
-    position:absolute;
-    left:0;
-    right:190px;
+    position: absolute;
+    left: 0;
+    right: 210px;
     height: 100%;
 }
+
 .run-command-buttons {
-    width: 180px;
+    width: 200px;
     height: 100%;
-    float:right;
+    float: right;
 }

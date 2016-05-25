@@ -107,14 +107,4 @@ module.exports.controller = function (application) {
         });
     });
 
-    /**
-     * Run a command
-     */
-    application.getExpress().get('/node/:nodeId/run/', function (request, response) {
-        response.render('project/node/run.html.twig', {
-            action: 'project.nodes',
-            subaction: 'run'
-        });
-    });
-
 };

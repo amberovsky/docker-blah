@@ -22,12 +22,14 @@
         </div>
     {% endif %}
 
+    <button type="button" class="btn btn-danger" id="stop" disabled><span class="fa fa-ban fa-lg"></span>&nbsp;&nbsp;STOP</button>
+
     <div class="btn-group" data-toggle="buttons">
         {% set index = 0 %}
         {% for log in projectLog.getParsedLogs() %}
             {% set index = index + 1 %}
             <label class="btn btn-primary label-log" id="label_log_{{ index }}" data-log="{{ log }}">
-                <input type="radio" name="log_{{ index }}" id="log_{{ index }}" autocomplete="off" checked>{{ log }}
+                <input type="radio" id="log_{{ index }}" autocomplete="off">{{ log }}
             </label>
         {% endfor %}
     </div>
@@ -44,44 +46,46 @@
     <script>
         var
             socket = null,
-            terminal = $('#terminal');
+            tab = $('#tab_customlog');
+            terminal = $('#terminal'),
+            stop = $('#stop');
 
+        /**
+         * Handle click on "STOP" button
+         */
+        stop.on('click', function () {
+            if (socket !== null) {
+                socket.disconnect();
+            }
+        });
+
+        /**
+         * Handle click on log radio group
+         */
         $('.label-log').on('click', function () {
             if (socket !== null) {
                 socket.disconnect();
             }
 
+            tab.removeClass('fa-list-alt').addClass('fa-refresh fa-spin');
             terminal.html('');
+            stop.prop('disabled', false);
 
-            var log = $(this).data('log');
+            var
+                log = $(this).data('log'),
+                command = 'tail -f ' + log;
 
-            addTextToLogTerminal(
-                terminal, '<span class="terminal-system-event">*** CONNECTING TO DOCKER-BLAH ***\n*** REQUESTING ' + log + ' ... ***</span>\n\n'
+            addSystemEventTextToLogTerminal(
+                terminal, '*** REQUESTING ' + log + ' ... ***\n\n'
             );
 
-            socket = io.connect('/');
-
-            socket.emit('customlog', {
-                nodeId: {{ request.node.getId() }},
-                containerId: '{{ request.container.id }}',
-                log: log
-            });
-
-            socket.on('disconnect', function () {
-                addTextToLogTerminal(
-                    terminal,
-                    '<span class="terminal-system-event">\n\n*** DISCONNECTED FROM DOCKER-BLAH ***</span>\n\n'
-                );
-            });
-
-            socket.on('data', function (response) {
-                if (!response.error) {
-                    addTextToLogTerminal(terminal, response.data);
-                } else {
-                    addError(response.error);
-                    socket.disconnect();
+            socket = executeAttachedCommand(
+                terminal, {{ request.node.getId() }}, '{{ request.container.id }}', command, function onDisconnect () {
+                    tab.removeClass('fa-refresh fa-spin').addClass('fa-list-alt');
+                    socket = null;
+                    stop.prop('disabled', true);
                 }
-            });
+            );
         });
     </script>
 {% endblock %}

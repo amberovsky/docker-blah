@@ -2,5 +2,4 @@
     <li role="presentation" {% if (subaction == 'overview') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/overview/"><span class="fa fa-paragraph fa-fw"></span>&nbsp;&nbsp;OVERVIEW</a></li>
     <li role="presentation" {% if (subaction == 'containers') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/containers/"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;CONTAINERS</a></li>
     <li role="presentation" {% if (subaction == 'images') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/images/"><span class="fa fa-server fa-fw"></span>&nbsp;&nbsp;IMAGES</a></li>
-    <li role="presentation" {% if (subaction == 'run') %}class="active"{% endif %}><a href="/node/{{ request.node.getId() }}/run/"><span class="fa fa-terminal fa-fw"></span>&nbsp;&nbsp;RUN COMMAND</a></li>
 </ul>

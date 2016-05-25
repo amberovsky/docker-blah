@@ -29,7 +29,9 @@
 
     <script>
         var
-            socket = io.connect('/'),
+            socket = io.connect('/', {
+                reconnection: false
+            }),
             textarea = $('#logs');
 
         socket.on('message', function (data) {

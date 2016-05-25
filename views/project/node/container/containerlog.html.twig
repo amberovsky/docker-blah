@@ -21,13 +21,13 @@
 
     <script>
         var
-            socket = io.connect('/'),
+            socket = io.connect('/', {
+                reconnection: false
+            }),
             terminal = $('#terminal'),
             tab = $('#tab_containerlog');
 
-        addTextToLogTerminal(
-            terminal, '<span class="terminal-system-event">*** CONNECTING TO DOCKER-BLAH... ***</span>\n\n'
-        );
+        addSystemEventTextToLogTerminal(terminal, '*** CONNECTING TO THE CONTAINER... ***\n\n');
 
         socket.emit('containerlog', {
             nodeId: {{ request.node.getId() }},
@@ -37,10 +37,7 @@
         socket.on('disconnect', function () {
             tab.removeClass('fa-refresh fa-spin').addClass('fa-list-alt');
 
-            addTextToLogTerminal(
-                terminal,
-                '<span class="terminal-system-event">\n\n*** DISCONNECTED FROM DOCKER-BLAH ***</span>\n\n'
-            );
+            addSystemEventTextToLogTerminal(terminal, '\n\n*** DISCONNECTED FROM DOCKER-BLAH ***\n\n');
         });
 
         socket.on('data', function (response) {

@@ -81,7 +81,14 @@ module.exports.controller = function (application) {
         });
     });
 
-    function validateLogRequestAndGetContainer(params, user, callback) {
+    /**
+     * Validates request with nodeId & containerId Also connects to node and returns container
+     *
+     * @param params
+     * @param {User} user - auth'ed user
+     * @param {function} callback - null|string (error, if present), container (container)
+     */
+    function validateRequestAndGetContainer(params, user, callback) {
         var
             nodeId = parseInt(params.nodeId),
             containerId = params.containerId;
@@ -152,24 +159,25 @@ module.exports.controller = function (application) {
      * @param {winston.logger} websocketLogger - logger instance
      */
     function streamContainerLog(socket, params, user, websocketLogger) {
-        validateLogRequestAndGetContainer(params, user, (error, container) => {
+        validateRequestAndGetContainer(params, user, (error, container) => {
             if (error === null) {
-                container.logs({ follow: true, stdout: true, stderr: true }, (error, dockerStream) => {
+                container.logs({ follow: true, stdout: true, stderr: true }, (error, stream) => {
                     if (error === null) {
                         const StringDecoder = require('string_decoder').StringDecoder;
                         const decoder = new StringDecoder('utf8');
 
-                        dockerStream.on('end', () => {
+                        stream.on('end', () => {
                             socket.emit('data', { data: 'Lost connection. Container was stopped?' });
                             return socket.disconnect();
                         });
 
-                        dockerStream.on('data', (chunk) => {
+                        stream.on('data', (chunk) => {
                             socket.emit('data', { data: decoder.write(chunk) });
                         });
 
                     } else {
                         websocketLogger.error(error);
+                        
                         socket.emit('data', { error: error });
                         return socket.disconnect();
                     }
@@ -183,26 +191,122 @@ module.exports.controller = function (application) {
     }
 
     /**
-     * Stream container's custom log
+     * Stream attached command
      *
      * @param {Object} socket - socket.io websocket
      * @param {Object} params - request params
      * @param {User} user - request author
      * @param {winston.logger} websocketLogger - logger instance
      */
-    function streamCustomLog(socket, params, user, websocketLogger) {
-        var log = params.log;
+    function streamCommand(socket, params, user, websocketLogger) {
+        var command = params.command;
 
-        if ((typeof log === 'undefined') || (log === null) || (log.trim().length == 0)) {
-            websocketLogger.error('[customlog] no log in the request');
+        if ((typeof command === 'undefined') || (command === null) || (command.trim().length == 0)) {
+            websocketLogger.error('[command] no command in the request');
             return socket.disconnect();
         }
 
-        validateLogRequestAndGetContainer(params, user, (error, container) => {
+        validateRequestAndGetContainer(params, user, (error, container) => {
             if (error === null) {
-                
+                command = command.trim();
+
+                websocketLogger.info('[ATTACHED COMMAND] "' + command + '"');
+                container.exec(
+                    {
+                        'AttachStdin' : true,
+                        'AttachStdout' : true,
+                        'AttachStderr' : true,
+                        'Tty' : true,
+                        'Cmd' : [
+                            '/bin/bash', '-c', command
+                        ]
+                    }, (error, exec) => {
+                        if (error === null) {
+                            exec.start(
+                                { 'hijack' : true, 'stdin' : true, 'Detach' : false, 'Tty' : true },
+                                (error, stream) => {
+                                    if (error === null) {
+                                        const StringDecoder = require('string_decoder').StringDecoder;
+                                        const decoder = new StringDecoder('utf8');
+
+                                        /** to avoid loop between socket.disconnect() <-> stream.end() */
+                                        var terminatingRequest = false;
+
+                                        /**
+                                         * following code really needs locks / critical sections
+                                         */
+                                        
+                                        stream.on('end', () => {
+                                            websocketLogger.info('[ATTACHED COMMAND] stream to container closed');
+
+                                            if (!terminatingRequest) {
+                                                terminatingRequest = true;
+
+                                                socket.emit('data', { data: '\n\nEnd of transmitted response' });
+                                                return socket.disconnect();
+                                            }
+                                        });
+
+                                        stream.on('data', (chunk) => {
+                                            socket.emit('data', { data: decoder.write(chunk) });
+                                        });
+
+                                        // send ctrl + c and close stream
+                                        var killCommand = () => {
+                                            const CTRL_C = '\u0003';
+
+                                            stream.write(CTRL_C);
+                                            stream.end();
+                                        };
+
+                                        // kill command
+                                        socket.on('kill', () => {
+                                            websocketLogger.info('[ATTACHED COMMAND] received kill command');
+
+                                            killCommand();
+                                        });
+
+                                        // detach command
+                                        socket.on('detach', () => {
+                                            websocketLogger.info('[ATTACHED COMMAND] received detach command');
+
+                                            const
+                                                CTRL_P = '\u0010',
+                                                CTRL_Q = '\u0011';
+
+                                            stream.write(CTRL_P);
+                                            stream.write(CTRL_Q);
+                                        });
+
+                                        socket.on('disconnect', () => {
+                                            websocketLogger.info('[ATTACHED COMMAND] socket disconnected');
+
+                                            if (!terminatingRequest) {
+                                                terminatingRequest = true;
+
+                                                killCommand();
+                                            }
+                                        });
+
+                                    } else {
+                                        websocketLogger.error(error);
+
+                                        socket.emit('data', { error: error });
+                                        return socket.disconnect();
+                                    }
+                                }
+                            )
+                        } else {
+                            websocketLogger.error(error);
+                            
+                            socket.emit('data', { error: error });
+                            return socket.disconnect();
+                        }
+                    }
+                );
+
             } else {
-                websocketLogger.error('[customlog] ' + error);
+                websocketLogger.error('[command] ' + error);
                 return socket.disconnect();
             }
         });
@@ -220,10 +324,10 @@ module.exports.controller = function (application) {
         });
 
         /**
-         * Stream container's custom log
+         * Run attached command
          */
-        socket.on('customlog', (params) => {
-            return streamCustomLog(socket, params, user, websocketLogger)
+        socket.on('command', (params) => {
+            return streamCommand(socket, params, user, websocketLogger)
         });
 
     });
@@ -264,13 +368,59 @@ module.exports.controller = function (application) {
     });
 
     /**
-     * Run a command
+     * Run a command - page
      */
     application.getExpress().get('/node/:nodeId/containers/:containerId/run/', function (request, response) {
         return response.render('project/node/container/run.html.twig', {
             action: 'project.nodes',
             subaction: 'run'
         });
+    });
+
+    /**
+     * Run a command - handler, for detached mode
+     */
+    application.getExpress().post('/node/:nodeId/containers/:containerId/run/', function (request, response) {
+        var command = request.body.command;
+
+        if ((typeof command === 'undefined') || (command === null) || (command.trim().length === 0)) {
+            request.logger.error('[DETACHED COMMAND] - no command in the request');
+
+            return response.json({ error: 'Wrong request' });
+        }
+
+        command = command.trim();
+
+        request.logger.info('[DETACHED COMMAND] "' + command + '"');
+        request.container.exec(
+            {
+                'AttachStdin' : false,
+                'AttachStdout' : false,
+                'AttachStderr' : false,
+                'Tty' : false,
+                'Cmd' : [
+                    '/bin/bash', '-c', command
+                ]
+            }, (error, exec) => {
+                if (error === null) {
+                    exec.start({ 'Detach' : true, 'Tty' : false }, (error, stream) => {
+                        if (error === null) {
+                            request.logger.info('[DETACHED COMMAND] - executed');
+
+                            return response.json({ data: 'Executed!' });
+                        } else {
+                            request.logger.error(error);
+
+                            return response.json({ error: error });
+                        }
+                    })
+                } else {
+                    request.logger.error(error);
+
+                    return response.json({ error: error });
+                }
+            }
+        );
     });
 
     /**
