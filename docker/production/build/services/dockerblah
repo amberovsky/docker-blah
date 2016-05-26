@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-chpst -uwww-data /var/www/admin/master/bin/run.sh

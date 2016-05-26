@@ -2,6 +2,6 @@
 
 set -e
 
-/build-development/env.sh
-/build-development/services.sh
-/build-development/cleanup.sh
+/build-production/env.sh
+/build-production/services.sh
+/build-production/cleanup.sh
