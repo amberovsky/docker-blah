@@ -13,8 +13,6 @@
 
     <br />
 
-    <div class="for_errors"></div>
-
     <div class='run-command-container'>
         <div class='run-command'>
             <input type="text" class="form-control input-sm" id="command" placeholder="Command">
@@ -69,10 +67,11 @@
         containerRun.on('click', function () {
             var text = command.val().trim();
 
+            terminal.html('');
+
             if (text.length == 0) {
-                addError('Empty command!');
+                addErrorTextToLogTerminal('Empty command!');
             } else {
-                terminal.html('');
                 tab.removeClass('fa-terminal').addClass('fa-refresh fa-spin');
 
                 command.prop('disabled', true);
@@ -106,10 +105,11 @@
         containerRunDetached.on('click', function () {
             var text = command.val().trim();
 
+            terminal.html('');
+
             if (text.length == 0) {
-                addError('Empty command!');
+                addErrorTextToLogTerminal('Empty command!');
             } else {
-                terminal.html('');
                 tab.removeClass('fa-terminal').addClass('fa-refresh fa-spin');
 
                 command.prop('disabled', true);

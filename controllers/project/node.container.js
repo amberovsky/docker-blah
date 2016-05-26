@@ -167,7 +167,7 @@ module.exports.controller = function (application) {
                         const decoder = new StringDecoder('utf8');
 
                         stream.on('end', () => {
-                            socket.emit('data', { data: 'Lost connection. Container was stopped?' });
+                            socket.emit('data', { data: '\n+++ Lost connection. Container was stopped? +++' });
                             return socket.disconnect();
                         });
 
@@ -356,7 +356,7 @@ module.exports.controller = function (application) {
                         : projectLog)
                 });
             } else {
-                request.loger.error(error);
+                request.logger.error(error);
 
                 return response.render('project/node/container/customlogs.html.twig', {
                     action: 'project.nodes',

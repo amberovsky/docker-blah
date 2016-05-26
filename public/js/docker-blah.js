@@ -95,7 +95,7 @@ function executeAttachedCommand(terminal, nodeId, containerId, command, onDiscon
         if (!response.error) {
             addTextToLogTerminal(terminal, response.data);
         } else {
-            addError(response.error);
+            addErrorTextToLogTerminal(terminal, JSON.stringify(response.error));
             socket.disconnect();
         }
     });

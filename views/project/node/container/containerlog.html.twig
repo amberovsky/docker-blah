@@ -13,8 +13,6 @@
 
     <br />
 
-    <div class="for_errors"></div>
-
     <div id="terminal" class="form-control terminal"></div>
 
     <br />
@@ -37,14 +35,14 @@
         socket.on('disconnect', function () {
             tab.removeClass('fa-refresh fa-spin').addClass('fa-list-alt');
 
-            addSystemEventTextToLogTerminal(terminal, '\n\n*** DISCONNECTED FROM DOCKER-BLAH ***\n\n');
+            addSystemEventTextToLogTerminal(terminal, '\n\n*** DISCONNECTED ***\n\n');
         });
 
         socket.on('data', function (response) {
             if (!response.error) {
                 addTextToLogTerminal(terminal, response.data);
             } else {
-                addError(response.error);
+                addErrorTextToLogTerminal(terminal, JSON.stringify(response.error));
                 socket.disconnect();
             }
         });

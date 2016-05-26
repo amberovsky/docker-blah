@@ -81,6 +81,13 @@ class Application {
         var multer = require('multer');
         this.express.use(multer({ dest: '/var/www/docker-blah/uploads/'}).any());
 
+        // global variables for request
+        this.express.use(function (request, response, next) {
+            response.locals.request = request;
+
+            next();
+        });
+
         /**
          * @param {string} tid - thread id
          * @param {string} uid - user id
@@ -89,7 +96,7 @@ class Application {
          * @returns {Function} - message formatter for logger
          */
         var loggerFormatter = function (tid, uid, uri) {
-            return function(options) {
+            return function (options) {
                 var date = new Date();
 
                 // format timestamp
@@ -98,10 +105,11 @@ class Application {
                     self.utils.leadZero(date.getUTCMinutes()) + ':' + self.utils.leadZero(date.getUTCSeconds()) + '.' +
                     self.utils.leadZero(date.getUTCMilliseconds(), 3);
 
-                return  timestamp + ' TID: ' + tid + ' UID: [' + uid + '] - ' + options.level.toUpperCase() + ': ' +
-                    (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : '' ) +
-                    '; URI: [' + uri + ']';
+                var message = timestamp + ' TID: ' + tid + ' UID: [' + uid + '] - ' + options.level.toUpperCase() +
+                    ': ' + (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : '' );
+
+                return (typeof uri === 'undefined') ? message : (message + '; URI: [' + uri + ']');
             };
         };
 
@@ -112,7 +120,7 @@ class Application {
                 new (winston.transports.File)({
                     filename: self.getLogsDirectory() + '/system.log',
                     json: false,
-                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM', 'N/A')
+                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM')
                 })
             ]
         });
@@ -127,6 +135,9 @@ class Application {
             express: this.express,
             noCache: true // TODO
         });
+
+        // globals for each template
+        environment.addGlobal('application', this);
 
         // filter: check regexp
         environment.addFilter('match', function (input, pattern) {
@@ -210,10 +221,6 @@ class Application {
 
         // set default variables in templates
         this.express.use((request, response, next) => {
-            // globals for each template
-            environment.addGlobal('application', this);
-            environment.addGlobal('request', request);
-
             // thread id
             request.tid = '[' + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) +
                 self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + self.getRandomInt(0, 9) + ']';
@@ -224,11 +231,11 @@ class Application {
                         filename: self.getLogsDirectory() + '/system.log',
                         json: false,
                         formatter: loggerFormatter(
-                            request.tid,
-                            (typeof request.user !== 'undefined')
-                                ? (request.user.getId() + ' : ' + request.user.getName())
-                                : 'NON-AUTH',
-                            request.originalUrl
+                                request.tid,
+                                (typeof request.user !== 'undefined')
+                                    ? (request.user.getId() + ' : ' + request.user.getName())
+                                    : 'NON-AUTH',
+                                request.originalUrl
                         )
                     })
                 ]
@@ -265,7 +272,7 @@ class Application {
             if (typeof request.user !== 'undefined') {
                 // for auth'ed user we will add list of available projects
                 request.projectManager.getAllExceptLocal((error, projects) => {
-                    environment.addGlobal('allProjects', projects);
+                    response.locals.allProjects = projects;
 
                     // this controls what projects user have access to (except admin/super)
                     request.projectManager.getAllForUser(request.user, (error, projectsWithAccess) => {
@@ -382,6 +389,40 @@ class Application {
                 });
             })(__dirname + '/../controllers');
 
+            // 404 handler
+            this.express.use(function(request, response, next) {
+                request.logger.error('Requested non-existed URL');
+                return response.status(404).render('error/404.html.twig', {
+                    action: 'error'
+                });
+            });
+
+            // error handler
+            this.express.use(function (error, request, response, next) {
+                // skip if headers were sent
+                if (response.headersSent) {
+                    return next(error);
+                }
+
+                console.log(error);
+                self.getSystemLogger().error(error);
+
+                response.status(500).send(`
+                    <!doctype html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Docker-blah</title>
+                        <link rel='shortcut icon' href='/public/favicon.ico' type='image/x-icon' />
+                    </head>
+                    <body>
+                        Something really bad happened.<br>
+                        If the superman is not around you - call your system administrator.
+                    </body>
+                    </html>
+                `);
+            });
+
             this.getSystemLogger().info('done');
 
             /**
@@ -426,7 +467,7 @@ class Application {
                             new (winston.transports.File)({
                                 filename: self.getLogsDirectory() + '/system.log',
                                 json: false,
-                                formatter: loggerFormatter('[WEBSOCKET]', user.getId() + ' - '  + user.getName(), 'N/A')
+                                formatter: loggerFormatter('[WEBSOCKET]', user.getId() + ' - '  + user.getName())
                             })
                         ]
                     });

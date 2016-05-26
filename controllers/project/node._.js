@@ -81,7 +81,7 @@ module.exports.controller = function (application) {
                 response.render('project/node/overview.html.twig', {
                     action: 'project.nodes',
                     subaction: 'overview',
-                    error: 'Got error. Contact your system adminstrator'
+                    error: error
                 });
             }
         })
