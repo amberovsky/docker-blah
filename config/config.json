@@ -1,0 +1,12 @@
+{
+  "session": {
+      "secret": "hiding ninja",
+      "store_secret": "more hiding ninja",
+      "key": "express.sid"
+  },
+
+  "redis": {
+      "host": "127.0.0.1",
+      "port": "6379"
+  }
+}

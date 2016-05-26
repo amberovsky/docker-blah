@@ -18,7 +18,13 @@ h1 {
 }
 
 .nav-sidebar {
-    font-size: 13px;
+    font-size: 15px;
+}
+
+@media screen and (max-width: 1280px) {
+    .nav-sidebar {
+        font-size: 13px;
+    }
 }
 
 .left-sidebar {

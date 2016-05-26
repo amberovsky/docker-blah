@@ -27,17 +27,28 @@ class Application {
      */
 
     /**
-     * "Next" callback
-     *
-     * @callback NextCallback
-     */
-
-
-    /**
      * @constructor
      */
     constructor() {
         var self = this;
+
+
+        // filesystem
+        this.fs = require('fs');
+
+
+        // paths
+        const
+            PROJECT_DIR = this.fs.realpathSync('./../'), // global path to project
+            PROJECT_SRC = this.fs.realpathSync('./'), // sources
+            PROJECT_MODELS = PROJECT_SRC + '/models', // models
+            PROJECT_VIEWS = PROJECT_SRC + '/views', // views
+            PROJECT_DATA = PROJECT_SRC + '/data', // internal data
+            PROJECT_CONFIG = PROJECT_SRC + '/config', // internal data
+            PROJECT_UPLOADS = PROJECT_DIR + '/uploads', // uploads
+            PROJECT_MOUNTED_DATA = PROJECT_DIR + '/data'; // mounted data directory, for database
+
+        var config = require(PROJECT_CONFIG + '/config.json');
 
 
         /**
@@ -54,10 +65,6 @@ class Application {
          * @type {WebSocketEventEmitter} - websocket event emitter
          */
         this.webSocketEventEmitter = new (require('./webSocketEventEmitter.js'))();
-
-
-        // filesystem
-        this.fs = require('fs');
 
 
         // express itself
@@ -79,7 +86,7 @@ class Application {
 
         // file uploads
         var multer = require('multer');
-        this.express.use(multer({ dest: '/var/www/docker-blah/uploads/'}).any());
+        this.express.use(multer({ dest: PROJECT_UPLOADS }).any());
 
         // global variables for request
         this.express.use(function (request, response, next) {
@@ -91,7 +98,7 @@ class Application {
         /**
          * @param {string} tid - thread id
          * @param {string} uid - user id
-         * @param {string} uri - uri
+         * @param {(null|string)} uri - uri, if present
          *
          * @returns {Function} - message formatter for logger
          */
@@ -109,7 +116,7 @@ class Application {
                     ': ' + (undefined !== options.message ? options.message : '') +
                     (options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : '' );
 
-                return (typeof uri === 'undefined') ? message : (message + '; URI: [' + uri + ']');
+                return (uri === null) ? message : (message + '; URI: [' + uri + ']');
             };
         };
 
@@ -120,7 +127,7 @@ class Application {
                 new (winston.transports.File)({
                     filename: self.getLogsDirectory() + '/system.log',
                     json: false,
-                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM')
+                    formatter: loggerFormatter('[SYSTEM]', 'SYSTEM', null)
                 })
             ]
         });
@@ -130,7 +137,7 @@ class Application {
 
         // templating
         var nunjucks = require('nunjucks');
-        var environment = nunjucks.configure(__dirname + '/../views', {
+        var environment = nunjucks.configure(PROJECT_VIEWS, {
             autoescape: true,
             express: this.express,
             noCache: true // TODO
@@ -160,19 +167,18 @@ class Application {
 
 
         // sessions
-        var sessionSecret = 'ho-ho-ho TODO changeme'; // TODO
         var session = require('express-session');
         var redisStore = require('connect-redis')(session);
         var sessionStore = new redisStore({
-            host: '127.0.0.1',
-            port: '6379',
-            secret: 'Whoah whoa whoa TODO changeme'
+            host: config.redis.host,
+            port: config.redis.port,
+            secret: config.session.store_secret
         });
         this.express.use(session({
-            key: 'express.sid',
+            key: config.session.key,
             resave: false,
             saveUninitialized: false,
-            secret: sessionSecret,
+            secret: config.session.secret,
             store: sessionStore
         }));
 
@@ -242,10 +248,10 @@ class Application {
             });
 
             /** @type {UserManager} - user manager */
-            request.userManager = new (require('../models/userManager.js'))(self, request.logger);
+            request.userManager = new (require(PROJECT_MODELS + '/userManager.js'))(self, request.logger);
 
             /** @type {ProjectManager} - project manager */
-            request.projectManager = new (require('../models/projectManager.js'))(
+            request.projectManager = new (require(PROJECT_MODELS + '/projectManager.js'))(
                 self,
                 request.userManager,
                 request.logger
@@ -255,10 +261,10 @@ class Application {
             request.projectUtils = new (require('./projectUtils.js'))(request);
 
             /** @type {NodeManager} - node manager */
-            request.nodeManager = new (require('../models/nodeManager.js'))(self, request.logger);
+            request.nodeManager = new (require(PROJECT_MODELS + '/nodeManager.js'))(self, request.logger);
 
             /** @type {ProjectLogManager} - project log manager */
-            request.projectLogManager = new (require('../models/projectLogManager.js'))(self, request.logger);
+            request.projectLogManager = new (require(PROJECT_MODELS + '/projectLogManager.js'))(self, request.logger);
 
             /** @type {NodeUtils} - nodeUtils */
             request.nodeUtils = new (require('./nodeUtils.js'))(request);
@@ -267,7 +273,7 @@ class Application {
             request.getDocker = self.dockerUtils.createDockerForRequest(request);
 
             /** @type {RegistryManager} - registry manager */
-            request.registryManager = new (require('../models/registryManager.js'))(self, request.logger);
+            request.registryManager = new (require(PROJECT_MODELS + '/registryManager.js'))(self, request.logger);
 
             if (typeof request.user !== 'undefined') {
                 // for auth'ed user we will add list of available projects
@@ -364,13 +370,13 @@ class Application {
             this.auth = new (require('./auth.js'))(this);
 
             /** @type {UserManager} - user manager */
-            this.userManager = new (require('../models/userManager.js'))(self, this.systemLogger);
+            this.userManager = new (require(PROJECT_MODELS + '/userManager.js'))(self, this.systemLogger);
 
             /** @type {ProjectManager} - project manager */
-            this.projectManager = new (require('../models/projectManager.js'))(self, this.systemLogger);
+            this.projectManager = new (require(PROJECT_MODELS + '/projectManager.js'))(self, this.systemLogger);
 
             /** @type {NodeManager} - node manager */
-            this.nodeManager = new (require('../models/nodeManager.js'))(self, this.systemLogger);
+            this.nodeManager = new (require(PROJECT_MODELS + '/nodeManager.js'))(self, this.systemLogger);
 
 
             this.getSystemLogger().info('loading controllers...');
@@ -436,8 +442,8 @@ class Application {
                 // passportjs for auth
                 io.use(passportSocketIo.authorize({
                     cookieParser: cookieParser, // the same middleware you register in express
-                    key:          'express.sid', // the name of the cookie where express/connect stores its session_id
-                    secret:       sessionSecret, // the session_secret to parse the cookie
+                    key:          config.session.key, // the name of the cookie where express/connect stores its session_id
+                    secret:       config.session.secret, // the session_secret to parse the cookie
                     store:        sessionStore, // we NEED to use a sessionstore. no memorystore please
                     success:      function(data, accept) {
                         console.log('socket-acc');
@@ -467,7 +473,7 @@ class Application {
                             new (winston.transports.File)({
                                 filename: self.getLogsDirectory() + '/system.log',
                                 json: false,
-                                formatter: loggerFormatter('[WEBSOCKET]', user.getId() + ' - '  + user.getName())
+                                formatter: loggerFormatter('[WEBSOCKET]', user.getId() + ' - '  + user.getName(), null)
                             })
                         ]
                     });
@@ -481,20 +487,20 @@ class Application {
         };
 
         // database
-        var file = __dirname + '/../../data/docker-blah.db';
+        var file = PROJECT_MOUNTED_DATA + '/docker-blah.db';
         var exists = this.fs.existsSync(file);
         var SQLite3 = require('sqlite3').verbose();
 
         /** @type {sqlite3.Database} */
         this.sqlite3 = new SQLite3.Database(file);
-        
+
         // initialize the database
         this.sqlite3.serialize(function () {
             if (!exists) {
                 self.getSystemLogger().info('database doesn\'t exist, will create...');
 
                 self.sqlite3.exec(
-                    self.fs.readFileSync(__dirname + '/../config/docker-blah.sql').toString(),
+                    self.fs.readFileSync(PROJECT_DATA + '/docker-blah.sql').toString(),
                     function (error) {
                         if (error === null) {
                             self.getSystemLogger().info('database was created');
