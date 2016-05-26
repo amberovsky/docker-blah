@@ -48,7 +48,10 @@ class Application {
             PROJECT_UPLOADS = PROJECT_DIR + '/uploads', // uploads
             PROJECT_MOUNTED_DATA = PROJECT_DIR + '/data'; // mounted data directory, for database
 
-        var config = require(PROJECT_CONFIG + '/config.json');
+
+        var config = this.fs.existsSync(PROJECT_CONFIG + '/config.json')
+            ? require(PROJECT_CONFIG + '/config.json') // production config
+            : require(PROJECT_SRC + '/config.json'); // development config
 
 
         /**
@@ -488,7 +491,6 @@ class Application {
 
         // database
         var file = PROJECT_MOUNTED_DATA + '/docker-blah.db';
-        var exists = this.fs.existsSync(file);
         var SQLite3 = require('sqlite3').verbose();
 
         /** @type {sqlite3.Database} */
@@ -496,7 +498,7 @@ class Application {
 
         // initialize the database
         this.sqlite3.serialize(function () {
-            if (!exists) {
+            if (!this.fs.existsSync(file)) {
                 self.getSystemLogger().info('database doesn\'t exist, will create...');
 
                 self.sqlite3.exec(

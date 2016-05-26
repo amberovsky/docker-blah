@@ -25,3 +25,5 @@ mkdir -p /var/www/docker-blah/master /var/www/docker-blah/data /var/log/docker-b
 chown www-data:www-data -R /var/www /var/log/docker-blah
 
 cp /build-base/conf/www.profile /var/www/.profile
+
+apt-get install -y htop
