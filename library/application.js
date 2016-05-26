@@ -498,7 +498,7 @@ class Application {
 
         // initialize the database
         this.sqlite3.serialize(function () {
-            if (!this.fs.existsSync(file)) {
+            if (!self.fs.existsSync(file)) {
                 self.getSystemLogger().info('database doesn\'t exist, will create...');
 
                 self.sqlite3.exec(
