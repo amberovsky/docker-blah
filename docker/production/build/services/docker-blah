@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-chpst -uwww-data /var/www/docker-blah/master/bin/run.sh  >> /var/log/docker-blah/run 2>&1

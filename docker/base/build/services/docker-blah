@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd /var/www/docker-blah/master
+exec chpst -uwww-data env NODE_PATH=/usr/lib/node_modules node index.js >> /var/log/docker-blah/run 2>&1

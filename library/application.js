@@ -143,7 +143,7 @@ class Application {
         var environment = nunjucks.configure(PROJECT_VIEWS, {
             autoescape: true,
             express: this.express,
-            noCache: true // TODO
+            noCache: config.noCache
         });
 
         // globals for each template
@@ -453,8 +453,8 @@ class Application {
                         accept();
                     },
                     fail:         function (data, message, error, accept) {
-                        // TODO more detailed logs
-                        console.log('failed socket connection');
+                        self.getSystemLogger().error(message);
+                        self.getSystemLogger().error(error);
 
                         // error indicates whether the fail is due to an error or just a unauthorized client
                         if (error) {
@@ -491,6 +491,7 @@ class Application {
 
         // database
         var file = PROJECT_MOUNTED_DATA + '/docker-blah.db';
+        var exist = this.fs.existsSync(file);
         var SQLite3 = require('sqlite3').verbose();
 
         /** @type {sqlite3.Database} */
@@ -498,7 +499,7 @@ class Application {
 
         // initialize the database
         this.sqlite3.serialize(function () {
-            if (!self.fs.existsSync(file)) {
+            if (!exist) {
                 self.getSystemLogger().info('database doesn\'t exist, will create...');
 
                 self.sqlite3.exec(
