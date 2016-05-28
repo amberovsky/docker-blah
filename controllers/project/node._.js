@@ -27,16 +27,16 @@ module.exports.controller = function (application) {
             if (node !== null) {
                 request.node = node;
 
-                if (request.userManager.isUserUser(request.user)) {
+                if (request.userManager.isUserUser(request.user) && (request.user.getLocalId() !== node.getProjectId())) {
                     if (!request.projectsWithAccess.hasOwnProperty(node.getProjectId())) {
                         request.logger.error('user [' + request.user.getId() + '] tried to access node [' +
-                            node.getId() + '] in project project [' + project.getId() + '] where he doesn\'t have ' +
-                            'access.');
+                            node.getId() + '] in project project [' + node.getProjectId() + '] where he doesn\'t ' +
+                            'have access.');
 
                         return response.redirect('/');
                     }
 
-                    request.project = request.projectsWithAccess[node.getProjectId()];
+                    request.project = request.projectsWithAccess[node.getProjectId()].project;
                     
                     request.isUserAdminForThisProject =
                         (request.projectsWithAccess[project.getId()].role == request.projectManager.ROLE_ADMIN);

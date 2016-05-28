@@ -50,6 +50,12 @@ module.exports.controller = function (application) {
             return routeToAllNodes(request, response, null, null);
         }
 
+        if (request.project.getUserId() !== -1) {
+            request.logger.info('Local docker requested, should be only in /profile/local');
+
+            return routeToAllNodes(request, response, null, 'Wrong request');
+        }
+
         request.node = request.nodeManager.create(request.project.getId());
 
         return response.render('project/nodes/node.html.twig', {
@@ -66,6 +72,12 @@ module.exports.controller = function (application) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
             return routeToAllNodes(request, response, null, null);
+        }
+
+        if (request.project.getUserId() !== -1) {
+            request.logger.info('Local docker requested, should be only in /profile/local');
+
+            return routeToAllNodes(request, response, null, 'Wrong request');
         }
 
         request.node = request.nodeManager.create(request.project.getId());
@@ -101,9 +113,15 @@ module.exports.controller = function (application) {
     });
     
     /**
-     * Middleware to preload node if there is a nodeId in the url
+     * Middleware to preload node if there is a nodeId in the url, and avoid manipulation with local docker
      */
     application.getExpress().all('/project/:projectId/nodes/:nodeId/*', function (request, response, next) {
+        if (request.project.getUserId() !== -1) {
+            request.logger.error('Local docker requested, should be only in /profile/local');
+
+            return routeToAllNodes(request, response, null, 'Wrong request');
+        }
+
         var nodeId = parseInt(request.params.nodeId);
 
         if (Number.isNaN(nodeId)) {

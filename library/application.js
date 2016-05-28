@@ -291,7 +291,6 @@ class Application {
                         if (request.user.getLocalId() !== -1) {
                             request.projectManager.getById(request.user.getLocalId(), (error, local) => {
                                 request.local = local;
-                                request.projectsWithAccess[local.getId()] = local;
 
                                 return next();
                             });

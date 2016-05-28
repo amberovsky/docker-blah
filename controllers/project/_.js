@@ -23,17 +23,17 @@ module.exports.controller = function (application) {
             return response.redirect('/');
         }
 
-        if (request.userManager.isUserUser(request.user)) {
+        if (request.userManager.isUserUser(request.user) && (request.user.getLocalId() !== projectId)) {
             if (!request.projectsWithAccess.hasOwnProperty(projectId)) {
-                request.logger.error('user [' + request.user.getId() + '] tried to access project [' +
-                    project.getId() + '] where he doesn\'t have access.');
+                request.logger.error('user [' + request.user.getId() + '] tried to access project [' + projectId +
+                    '] where he doesn\'t have access.');
 
                 return response.redirect('/');
             }
 
-            request.project = request.projectsWithAccess[projectId];
+            request.project = request.projectsWithAccess[projectId].project;
             request.isUserAdminForThisProject =
-                (request.projectsWithAccess[project.getId()].role == request.projectManager.ROLE_ADMIN);
+                (request.projectsWithAccess[projectId].role == request.projectManager.ROLE_ADMIN);
 
             return next();
         } else {

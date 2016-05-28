@@ -33,13 +33,17 @@ module.exports.controller = function (application) {
      * @param {(string|null)} error - error message, if present
      */
     function routeToAllProjects(request, response, success, error) {
-        request.projectManager.getAllExceptLocal((getAllError, projects) => {
-            response.render('admin/project/projects.html.twig', {
-                action: 'admin.projects',
-                projects: projects,
-                projectsCount: Object.keys(projects).length,
-                success: success,
-                error: error
+        request.projectManager.getAllExceptLocal((_, projects) => {
+            response.locals.allProjects = projects;
+
+            request.projectManager.getAllExceptLocal((getAllError, projects) => {
+                response.render('admin/project/projects.html.twig', {
+                    action: 'admin.projects',
+                    projects: projects,
+                    projectsCount: Object.keys(projects).length,
+                    success: success,
+                    error: error
+                });
             });
         });
     };

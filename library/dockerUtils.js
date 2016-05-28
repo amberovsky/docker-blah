@@ -41,7 +41,7 @@ class DockerUtils {
     /**
      * Create docker object by custom parameters
      *
-     * @param {number} ip - node IP
+     * @param {string} ip - node IP
      * @param {number} port - node port
      * @param {string} CA - CA
      * @param {string} CERT - CERT

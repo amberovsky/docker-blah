@@ -321,7 +321,7 @@ class ProjectManager {
      * Get list of all projects with roles which given user has
      *
      * @param {User} user - user
-     * @param {callback} callback - {Object.<number, Object.<Project, number>>} project_id x { project, role }
+     * @param {function} callback - {Object.<number, Object.<Project, number>>} project_id x { project, role }
      */
     getAllForUser(user, callback) {
         var
@@ -391,7 +391,7 @@ class ProjectManager {
 
     /**
      * @param {number} userId - user id
-     * @param {callback} callback - {Object.<number, number>} project_id x role
+     * @param {function} callback - {Object.<number, number>} project_id x role
      */
     getUserRoleInProjects(userId, callback) {
         var

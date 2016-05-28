@@ -121,11 +121,11 @@ module.exports.controller = function (application) {
                                 ),
                                 container = docker.getContainer(containerId);
 
-                            callback(null, container);
+                            return callback(null, container);
                         };
 
                         // check does user have access to this node
-                        if (application.getUserManager().isUserUser(user)) {
+                        if (application.getUserManager().isUserUser(user) && (user.getLocalId() !== project.getId())) {
                             application.getProjectManager().getUserRoleInProjects(user.getId, (error, roles) => {
                                 if (error === null) {
                                     if (roles.hasOwnProperty(project.getId())) {
@@ -134,6 +134,8 @@ module.exports.controller = function (application) {
                                         return callback('user tried to read logs from project [' + project.getId() +
                                             '] where he does not have access', null);
                                     }
+                                } else {
+                                    return callback(error, null);
                                 }
                             });
                         } else {
@@ -185,6 +187,8 @@ module.exports.controller = function (application) {
 
             } else {
                 websocketLogger.error('[containerlog] ' + error);
+
+                socket.emit('data', { error: error });
                 return socket.disconnect();
             }
         });
@@ -203,6 +207,8 @@ module.exports.controller = function (application) {
 
         if ((typeof command === 'undefined') || (command === null) || (command.trim().length == 0)) {
             websocketLogger.error('[command] no command in the request');
+
+            socket.emit('data', { error: 'Empty command' });
             return socket.disconnect();
         }
 
@@ -307,6 +313,8 @@ module.exports.controller = function (application) {
 
             } else {
                 websocketLogger.error('[command] ' + error);
+
+                socket.emit('data', { error: error });
                 return socket.disconnect();
             }
         });

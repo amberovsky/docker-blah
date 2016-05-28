@@ -70,7 +70,7 @@
             terminal.html('');
 
             if (text.length == 0) {
-                addErrorTextToLogTerminal('Empty command!');
+                addErrorTextToLogTerminal(terminal, 'Empty command!');
             } else {
                 tab.removeClass('fa-terminal').addClass('fa-refresh fa-spin');
 
@@ -108,7 +108,7 @@
             terminal.html('');
 
             if (text.length == 0) {
-                addErrorTextToLogTerminal('Empty command!');
+                addErrorTextToLogTerminal(terminal, 'Empty command!');
             } else {
                 tab.removeClass('fa-terminal').addClass('fa-refresh fa-spin');
 

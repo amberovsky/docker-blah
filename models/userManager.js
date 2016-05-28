@@ -314,7 +314,7 @@ class UserManager {
      * @param {number} role - given role, -1 means no restriction
      * @param {number} projectId - project id, -1 means no restriction
      * @param {number} projectRole - project role, -1 means no restriction
-     * @param {callback} callback - {Object.<User>, Object.<Project>}[] found users with corresponding projects,
+     * @param {function} callback - {Object.<User>, Object.<Project>}[] found users with corresponding projects,
      *                              indexed by user id
      */
     searchByCriteria(role, projectId, projectRole, callback) {
