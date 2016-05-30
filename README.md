@@ -69,7 +69,7 @@ To be done
     amberovsky/docker-blah-development
     ```
     
-3.  Access in browser via `http://IP:$HTTP_PORT` or vis shell `ssh www-data@IP -p $SSH_PORT`
+3.  Access in browser via `http://IP:$HTTP_PORT` or via shell `ssh www-data@IP -p $SSH_PORT`
 
 4.  Next, read how to connect your local docker in a development environment.
 
@@ -216,12 +216,12 @@ Now we need to tell docker daemon to listen on a particular port using TLS. Loca
 <a name="run_docker_blah"></a>    
 #### 5. Run docker-blah
     
-1.  We need two folders - one for configuration file and one for sqlite3 database. Let's say you've decided to use `/var/www/docker-blah/` folder (don't forget to get proper permissions!):
+-   We need two folders - one for configuration file and one for sqlite3 database. Let's say you've decided to use `/var/www/docker-blah/` folder (don't forget to get proper permissions!):
     ```bash
     mkdir -p /var/www/docker-blah/data /var/www/docker-blah/config
     ```
 
-2.  Create `config.json` in the `/var/www/docker-blah/config`:
+-   Create `config.json` in the `/var/www/docker-blah/config`:
     ```json
     {
       "session": {
@@ -241,9 +241,10 @@ Now we need to tell docker daemon to listen on a particular port using TLS. Loca
     
     Change sessions `secret`/`store_secret` params for security reasons, `key` not so important.
     
-3.  If you already have a `redis` instance somewhere in your network:
+-   If you already have a `redis` instance somewhere in your network:
     1.  Change `redis` host/port respectively.
     2.  Run `docker-blah`:
+    
         ```bash
         sudo docker run -d -it --name docker-blah \
             -p $PORT:80 \
