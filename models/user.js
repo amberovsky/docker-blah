@@ -3,7 +3,7 @@
 /**
  * user.js - User model
  *
- * (C) Anton Zagorskii aka amberovsky amberovsky@gmail.com
+ * Copyright (C) 2016 Anton Zagorskii aka amberovsky. All rights reserved. Contacts: <amberovsky@gmail.com>
  */
 
 class User {
