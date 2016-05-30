@@ -49,7 +49,7 @@ class Application {
             PROJECT_MOUNTED_DATA = PROJECT_DIR + '/data'; // mounted data directory, for database
 
 
-        var config = this.fs.existsSync(PROJECT_CONFIG + '/config.json')
+        const config = this.fs.existsSync(PROJECT_CONFIG + '/config.json')
             ? require(PROJECT_CONFIG + '/config.json') // production config
             : require(PROJECT_SRC + '/config.json'); // development config
 
@@ -71,28 +71,28 @@ class Application {
 
 
         // express itself
-        var express = require('express');
+        const express = require('express');
         this.express = express();
 
 
         // cookie parser
-        var cookieParser = require('cookie-parser');
+        const cookieParser = require('cookie-parser');
         this.express.use(cookieParser());
 
 
         // body / form parser
-        var bodyParser = require('body-parser');
+        const bodyParser = require('body-parser');
         this.express.use(bodyParser.json());
         this.express.use(bodyParser.urlencoded({
             extended: true
         }));
 
         // file uploads
-        var multer = require('multer');
+        const multer = require('multer');
         this.express.use(multer({ dest: PROJECT_UPLOADS }).any());
 
         // global variables for request
-        this.express.use(function (request, response, next) {
+        this.express.use((request, response, next) => {
             response.locals.request = request;
 
             next();
@@ -124,7 +124,7 @@ class Application {
         };
 
         // system logger
-        var winston = require('winston');
+        const winston = require('winston');
         this.systemLogger = new (winston.Logger)({
             transports: [
                 new (winston.transports.File)({
@@ -139,8 +139,8 @@ class Application {
 
 
         // templating
-        var nunjucks = require('nunjucks');
-        var environment = nunjucks.configure(PROJECT_VIEWS, {
+        const nunjucks = require('nunjucks');
+        const environment = nunjucks.configure(PROJECT_VIEWS, {
             autoescape: true,
             express: this.express,
             noCache: config.noCache
@@ -170,9 +170,9 @@ class Application {
 
 
         // sessions
-        var session = require('express-session');
-        var redisStore = require('connect-redis')(session);
-        var sessionStore = new redisStore({
+        const session = require('express-session');
+        const redisStore = require('connect-redis')(session);
+        const sessionStore = new redisStore({
             host: config.redis.host,
             port: config.redis.port,
             secret: config.session.store_secret
@@ -187,8 +187,8 @@ class Application {
 
 
         // authentication
-        var passport = require('passport');
-        var LocalStrategy = require('passport-local').Strategy;
+        const passport = require('passport');
+        const LocalStrategy = require('passport-local').Strategy;
         this.express.use(passport.initialize());
         this.express.use(passport.session());
 
@@ -305,14 +305,14 @@ class Application {
         });
 
         // handle logout
-        this.express.get('/logout', function (request, response) {
+        this.express.get('/logout', (request, response) => {
             request.logout();
             
             return response.redirect('/');
         });
         
         // handle login
-        this.express.post('/', function (request, response, next) {
+        this.express.post('/', (request, response, next) => {
             passport.authenticate(
                 'local',
                 function(error, user, info) {
@@ -350,7 +350,7 @@ class Application {
 
 
         // middleware for all requests - check auth
-        this.express.use(function (request, response, next) {
+        this.express.use((request, response, next) => {
             if (!request.isAuthenticated()) {
                 self.getSystemLogger().info('user is not auth\'ed, will redirect to auth');
 
@@ -489,9 +489,9 @@ class Application {
         };
 
         // database
-        var file = PROJECT_MOUNTED_DATA + '/docker-blah.db';
-        var exist = this.fs.existsSync(file);
-        var SQLite3 = require('sqlite3').verbose();
+        const file = PROJECT_MOUNTED_DATA + '/docker-blah.db';
+        const exist = this.fs.existsSync(file);
+        const SQLite3 = require('sqlite3').verbose();
 
         /** @type {sqlite3.Database} */
         this.sqlite3 = new SQLite3.Database(file);

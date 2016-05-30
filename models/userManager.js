@@ -44,6 +44,7 @@ class UserManager {
         application.createConstant(this, 'MIN_TEXT_FIELD_LENGTH', 5);
         
         this.sqlite3 = application.getSqlite3();
+
         this.logger = logger;
     };
 
@@ -53,6 +54,18 @@ class UserManager {
     create() {
         return new User(-1, '', '', '', this.ROLE_USER, -1);
     };
+
+    /**
+     * Creates a new user from given values from database
+     *
+     * @param {sqlite3.row} row - row from database
+     *
+     * @returns {User} new user
+     */
+    createFromRow(row) {
+        return new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id);
+    }
+
 
     /**
      * Add a new user, also save to the database
@@ -146,10 +159,7 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(
-                        null,
-                        new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id)
-                    );
+                    callback(null, self.createFromRow(row));
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -160,26 +170,24 @@ class UserManager {
 
     /**
      * @param {string} login - user's login
-     * @param {string} passwordHash - user's password hash
      * @param {UserOperationCallback} callback - user operation callback
      */
-    getByLoginAndPasswordHash(login, passwordHash, callback) {
+    getByLoginWithSalt(login, callback) {
         var self = this;
 
         this.sqlite3.get(
-            'SELECT id, name, login, password_hash, role, local_id FROM user WHERE (login = ?) AND (password_hash = ?)',
+            'SELECT id, name, login, password_hash, role, local_id, salt FROM user WHERE (login = ?)',
             [
-                login,
-                passwordHash
+                login
             ],
             function (error, row) {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(
-                        null,
-                        new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id)
-                    );
+                    let user = self.createFromRow(row);
+                    user.setSalt(row.salt);
+
+                    callback(null, user);
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -204,10 +212,7 @@ class UserManager {
                 if (typeof row === 'undefined') {
                     callback(null, null);
                 } else if (error === null) {
-                    callback(
-                        null,
-                        new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id)
-                    );
+                    callback(null, self.createFromRow(row));
                 }  else {
                     self.logger.error(error);
                     callback(error, null);
@@ -228,7 +233,7 @@ class UserManager {
 
         this.sqlite3.each("SELECT id, name, login, password_hash, role, local_id FROM user", function (error, row) {
             if (error === null) {
-                var user = new User(row.id, row.name, row.login, row.password_hash, row.role, row.local_id);
+                var user = self.createFromRow(row);
                 users[user.getId()] = user;
             } else {
                 self.logger.error(error);

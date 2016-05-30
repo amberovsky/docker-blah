@@ -36,6 +36,9 @@ class User {
         
         /** @type {number} localId - id for project for local configured docker, -1 otherwise */
         this.localId = localId;
+
+        /** @type {string} salt - for update/auth operations */
+        this.salt = '';
     };
 
     /**
@@ -154,6 +157,25 @@ class User {
     setLocalId(localId) {
         this.localId = localId;
         
+        return this;
+    }
+
+    /**
+     * @returns {string} - for update/auth operations
+     */
+    getSalt() {
+        return this.salt;
+    }
+
+
+    /**
+     * @param {string} salt - for update/auth operations
+     *
+     * @returns {User}
+     */
+    setSalt(salt) {
+        this.salt = salt;
+
         return this;
     }
 

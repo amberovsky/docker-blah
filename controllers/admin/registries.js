@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Create a new registry - page
      */
-    application.getExpress().get('/admin/registries/create/', function (request, response) {
+    application.getExpress().get('/admin/registries/create/', (request, response) => {
         request.registry = request.registryManager.create();
 
         response.render('admin/registry/registry.html.twig', {
@@ -31,10 +31,10 @@ module.exports.controller = function (application) {
      *
      * @param {Object} request - expressjs request
      * @param {Object} response - expressjs response
+     * @param {(string|null)} error - error message, if present 
      * @param {(string|null)} success - success message, if present
-     * @param {(string|null)} error - error message, if present
      */
-    function routeToAllRegistries(request, response, success, error) {
+    function routeToAllRegistries(request, response, error = null, success = null) {
         request.registryManager.getAll((getAllError, registries) => {
             response.render('admin/registry/registries.html.twig', {
                 action: 'admin.registries',
@@ -49,8 +49,8 @@ module.exports.controller = function (application) {
     /**
      * View all registries
      */
-    application.getExpress().get('/admin/registries/', function (request, response) {
-        return routeToAllRegistries(request, response, null, null);
+    application.getExpress().get('/admin/registries/', (request, response) => {
+        return routeToAllRegistries(request, response);
     });
 
 };

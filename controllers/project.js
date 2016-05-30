@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Overview
      */
-    application.getExpress().get('/project/:projectId/overview', function (request, response) {
+    application.getExpress().get('/project/:projectId/overview', (request, response) => {
         request.userManager.searchByCriteria(-1, request.project.getId(), -1, (error, data) => {
             response.render('project/overview.html.twig', {
                 action: 'project.index',

@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * View projects
      */
-    application.getExpress().get('/profile/projects/', function (request, response) {
+    application.getExpress().get('/profile/projects/', (request, response) => {
         request.projectManager.getAllForUser(request.user, (error, projects) => {
             response.render('profile/projects.html.twig', {
                 action: 'profile.projects',

@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Middleware to preload local & related node
      */
-    application.getExpress().all('/profile/local/*', function (request, response, next) {
+    application.getExpress().all('/profile/local/*', (request, response, next) => {
         if (request.user.getLocalId() === -1) {
             // no local docker configured
             request.project = request.projectManager.create().setUserId(request.user.getId());
@@ -38,16 +38,14 @@ module.exports.controller = function (application) {
                         request.logger.error('unable to fetch nodes for local docker, error: [' + error + ']');
 
                         return routeToLocalNotConfigured(
-                            request, response, 'Got error. Contact your system administrator', null
+                            request, response, 'Got error. Contact your system administrator'
                         );
                     }
                 });
             } else {
                 request.logger.error('unable to fetch local docker for user, error: [' + error + ']');
 
-                return routeToLocalNotConfigured(
-                    request, response, 'Got error. Contact your system administrator', null
-                );
+                return routeToLocalNotConfigured(request, response, 'Got error. Contact your system administrator');
             }
         });
     });
@@ -60,7 +58,7 @@ module.exports.controller = function (application) {
      * @param {(null|string)} error - error message, if present
      * @param {(null|string)} success - success message, if present
      */
-    function routeToLocalNotConfigured(request, response, error, success) {
+    function routeToLocalNotConfigured(request, response, error = null, success = null) {
         if (typeof request.node === 'undefined') {
             request.node = request.nodeManager.create(-1);
         }
@@ -83,7 +81,7 @@ module.exports.controller = function (application) {
      * @param {(null|string)} error - error message, if present
      * @param {(null|string)} success - success message, if present
      */
-    function routeToLocalConfigured(response, error, success) {
+    function routeToLocalConfigured(response, error = null, success = null) {
         return response.render('profile/local/configured.html.twig', {
             action: 'profile.local',
             error: error,
@@ -99,7 +97,7 @@ module.exports.controller = function (application) {
      * @param {(null|string)} errorMsg - error message, if present
      * @param {(null|string)} successMsg - success message, if present
      */
-    function routeToLocal(request, response, errorMsg, successMsg) {
+    function routeToLocal(request, response, errorMsg = null, successMsg = null) {
         if (request.user.getLocalId() === -1) {
             routeToLocalNotConfigured(request, response, errorMsg, successMsg);
         } else {
@@ -110,8 +108,8 @@ module.exports.controller = function (application) {
     /**
      * View local
      */
-    application.getExpress().get('/profile/local/', function (request, response) {
-        return routeToLocal(request, response, null, null);
+    application.getExpress().get('/profile/local/', (request, response) => {
+        return routeToLocal(request, response);
     });
 
     /**
@@ -149,10 +147,7 @@ module.exports.controller = function (application) {
                                                 }
 
                                                 return routeToLocalNotConfigured(
-                                                    request,
-                                                    response,
-                                                    'Got error. Contact your system administrator',
-                                                    null
+                                                    request, response, 'Got error. Contact your system administrator'
                                                 );
                                             })
                                     })
@@ -167,7 +162,7 @@ module.exports.controller = function (application) {
                                 }
 
                                 return routeToLocalNotConfigured(
-                                    request, response, 'Got error. Contact your system administrator', null
+                                    request, response, 'Got error. Contact your system administrator'
                                 );
                             })
                         }
@@ -175,9 +170,7 @@ module.exports.controller = function (application) {
                 } else {
                     request.logger.error('unable to create new project');
 
-                    return routeToLocalNotConfigured(
-                        request, response, 'Got error. Contact your system administrator', null
-                    );
+                    return routeToLocalNotConfigured(request, response, 'Got error. Contact your system administrator');
                 }
             });
         };
@@ -189,18 +182,18 @@ module.exports.controller = function (application) {
                         if (error === null) {
                             return processCreateProject();
                         } else {
-                            return routeToLocalNotConfigured(request, response, error, null);
+                            return routeToLocalNotConfigured(request, response, error);
                         }
                     });
                 } else {
-                    return routeToLocalNotConfigured(request, response, error, null);
+                    return routeToLocalNotConfigured(request, response, error);
                 }
             });
         } else {
             // user already has local docker
             request.logger.error('Attempt to create local docker when it already was created');
 
-            return routeToLocalConfigured(request, response);
+            return routeToLocalConfigured(response);
         }
     }
 
@@ -213,7 +206,7 @@ module.exports.controller = function (application) {
     function handleActionLocal(request, response) {
         if (request.user.getLocalId() == -1) {
             request.logger.error('Trying to update info in local docker when it is not configured');
-            return routeToLocalNotConfigured(request, response, 'Local docker is not configured', null);
+            return routeToLocalNotConfigured(request, response, 'Local docker is not configured');
         }
 
         request.projectUtils.validateProjectActionCreateNewOrUpdateProject(true, (error) => {
@@ -229,22 +222,20 @@ module.exports.controller = function (application) {
                                         return routeToLocal(request, response, null, 'Info was updated');
                                     } else {
                                         return routeToLocalConfigured(
-                                            response, 'Got error. Contact your system administrator', null
+                                            response, 'Got error. Contact your system administrator'
                                         );
                                     }
                                 });
                             } else {
-                                return routeToLocalConfigured(
-                                    response, 'Got error. Contact your system administrator', null
-                                );
+                                return routeToLocalConfigured(response, 'Got error. Contact your system administrator');
                             }
                         });
                     } else {
-                        return routeToLocal(request, response, error, null);
+                        return routeToLocal(request, response, error);
                     }
                 });
             } else {
-                return routeToLocal(request, response, error, null);
+                return routeToLocal(request, response, error);
             }
         })
     }
@@ -258,7 +249,7 @@ module.exports.controller = function (application) {
     function handleActionFiles(request, response) {
         if (request.user.getLocalId() == -1) {
             request.logger.error('Trying to update files in local docker when it is not configured');
-            return routeToLocalNotConfigured(request, response, 'Local docker is not configured', null);
+            return routeToLocalNotConfigured(request, response, 'Local docker is not configured');
         }
 
         request.projectUtils.validateProjectActionUpdateCerts((error) => {
@@ -267,11 +258,11 @@ module.exports.controller = function (application) {
                     if (error === null) {
                         return routeToLocalConfigured(response, null, 'Files were changed');
                     } else {
-                        return routeToLocalConfigured(response, 'Got error. Contact your system administrator', null);
+                        return routeToLocalConfigured(response, 'Got error. Contact your system administrator');
                     }
                 });
             } else {
-                return routeToLocalConfigured(response, error, null);
+                return routeToLocalConfigured(response, error);
             }
         });
     }
@@ -279,7 +270,7 @@ module.exports.controller = function (application) {
     /**
      * Update local docker info
      */
-    application.getExpress().post('/profile/local/', function (request, response) {
+    application.getExpress().post('/profile/local/', (request, response) => {
         const   ACTION_CREATE   = 'create'; // action == create local docker
         const   ACTION_LOCAL    = 'local'; // action == update local docker info (name, port, ip, etc)
         const   ACTION_FILES    = 'files'; // action == update local docker files
@@ -288,7 +279,7 @@ module.exports.controller = function (application) {
 
         if (typeof action === 'undefined') {
             request.logger.error('No action in the request');
-            return routeToLocal(request, response, 'Wrong request', null);
+            return routeToLocal(request, response, 'Wrong request');
         }
 
         switch (action) {
@@ -306,17 +297,17 @@ module.exports.controller = function (application) {
 
             default:
                 request.logger.error('Wrong action [' + action + ']');
-                return routeToLocal(request, response, 'Wrong action', null);
+                return routeToLocal(request, response, 'Wrong action');
         }
     });
 
     /**
      * Delete local - handler
      */
-    application.getExpress().post('/profile/local/delete/', function (request, response) {
+    application.getExpress().post('/profile/local/delete/', (request, response) => {
         if (request.user.getLocalId() === -1) {
             request.logger.error('Attempt to delete local docker when it was not created');
-            return routeToLocalNotConfigured(request, response, 'You don\'t have local docker', null);
+            return routeToLocalNotConfigured(request, response, 'You don\'t have local docker');
         }
 
         request.nodeManager.deleteByProjectId(request.user.getLocalId(), (error) => {
@@ -334,25 +325,19 @@ module.exports.controller = function (application) {
                             } else {
                                 request.logger.error(error);
 
-                                return routeToLocalConfigured(
-                                    request, response, 'Got error. Contact your system administrator', null
-                                );
+                                return routeToLocalConfigured(response, 'Got error. Contact your system administrator');
                             }
                         })
                     } else {
                         request.logger.error(error);
 
-                        return routeToLocalConfigured(
-                            request, response, 'Got error. Contact your system administrator', null
-                        );
+                        return routeToLocalConfigured(response, 'Got error. Contact your system administrator');
                     }
                 });
             } else {
                 request.logger.error(error);
 
-                return routeToLocalConfigured(
-                    request, response, 'Got error. Contact your system administrator', null
-                );
+                return routeToLocalConfigured(response, 'Got error. Contact your system administrator');
             }
         });
     });
@@ -360,10 +345,10 @@ module.exports.controller = function (application) {
     /**
      * Delete local - page
      */
-    application.getExpress().get('/profile/local/delete/', function (request, response) {
+    application.getExpress().get('/profile/local/delete/', (request, response) => {
         if (request.user.getLocalId() === -1) {
             request.logger.error('Attempt to delete local docker when it was not created');
-            return routeToLocalNotConfigured(request, response, 'You don\'t have local docker', null);
+            return routeToLocalNotConfigured(request, response, 'You don\'t have local docker');
         }
 
         return response.render('profile/local/delete.html.twig', {

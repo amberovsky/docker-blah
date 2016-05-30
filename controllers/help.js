@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Help start page
      */
-    application.getExpress().get('/help/', function (request, response) {
+    application.getExpress().get('/help/', (request, response) => {
         response.render('help/index.html.twig', {
             action: 'help.index'
         });

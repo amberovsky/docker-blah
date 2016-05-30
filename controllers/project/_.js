@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Middleware to preload project if there is a projectId in the url
      */
-    application.getExpress().all('/project/:projectId/*', function (request, response, next) {
+    application.getExpress().all('/project/:projectId/*', (request, response, next) => {
         var projectId = parseInt(request.params.projectId);
 
         if (Number.isNaN(projectId)) {

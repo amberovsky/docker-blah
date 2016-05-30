@@ -20,7 +20,7 @@ module.exports.controller = function (application) {
      * @param {(null|object)} roles - roles, @see UserUpdateOrCreateCallback
      * @param {(null|string)} error - error message, if present
      */
-    function routeToUserCreate(response, roles, error) {
+    function routeToUserCreate(response, roles, error = null) {
         return response.render('admin/user/user.html.twig', {
             action: 'admin.users',
             roles: roles,
@@ -32,16 +32,16 @@ module.exports.controller = function (application) {
     /**
      * Create a user - page
      */
-    application.getExpress().get('/admin/users/create/', function (request, response) {
+    application.getExpress().get('/admin/users/create/', (request, response) => {
         request.requestedUser = request.userManager.create();
         
-        return routeToUserCreate(response, {}, null);
+        return routeToUserCreate(response, {});
     });
 
     /**
      * Create a user - handler
      */
-    application.getExpress().post('/admin/users/create/', function (request, response) {
+    application.getExpress().post('/admin/users/create/', (request, response) => {
         request.requestedUser = request.userManager.create();
 
         validateUserActionCreateNewOrUpdateUser(request, false, function (error, roles) {
@@ -87,7 +87,7 @@ module.exports.controller = function (application) {
     /**
      * Middleware to preload user if there is a userId in the url
      */
-    application.getExpress().all('/admin/users/:userId/*', function (request, response, next) {
+    application.getExpress().all('/admin/users/:userId/*', (request, response, next) => {
         var userId = parseInt(request.params.userId);
 
         if (Number.isNaN(userId)) {
@@ -133,7 +133,7 @@ module.exports.controller = function (application) {
             login = request.body.login,
             password = request.body.password,
             role = request.body.role,
-            passwordHash = '',
+            hashes = {},
             roles = {};
         
         request.requestedUser
@@ -173,9 +173,9 @@ module.exports.controller = function (application) {
                 );
             }
 
-            passwordHash = application.getAuth().hashPassword(password);
+            hashes = application.getAuth().hashPassword(password);
         } else {
-            passwordHash = request.requestedUser.getPasswordHash();
+            hashes = request.requestedUser.getPasswordHash();
         }
 
         var userId = (isUpdate === true) ? request.requestedUser.getId() : -1;
@@ -212,7 +212,8 @@ module.exports.controller = function (application) {
                     .setName(name)
                     .setLogin(login)
                     .setRole(role)
-                    .setPasswordHash(passwordHash);
+                    .setPasswordHash(hashes.hash)
+                    .setSalt(hashes.salt);
 
                 return callback(null, roles);
 
@@ -227,7 +228,7 @@ module.exports.controller = function (application) {
      * @param {(null|object)} roles - roles, @see UserUpdateOrCreateCallback
      * @param {(null|string)} error - error message, if present
      */
-    function routeToUserEdit(response, roles, error) {
+    function routeToUserEdit(response, roles, error = null) {
         return response.render('admin/user/user.html.twig', {
             action: 'admin.users',
             roles: roles,
@@ -239,7 +240,7 @@ module.exports.controller = function (application) {
     /**
      * Update user info
      */
-    application.getExpress().post('/admin/users/:userId/', function (request, response) {
+    application.getExpress().post('/admin/users/:userId/', (request, response) => {
         if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
             request.logger.error('attempt to update super user data while current user is not super');
 
@@ -294,7 +295,7 @@ module.exports.controller = function (application) {
     /**
      * View/Edit user
      */
-    application.getExpress().get('/admin/users/:userId/', function (request, response) {
+    application.getExpress().get('/admin/users/:userId/', (request, response) => {
         if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
             request.logger.error('attempt to open edit page for super user while current user is not super');
 
@@ -302,7 +303,7 @@ module.exports.controller = function (application) {
         }
 
         request.projectManager.getUserRoleInProjects(request.requestedUser.getId(), (error, roles) => {
-            return routeToUserEdit(response, roles, null);
+            return routeToUserEdit(response, roles);
         });
     });
 
@@ -337,14 +338,14 @@ module.exports.controller = function (application) {
     /**
      * View all users
      */
-    application.getExpress().get('/admin/users/', function (request, response) {
+    application.getExpress().get('/admin/users/', (request, response) => {
         return fetchUsersByCriteria(request, response, -1, -1, -1, null, null);
     });
 
     /**
      * View all users with given filters
      */
-    application.getExpress().post('/admin/users/', function (request, response) {
+    application.getExpress().post('/admin/users/', (request, response) => {
         var
             role = request.body.role,
             projectId = request.body.project,
@@ -364,7 +365,7 @@ module.exports.controller = function (application) {
     /**
      * Delete user - page
      */
-    application.getExpress().get('/admin/users/:userId/delete/', function (request, response) {
+    application.getExpress().get('/admin/users/:userId/delete/', (request, response) => {
         if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
             request.logger.error('attempt to open delete page for super user while current user is not super');
 
@@ -379,7 +380,7 @@ module.exports.controller = function (application) {
     /**
      * Delete user - handler
      */
-    application.getExpress().post('/admin/users/:userId/delete/', function (request, response) {
+    application.getExpress().post('/admin/users/:userId/delete/', (request, response) => {
         if (!request.userManager.isUserSuper(request.user) && request.userManager.isUserSuper(request.requestedUser)) {
             request.logger.error('attempt to delete super user while current user is not super');
 

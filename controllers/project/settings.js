@@ -22,7 +22,7 @@ module.exports.controller = function (application) {
      * @param {(null|string)} errorMsg - error message, if present
      * @param {(null|string)} successMsg - successs message, if present
      */
-    function routeToSettingsPage(request, response, projectLog, errorMsg, successMsg) {
+    function routeToSettingsPage(request, response, projectLog, errorMsg = null, successMsg = null) {
         response.render('project/settings.html.twig', {
             action: 'project.settings',
             projectLog: (projectLog === null) ? request.projectLogManager.create(request.project.getId()) : projectLog,
@@ -34,18 +34,18 @@ module.exports.controller = function (application) {
     /**
      * Project settings - page
      */
-    application.getExpress().get('/project/:projectId/settings/', function (request, response) {
+    application.getExpress().get('/project/:projectId/settings/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             return response.redirect('/');
         }
 
         request.projectLogManager.getByProjectId(request.project.getId(), (error, projectLog) => {
             if (error === null) {
-                routeToSettingsPage(request, response, projectLog, null, null);
+                routeToSettingsPage(request, response, projectLog);
             } else {
                 request.logger.error(error);
 
-                routeToSettingsPage(request, response, null, 'Got error. Contact your system administrator', null);
+                routeToSettingsPage(request, response, null, 'Got error. Contact your system administrator');
             }
         });
     });
@@ -53,7 +53,7 @@ module.exports.controller = function (application) {
     /**
      * Project settings - handler
      */
-    application.getExpress().post('/project/:projectId/settings/', function (request, response) {
+    application.getExpress().post('/project/:projectId/settings/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             return response.redirect('/');
         }
@@ -63,7 +63,7 @@ module.exports.controller = function (application) {
         if (typeof logs === 'undefined') {
             request.logger.error('Not enough data in the request');
 
-            routeToSettingsPage(request, response, null, 'Not enough data in the request', null);
+            routeToSettingsPage(request, response, null, 'Not enough data in the request');
         }
 
         var projectLog = request.projectLogManager.create(request.project.getId());
@@ -75,9 +75,7 @@ module.exports.controller = function (application) {
             } else {
                 request.logger.error(error);
 
-                routeToSettingsPage(
-                    request, response, projectLog, 'Got error. Contact your system administrator', null
-                );
+                routeToSettingsPage(request, response, projectLog, 'Got error. Contact your system administrator');
             }
         });
     });

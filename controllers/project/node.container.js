@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Middleware to set container in the request
      */
-    application.getExpress().all('/node/:nodeId/containers/:containerId/*', function (request, response, next) {
+    application.getExpress().all('/node/:nodeId/containers/:containerId/*', (request, response, next) => {
         request.container = request.getDocker().getContainer(request.params.containerId);
 
         return next();
@@ -25,7 +25,7 @@ module.exports.controller = function (application) {
     /**
      * List
      */
-    application.getExpress().get('/node/:nodeId/containers/list/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/list/', (request, response) => {
         request.getDocker().listContainers({ all: true }, (error, containers) => {
             if (error === null) {
                 return response.render('project/node/containers.list.html.twig', {
@@ -45,7 +45,7 @@ module.exports.controller = function (application) {
     /**
      * Overview
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/overview/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/overview/', (request, response) => {
         request.container.inspect((error, containerInfo) => {
             if (error === null) {
                 request.container.top({ ps_args: 'aux' }, (error, top) => {
@@ -343,7 +343,7 @@ module.exports.controller = function (application) {
     /**
      * Container log
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/containerlog/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/containerlog/', (request, response) => {
         return response.render('project/node/container/containerlog.html.twig', {
             action: 'project.nodes',
             subaction: 'containerlog'
@@ -353,7 +353,7 @@ module.exports.controller = function (application) {
     /**
      * Custom logs
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/customlogs/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/customlogs/', (request, response) => {
         request.projectLogManager.getByProjectId(request.project.getId(), (error, projectLog) => {
             if (error === null) {
                 return response.render('project/node/container/customlogs.html.twig', {
@@ -378,7 +378,7 @@ module.exports.controller = function (application) {
     /**
      * Run a command - page
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/run/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/run/', (request, response) => {
         return response.render('project/node/container/run.html.twig', {
             action: 'project.nodes',
             subaction: 'run'
@@ -388,7 +388,7 @@ module.exports.controller = function (application) {
     /**
      * Run a command - handler, for detached mode
      */
-    application.getExpress().post('/node/:nodeId/containers/:containerId/run/', function (request, response) {
+    application.getExpress().post('/node/:nodeId/containers/:containerId/run/', (request, response) => {
         var command = request.body.command;
 
         if ((typeof command === 'undefined') || (command === null) || (command.trim().length === 0)) {
@@ -434,7 +434,7 @@ module.exports.controller = function (application) {
     /**
      * Stop
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/stop/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/stop/', (request, response) => {
         request.container.stop((error) => {
             if (error === null) {
                 request.getDocker().listContainers({ all: true }, (error, containers) => {
@@ -492,7 +492,7 @@ module.exports.controller = function (application) {
     /**
      * Start
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/start/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/start/', (request, response) => {
         request.container.start((error) => {
             if (error === null) {
                 request.getDocker().listContainers({ all: true }, (error, containers) => {
@@ -549,7 +549,7 @@ module.exports.controller = function (application) {
     /**
      * Delete
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/delete/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/delete/', (request, response) => {
         request.container.remove({ v: true }, (error) => {
             if (error === null) {
                 request.logger.info('Container [' + request.container.id + '] was deleted');
@@ -569,7 +569,7 @@ module.exports.controller = function (application) {
     /**
      * Stats - page
      */
-    application.getExpress().get('/node/:nodeId/containers/:containerId/stats/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/:containerId/stats/', (request, response) => {
         response.render('project/node/container/stats.html.twig', {
             action: 'project.nodes',
             subaction: 'stats'
@@ -579,7 +579,7 @@ module.exports.controller = function (application) {
     /**
      * Stats - data
      */
-    application.getExpress().post('/node/:nodeId/containers/:containerId/stats/', function (request, response) {
+    application.getExpress().post('/node/:nodeId/containers/:containerId/stats/', (request, response) => {
         var
             cpuTotalUsage = parseFloat(request.body.cpu_totalusage),
             cpuSystemUsage = parseFloat(request.body.cpu_systemusage),

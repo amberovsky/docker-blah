@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Middleware to set image in the request
      */
-    application.getExpress().all('/node/:nodeId/images/:imageId/*', function (request, response, next) {
+    application.getExpress().all('/node/:nodeId/images/:imageId/*', (request, response, next) => {
         request.image = request.getDocker().getImage(request.params.imageId);
 
         return next();
@@ -25,7 +25,7 @@ module.exports.controller = function (application) {
     /**
      * List
      */
-    application.getExpress().get('/node/:nodeId/images/list/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/images/list/', (request, response) => {
         request.getDocker().listImages((error, images) => {
             if (error === null) {
                 response.render('project/node/images.list.html.twig', {
@@ -45,7 +45,7 @@ module.exports.controller = function (application) {
     /**
      * Delete - page
      */
-    application.getExpress().get('/node/:nodeId/images/:imageId/delete/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/images/:imageId/delete/', (request, response) => {
         response.render('project/node/image/delete.html.twig', {
             action: 'project.nodes'
         });
@@ -54,7 +54,7 @@ module.exports.controller = function (application) {
     /**
      * Delete - handler
      */
-    application.getExpress().post('/node/:nodeId/images/:imageId/delete/', function (request, response) {
+    application.getExpress().post('/node/:nodeId/images/:imageId/delete/', (request, response) => {
         request.getDocker().getImage(request.image.name).remove((error) => {
             if (error === null) {
                 request.logger.info('Image [' + request.image.name + '] in project [' + request.project.getId() +

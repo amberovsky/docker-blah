@@ -18,10 +18,10 @@ module.exports.controller = function (application) {
      *
      * @param {Object} request - expressjs request
      * @param {Object} response - expressjs response
+     * @param {(string|null)} error - error message, if present 
      * @param {(string|null)} success - success message, if present
-     * @param {(string|null)} error - error message, if present
      */
-    function routeToAllNodes(request, response, success, error) {
+    function routeToAllNodes(request, response, error = null, success = null) {
         return request.nodeManager.getByProjectId(request.project.getId(), (allNodesError, nodes) => {
             response.render('project/nodes/nodes.html.twig', {
                 action: 'project.nodes',
@@ -36,24 +36,24 @@ module.exports.controller = function (application) {
     /**
      * View nodes in project
      */
-    application.getExpress().get('/project/:projectId/nodes/', function (request, response) {
-        return routeToAllNodes(request, response, null, null);
+    application.getExpress().get('/project/:projectId/nodes/', (request, response) => {
+        return routeToAllNodes(request, response);
     });
     
     /**
      * Create a new node - page
      */
-    application.getExpress().get('/project/:projectId/nodes/create/', function (request, response) {
+    application.getExpress().get('/project/:projectId/nodes/create/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
-            return routeToAllNodes(request, response, null, null);
+            return routeToAllNodes(request, response);
         }
 
         if (request.project.getUserId() !== -1) {
             request.logger.info('Local docker requested, should be only in /profile/local');
 
-            return routeToAllNodes(request, response, null, 'Wrong request');
+            return routeToAllNodes(request, response, 'Wrong request');
         }
 
         request.node = request.nodeManager.create(request.project.getId());
@@ -67,17 +67,17 @@ module.exports.controller = function (application) {
     /**
      * Create a new node - handler
      */
-    application.getExpress().post('/project/:projectId/nodes/create/', function (request, response) {
+    application.getExpress().post('/project/:projectId/nodes/create/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
-            return routeToAllNodes(request, response, null, null);
+            return routeToAllNodes(request, response);
         }
 
         if (request.project.getUserId() !== -1) {
             request.logger.info('Local docker requested, should be only in /profile/local');
 
-            return routeToAllNodes(request, response, null, 'Wrong request');
+            return routeToAllNodes(request, response, 'Wrong request');
         }
 
         request.node = request.nodeManager.create(request.project.getId());
@@ -90,7 +90,7 @@ module.exports.controller = function (application) {
                             request.project.getName() + '] was created');
                         
                         return routeToAllNodes(
-                            request, response, 'Node [' + request.node.getName() + '] was created', error
+                            request, response, null, 'Node [' + request.node.getName() + '] was created'
                         );
                     } else {
                         request.logger.error(error);
@@ -115,11 +115,11 @@ module.exports.controller = function (application) {
     /**
      * Middleware to preload node if there is a nodeId in the url, and avoid manipulation with local docker
      */
-    application.getExpress().all('/project/:projectId/nodes/:nodeId/*', function (request, response, next) {
+    application.getExpress().all('/project/:projectId/nodes/:nodeId/*', (request, response, next) => {
         if (request.project.getUserId() !== -1) {
             request.logger.error('Local docker requested, should be only in /profile/local');
 
-            return routeToAllNodes(request, response, null, 'Wrong request');
+            return routeToAllNodes(request, response, 'Wrong request');
         }
 
         var nodeId = parseInt(request.params.nodeId);
@@ -127,7 +127,7 @@ module.exports.controller = function (application) {
         if (Number.isNaN(nodeId)) {
             request.logger.info('node was requested by non-NAN id [' + nodeId + ']');
 
-            return routeToAllNodes(request, response, null, 'Wrong node id');
+            return routeToAllNodes(request, response, 'Wrong node id');
         }
 
         request.nodeManager.getByIdAndProjectId(nodeId, request.project.getId(), (error, node) => {
@@ -135,7 +135,7 @@ module.exports.controller = function (application) {
                 request.logger.info('non-existed node [' + nodeId + '] in project [' + request.project.getId() +
                     '] was requested');
 
-                return routeToAllNodes(request, response, null, 'Node with given id doesn\'t exist');
+                return routeToAllNodes(request, response, 'Node with given id doesn\'t exist');
             }
 
             request.node = node;
@@ -146,11 +146,11 @@ module.exports.controller = function (application) {
     /**
      * View/Edit node
      */
-    application.getExpress().get('/project/:projectId/nodes/:nodeId/', function (request, response) {
+    application.getExpress().get('/project/:projectId/nodes/:nodeId/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
-            return routeToAllNodes(request, response, null, null);
+            return routeToAllNodes(request, response);
         }
 
         return response.render('project/nodes/node.html.twig', {
@@ -162,11 +162,11 @@ module.exports.controller = function (application) {
     /**
      * Update node info
      */
-    application.getExpress().post('/project/:projectId/nodes/:nodeId/', function (request, response) {
+    application.getExpress().post('/project/:projectId/nodes/:nodeId/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
-            return routeToAllNodes(request, response, null, null);
+            return routeToAllNodes(request, response);
         }
 
         request.nodeUtils.validateNodeActionCreateNewOrUpdate(true, (error) => {
@@ -184,7 +184,7 @@ module.exports.controller = function (application) {
                         request.project.getName() + '] was updated.');
 
                     return routeToAllNodes(
-                        request, response, 'Node [' + request.node.getName() + '] info was updated.', null
+                        request, response, null, 'Node [' + request.node.getName() + '] info was updated.'
                     );
                 } else {
                     request.logger.error(error);
@@ -202,11 +202,11 @@ module.exports.controller = function (application) {
     /**
      * Delete node - page
      */
-    application.getExpress().get('/project/:projectId/nodes/:nodeId/delete/', function (request, response) {
+    application.getExpress().get('/project/:projectId/nodes/:nodeId/delete/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
-            return routeToAllNodes(request, response, null, null);
+            return routeToAllNodes(request, response);
         }
 
         response.render('project/nodes/delete.html.twig', {
@@ -217,11 +217,11 @@ module.exports.controller = function (application) {
     /**
      * Delete node - handler
      */
-    application.getExpress().post('/project/:projectId/nodes/:nodeId/delete/', function (request, response) {
+    application.getExpress().post('/project/:projectId/nodes/:nodeId/delete/', (request, response) => {
         if (!request.isUserAdminForThisProject) {
             request.logger.info('user doesn\'t have enough rights for this action');
 
-            return routeToAllNodes(request, response, null, null);
+            return routeToAllNodes(request, response);
         }
         
         request.nodeManager.deleteNode(request.node.getId(), function (error) {
@@ -229,15 +229,11 @@ module.exports.controller = function (application) {
                 request.logger.info('node [' + request.node.getName() + '] in project [' + request.project.getName() +
                     '] was deleted.');
 
-                return routeToAllNodes(
-                    request, response, 'Node [' + request.node.getName() + '] was deleted.', null
-                );
+                return routeToAllNodes(request, response, null, 'Node [' + request.node.getName() + '] was deleted.');
             } else {
                 request.logger.error(error);
 
-                return routeToAllNodes(
-                    request, response, null, 'Got error. Contact your system administrator.'
-                );
+                return routeToAllNodes(request, response, 'Got error. Contact your system administrator.');
             }
         });
     });

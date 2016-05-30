@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Project entrypoint
      */
-    application.getExpress().get('/', function (request, response) {
+    application.getExpress().get('/', (request, response) => {
         response.render('index/index.html.twig', {
             action: 'index.index'
         });

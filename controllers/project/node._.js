@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * Middleware to preload node
      */
-    application.getExpress().all('/node/:nodeId/*', function (request, response, next) {
+    application.getExpress().all('/node/:nodeId/*', (request, response, next) => {
         var nodeId = parseInt(request.params.nodeId);
 
         if (Number.isNaN(nodeId)) {
@@ -67,7 +67,7 @@ module.exports.controller = function (application) {
     /**
      * Overview
      */
-    application.getExpress().get('/node/:nodeId/overview/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/overview/', (request, response) => {
         request.getDocker().info((error, info) => {
             if (error === null) {
                 response.render('project/node/overview.html.twig', {
@@ -90,7 +90,7 @@ module.exports.controller = function (application) {
     /**
      * Containers
      */
-    application.getExpress().get('/node/:nodeId/containers/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/containers/', (request, response) => {
         response.render('project/node/containers.html.twig', {
             action: 'project.nodes',
             subaction: 'containers'
@@ -100,7 +100,7 @@ module.exports.controller = function (application) {
     /**
      * Images
      */
-    application.getExpress().get('/node/:nodeId/images/', function (request, response) {
+    application.getExpress().get('/node/:nodeId/images/', (request, response) => {
         response.render('project/node/images.html.twig', {
             action: 'project.nodes',
             subaction: 'images'

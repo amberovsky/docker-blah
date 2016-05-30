@@ -16,7 +16,7 @@ module.exports.controller = function (application) {
     /**
      * View profile - page
      */
-    application.getExpress().get('/profile/personal/', function (request, response) {
+    application.getExpress().get('/profile/personal/', (request, response) => {
         response.render('profile/personal.html.twig', {
             action: 'profile.personal'
         });
@@ -67,14 +67,21 @@ module.exports.controller = function (application) {
     };
 
     /**
+     * Callback for validateActionPasswordUpdate
+     *
+     * @callback validateActionPasswordUpdateCallback
+     *
+     * @param {(null|string)} error - error message, if present
+     */
+
+    /**
      * Validate request for update user password
      *
      * @param {Object} request - express request
-     *
-     * @returns {(boolean|string)} - true, if validation passed, error message otherwise
+     * @param {validateActionPasswordUpdateCallback} callback
      */
-    function validateActionPasswordUpdate(request) {
-        var
+    function validateActionPasswordUpdate(request, callback) {
+        let
             currentPassword = request.body.password,
             newPassword = request.body.new_password1,
             newPassword2 = request.body.new_password2;
@@ -84,7 +91,7 @@ module.exports.controller = function (application) {
             (typeof newPassword === 'undefined') ||
             (typeof newPassword2 === 'undefined')
         ) {
-            return 'Not enough data in the request.';
+            callback('Not enough data in the request.');
         }
 
         currentPassword = currentPassword.trim();
@@ -95,26 +102,32 @@ module.exports.controller = function (application) {
             (newPassword.length < request.userManager.MIN_TEXT_FIELD_LENGTH) ||
             (newPassword2.length < request.userManager.MIN_TEXT_FIELD_LENGTH)
         ) {
-            return 'Passwords should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.';
+            callback('Passwords should be at least ' + request.userManager.MIN_TEXT_FIELD_LENGTH + ' characters.');
         }
 
         if (newPassword !== newPassword2) {
-            return 'New passwords do not match.';
+            callback('New passwords do not match.');
         }
 
-        if (!application.getAuth().checkPasswordMatch(request.user.getPasswordHash(), currentPassword)) {
-            return 'Wrong current password';
-        }
+        application.getAuth().auth(request.user.getLogin(), currentPassword, (error, user) => {
+            if (user === null) {
+                callback('Wrong current password');
+            } else {
+                const hashes = application.getAuth().hashPassword(newPassword);
 
-        request.user.setPasswordHash(application.getAuth().hashPassword(newPassword));
+                request.user
+                    .setPasswordHash(hashes.hash)
+                    .setSalt(hashes.salt);
 
-        return true;
+                callback(null);
+            }
+        });
     };
 
     /**
      * View profile - handler
      */
-    application.getExpress().post('/profile/personal/', function (request, response) {
+    application.getExpress().post('/profile/personal/', (request, response) => {
         const   ACTION_PERSONAL = 'personal';
         const   ACTION_PASSWORD = 'password';
 
@@ -139,7 +152,7 @@ module.exports.controller = function (application) {
                     });
                 }
 
-                request.userManager.update(request.user, function (error) {
+                request.userManager.update(request.user, (error) => {
                     if (error === null) {
                         response.render('profile/personal.html.twig', {
                             action: 'profile.personal',
@@ -158,32 +171,31 @@ module.exports.controller = function (application) {
 
             });
         } else if (action === ACTION_PASSWORD) { // if (action === ACTION_PROFILE) {
-            var validation = validateActionPasswordUpdate(request);
-            if (validation !== true) {
-
-                return response.render('profile/personal.html.twig', {
-                    action: 'profile.personal',
-                    error_password: validation
-                });
-            }
-
-            request.userManager.update(request.user, function (error) {
-                if (error === null) {
-                    response.render('profile/personal.html.twig', {
+            validateActionPasswordUpdate(request, (error) => {
+                if (error !== null) {
+                    return response.render('profile/personal.html.twig', {
                         action: 'profile.personal',
-                        success_password: 'Password was changed.'
-                    });
-                } else {
-                    request.logger.error(error);
-                    
-                    request.user = currentUser;
-                    response.render('profile/personal.html.twig', {
-                        action: 'profile.personal',
-                        error_password: 'Got error. Contact your system administrator.'
+                        error_password: error
                     });
                 }
-            });
 
+                request.userManager.update(request.user, (error) => {
+                    if (error === null) {
+                        response.render('profile/personal.html.twig', {
+                            action: 'profile.personal',
+                            success_password: 'Password was changed.'
+                        });
+                    } else {
+                        request.logger.error(error);
+
+                        request.user = currentUser;
+                        response.render('profile/personal.html.twig', {
+                            action: 'profile.personal',
+                            error_password: 'Got error. Contact your system administrator.'
+                        });
+                    }
+                });
+            });
         } else { // } else if (action === ACTION_PASSWORD) { // if (action === ACTION_PROFILE) {
             request.logger.error('wrong request ' + action);
             

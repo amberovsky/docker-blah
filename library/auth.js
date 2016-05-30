@@ -19,6 +19,8 @@ class Auth {
 
         /** @property {number} AUTH_WRONG_PASSWORD - @constant for AUTH_WRONG_PASSWORD auth result */
         application.createConstant(this, 'AUTH_WRONG_PASSWORD', -2);
+
+        this.crypto = require('crypto');
         
         this.application = application;
     };
@@ -26,11 +28,22 @@ class Auth {
     /**
      *
      * @param {string} password - plain password
+     * @param {(null|string)} salt - salt, will be generated if null
      *
-     * @returns {string} securely hashed password
+     * @returns {{hash: string, salt: string}} hashed password & salt
      */
-    hashPassword(password) {
-        return password;
+    hashPassword(password, salt = null) {
+        if (salt === null) {
+            salt = this.crypto.randomBytes(128).toString('hex');
+        }
+
+        const hash = this.crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512').toString('hex');
+        console.log(hash);
+
+        return {
+            hash: hash,
+            salt: salt
+        };
     };
 
     /**
@@ -50,32 +63,25 @@ class Auth {
      * @param {AuthCallback} callback - auth callback
      */
     auth(login, password, callback) {
-        var passwordHash = this.hashPassword(password);
-
-        this.application.getUserManager().getByLoginAndPasswordHash(login, passwordHash, (error, user) => {
+        this.application.getUserManager().getByLoginWithSalt(login, (error, user) => {
             if (error === null) {
                 if (user === null) {
                     callback(this.AUTH_NO_USER, null);
                 } else  {
-                    callback(null, user);
+                    const hashes = this.hashPassword(password, user.getSalt());
+                    user.setSalt(''); // pray for safety!
+
+                    if (hashes.hash === user.getPasswordHash()) {
+                        callback(null, user);
+                    } else {
+                        callback(this.AUTH_WRONG_PASSWORD, null);
+                    }
                 }
             } else {
                 callback(error, null)
             }
         });
     }
-
-    /**
-     * Check is given password equals to hashed password
-     *
-     * @param {string} hash - password hash
-     * @param {string} password - password
-     *
-     * @returns {boolean} same or not
-     */
-    checkPasswordMatch(hash, password) {
-        return (hash == this.hashPassword(password));
-    };
 
 }
 
