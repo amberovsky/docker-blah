@@ -22,7 +22,24 @@ Docker - be less as hossible
 <a name="about"></a>
 ## About
 
-To be done.
+`docker-blah` is a small project written in nodejs. It is a good "first choice" solution if you are doing just first steps with docker and don't want to setup whole infrastructure, like swarm, for example. Basic functionality is:
+
+-   Create projects and add current nodes with docker daemon to a project
+ 
+-   Define users, assign roles in projects
+ 
+-   View/Start/Stop/Delete containers
+
+-   View/Delete images
+
+-   See container's statistics
+
+-   See (stream in a real-time) cointaner's log, define custom logs per/project
+
+-   Run commands in a container in attached/detached mode and stream output
+
+
+This project will also provide you [nice GUI](#how_to_run_development) to your local docker daemon
 
 <a name="technical_specifications"></a>
 ### Technical specifications
