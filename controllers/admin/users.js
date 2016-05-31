@@ -175,7 +175,10 @@ module.exports.controller = function (application) {
 
             hashes = application.getAuth().hashPassword(password);
         } else {
-            hashes = request.requestedUser.getPasswordHash();
+            hashes = {
+                hash: request.requestedUser.getPasswordHash(),
+                salt: ''
+            }
         }
 
         var userId = (isUpdate === true) ? request.requestedUser.getId() : -1;

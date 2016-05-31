@@ -1,5 +1,7 @@
 # `docker-blah` admin guide
 
+[Go back to the main guide doc](../README.md)
+
 You will have admin rights only if you have **SUPER**/**ADMIN** role. 
 
 ## Projects
@@ -16,6 +18,7 @@ You will have admin rights only if you have **SUPER**/**ADMIN** role.
 
 -   *Users* (list all users in a project), *Nodes* (list all nodes in an project) and *Settings* (show settings for this project) are just shortcuts to other pages.
 
+<a name="users"></a>
 ## Users
 
 -   Click *admin* in the top navigation bar, then *Users* in the left panel

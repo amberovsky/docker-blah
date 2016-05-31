@@ -306,6 +306,7 @@ Explained in details (except local docker) [here](/docs/usage/README.md)
 ### Connect local docker daemon:
 
 One of use cases of `docker-blah` is to treat your local docker daemon as a separate node and thus to have nice GUI. Any member of your team can connect its local docker to your team's `docker-blah` instance.
+
 <a name="connect_local_docker_development"></a>
 #### Development:
 
