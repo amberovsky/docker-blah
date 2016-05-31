@@ -83,7 +83,7 @@ Projects is a heart of the `docker-blah`. Click *Select a project* in the top na
 -   *Select a project* in the top navigation bar, then *Project settings* in the left panel
     ![Project - settings](./project/project-settings.png "Project - settings")
     
--   You can configure list of logs, one per line. Later, you will be able to quick watch logs in realtime in the [container: custom logs TODO LINK HERE]()
+-   You can configure list of logs, one per line. Later, you will be able to quick watch logs in realtime in the [container: custom logs](/docs/usage/user/nodes/containers/README.md#custom_logs)
 
 <a name="license"></a>
 ## License

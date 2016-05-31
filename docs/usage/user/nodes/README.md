@@ -1,4 +1,4 @@
-# `docker-blah` user guide for nodes *Inspect*
+# `docker-blah` user guide for node's *Inspect*
 
 [Go back to the main usage guide doc](../README.md)
 
@@ -8,36 +8,38 @@ In this documentation I'll use my local docker as an example. I assume you've al
 
  * [Overview](#overview)
  * [Containers](#containers)
-   * [Overview](#project_overview)
-   * [Project: nodes](#project_nodes)   
-   * [Project settings](#project_settings)
+   * [Inspect](#containers_inspect)
  * [Images](#images)   
  * [License](#license)
 
 <a name="overview"></a>
 ## Overview
-Click *Overview* in the tab list
+Click *OVERVIEW* in the tab list
 
 
 Just a brief info about a docker daemon at the node.
-![Overview](./inspect-overview.png "Overview")
+![Inspect - overview](./inspect-overview.png "Inspect - verview")
 
 <a name="containers"></a>
 ## Containers
-Click *Containers* in the tab list
+Click *CONTAINERS* in the tab list
 
 
 You will see a list of containers. You can start/stop/delete a container. `docker-blah` will not allow you to delete a running container
-![Containers](./inspect-containers.png "Containers")
+![Inspect - containers](./inspect-containers.png "Inspect - containers")
 
+<a name="containers_inspect"></a>
+### Inspect
+
+Click *Inspect* to see container's details and run commands. Please read dedicated [documentation](/docs/usage/user/nodes/containers/README.md) about *Inspect*
 
 <a name="images"></a>
 ## Images
-Click *Images* in the tab list
+Click *IMAGES* in the tab list
 
 
 You will see a list of images. You can delete a particular image. `docker-blah` will not allow you to delete an image, if there is a running container from that image
-![Images](./inspect-images.png "Images")
+![Inspect - images](./inspect-images.png "Inspect - images")
 
 <a name="license"></a>
 ## License
