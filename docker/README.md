@@ -16,7 +16,7 @@ Use `./bin/build_*.sh` scripts to build a particular image, please read document
 
 ## License
 
-`docker-blah` is [Apache 2.0 licensed](../LICENSE)
+`docker-blah` is [Apache 2.0 licensed](/LICENSE)
 
 Copyright (C) 2016 Anton Zagorskii aka amberovsky.
 All rights reserved. Contacts: <amberovsky@gmail.com> 

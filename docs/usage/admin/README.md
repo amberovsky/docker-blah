@@ -55,7 +55,7 @@ You will have admin rights only if you have **SUPER**/**ADMIN** role.
 
 ## License
 
-`docker-blah` is [Apache 2.0 licensed](../LICENSE)
+`docker-blah` is [Apache 2.0 licensed](/LICENSE)
 
 Copyright (C) 2016 Anton Zagorskii aka amberovsky.
 All rights reserved. Contacts: <amberovsky@gmail.com> 

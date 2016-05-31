@@ -65,7 +65,17 @@ Projects is a heart of the `docker-blah`. Click *Select a project* in the top na
 <a name="project_nodes"></a>
 ### Nodes
 
--   Please read dedicated [documentation](/docs/usage/user/nodes/README.md)
+-   *Select a project* in the top navigation bar, then *Nodes* in the left panel
+    ![Project - nodes](./project/project-nodes.png "Project - nodes")
+    
+    You will see a list of nodes in the project. You can edit or add a new one, if you have *ADMIN* role in this project
+    
+-   Click *Inspect* to dive in the node. Please read dedicated [documentation](/docs/usage/user/nodes/README.md) about *Inspect*
+
+-   Click *Create new* to create a new node in this project
+    ![Project - nodes - create](./project/project-nodes-create.png "Project - nodes - create")
+    
+    Provide a name, an IP and a port for the new node. You have to be sure, that you've [configured docker daemon](/README.md#how_to_run_production) to accept TLS connection on that IP:port
 
 <a name="project_settings"></a>
 ### Project settings
@@ -78,7 +88,7 @@ Projects is a heart of the `docker-blah`. Click *Select a project* in the top na
 <a name="license"></a>
 ## License
 
-`docker-blah` is [Apache 2.0 licensed](../LICENSE)
+`docker-blah` is [Apache 2.0 licensed](/LICENSE)
 
 Copyright (C) 2016 Anton Zagorskii aka amberovsky.
 All rights reserved. Contacts: <amberovsky@gmail.com> 
