@@ -6,11 +6,11 @@ Although `docker-blah` was designed to be straightforward and simple, sometimes 
 
 ## Admin 
 
-[This documentation](./admin/README.md) describes `docker-blah` for administrators 
+[This documentation](/docs/usage/admin/README.md) describes `docker-blah` for administrators 
 
 ## User
 
-[This documentation](./user/README.md) describes `docker-blah` for users
+[This documentation](/docs/usage/user/README.md) describes `docker-blah` for users
 
 ## License
 
