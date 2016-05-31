@@ -1,6 +1,6 @@
 # `docker-blah` user guide
 
-[Go back to the main guide doc](../README.md)
+[Go back to the main guide documentation](/docs/usage/README.md)
 
 **Table of contents**
 

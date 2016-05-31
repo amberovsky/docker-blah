@@ -1,6 +1,6 @@
 # `docker-blah` usage guide
 
-[Go back to main doc](/README.md#usage)
+[Go back to the main documentation](/README.md#usage)
 
 Although `docker-blah` was designed to be straightforward and simple, sometimes you may struggle with it, so here is (mostly) complete `docker-blah` guide!
 

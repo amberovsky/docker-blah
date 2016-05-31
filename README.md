@@ -60,12 +60,12 @@ This project will also provide you [nice GUI](#how_to_run_development) to your l
 | [multer](https://github.com/expressjs/multer) | file uploader |
 | [socket.io 1.x](http://socket.io/) | websockets, to stream logs & execute commands |
 | [passport.socketio](https://github.com/jfromaniello/passport.socketio) | websocket auth |
-| [and more...](./docker/base/build/node.sh) | |
+| [and more...](/docker/base/build/node.sh) | |
 
 <a name="docker_structure"></a>
 ### Docker structure
 
-There is the separate [documentation](./docker/README.md)
+There is the separate [documentation](/docker/README.md)
 
 <a name="how_to_run"></a>
 ## How to run

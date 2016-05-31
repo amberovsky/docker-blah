@@ -1,6 +1,6 @@
 # `docker-blah` user guide for container's *Inspect*
 
-[Go back to the main node usage guide doc](../README.md)
+[Go back to the main node usage guide documentation](/docs/usage/user/nodes/README.md)
 
 In this documentation I'll use my local docker as an example. I assume you've already clicked *Inspect* button on a selected container in a selected node.
 
