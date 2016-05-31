@@ -10,7 +10,7 @@
    * [Local docker](#profile_local_docker)   
  * [Projects](#projects)
    * [Overview](#project_overview)
-   * [Nodes](#nodes)   
+   * [Nodes](#project_nodes)   
    * [Settings](#project_settings)
  * [License](#license)
 
@@ -62,7 +62,7 @@ Projects is a heart of the `docker-blah`. Click *Select a project* in the top na
     
     Just a list of users in the project
     
-<a name="nodes"></a>
+<a name="project_nodes"></a>
 ### Nodes
 
 -   *Select a project* in the top navigation bar, then *Nodes* in the left panel
