@@ -10,8 +10,8 @@
    * [Local docker](#profile_local_docker)   
  * [Projects](#projects)
    * [Overview](#project_overview)
-   * [Project: nodes](#project_nodes)   
-   * [Project settings](#project_settings)
+   * [Nodes](#project_nodes)   
+   * [Settings](#project_settings)
  * [License](#license)
 
 <a name="profile"></a>
