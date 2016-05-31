@@ -1,6 +1,6 @@
 # Docker structure for `docker-blah`
 
-[Go back to main doc](../README.md)
+[Go back to main doc](../README.md#docker_structure)
 
 ##  There are 3 images for this project:
 
