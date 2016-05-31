@@ -22,7 +22,7 @@ Docker - be less as hossible
 <a name="about"></a>
 ## About
 
-`docker-blah` is a small project written in nodejs. It is a good "first choice" solution if you are doing just first steps with docker and don't want to setup whole infrastructure, like swarm, for example. Basic functionality is:
+`docker-blah` is a small project written in nodejs. It is a good "first choice" solution if you are doing just first steps with docker and don't want to setup whole infrastructure, like swarm, for example. Basic functionality are:
 
 -   Create projects and add current nodes with docker daemon to a project
  
@@ -90,12 +90,12 @@ There is the separate [documentation](./docker/README.md)
 2.  Run a container:
     ```bash
     docker run -d -it -p $HTTP_PORT:80 -p $SSH_PORT:22 \
-    -v $PATH_TO_SOURCES:/var/www/docker-blah/master \
-    --name docker-blah-development \
-    amberovsky/docker-blah-development
+        -v $PATH_TO_SOURCES:/var/www/docker-blah/master \
+        --name docker-blah-development \
+        amberovsky/docker-blah-development
     ```
     
-3.  Access in browser via `http://IP:$HTTP_PORT` or via shell `ssh www-data@IP -p $SSH_PORT`
+3.  Access in abrowser via `http://IP:$HTTP_PORT` or via shell `ssh www-data@IP -p $SSH_PORT`
 
 4.  Next, read [how to connect your local docker in a development environment](#connect_local_docker_development).
 
@@ -300,7 +300,7 @@ Now we need to tell docker daemon to listen on a particular port using TLS. Loca
 <a name="usage"></a>
 ## Usage
 
-To be done.
+Explained in details (except local docker) [here](/docs/usage/README.md)
 
 <a name="connect_local_docker"></a>
 ### Connect local docker daemon:
