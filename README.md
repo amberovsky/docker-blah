@@ -41,14 +41,14 @@ To be done.
 | [connect-redis](https://www.npmjs.com/package/connect-redis) | session backend |
 | [winston](https://github.com/winstonjs/winston) | logger |
 | [multer](https://github.com/expressjs/multer) | file uploader |
-| [socket.io 1.x](http://socket.io/) | websockets |
+| [socket.io 1.x](http://socket.io/) | websockets, to stream logs & execute commands |
 | [passport.socketio](https://github.com/jfromaniello/passport.socketio) | websocket auth |
 | [and more...](./docker/base/build/node.sh) | |
 
 <a name="docker_structure"></a>
 ### Docker structure
 
-To be done
+There is the separate [documentation](./docker/README.md)
 
 <a name="how_to_run"></a>
 ## How to run
@@ -56,6 +56,15 @@ To be done
 -   Default username/password are `changeme`/`changeme`. Don't forget to change!
 
 -   Use `[sudo] sv restart <service_name>` to restart a service, like `nginx` or `docker-blah` itself.
+
+-   Logs are in `/var/log/docker-blah/`:
+    -   `run`: nodejs output & error log
+    
+    -   `system.log`: main log
+    
+    -   `nginx_error.log`: nginx error log
+    
+    -   `nginx_access.log`: nginx access log
 
 <a name="how_to_run_development"></a>
 ### Development
@@ -71,7 +80,7 @@ To be done
     
 3.  Access in browser via `http://IP:$HTTP_PORT` or via shell `ssh www-data@IP -p $SSH_PORT`
 
-4.  Next, read how to connect your local docker in a development environment.
+4.  Next, read [how to connect your local docker in a development environment](#connect_local_docker_development).
 
 <a name="how_to_run_production"></a>
 ### Production
@@ -239,7 +248,7 @@ Now we need to tell docker daemon to listen on a particular port using TLS. Loca
     }
     ```
     
-    Change sessions `secret`/`store_secret` params for security reasons, `key` not so important.
+    Change sessions `secret`/`store_secret` params for security reasons, `key` is not so important.
     
 -   If you already have a `redis` instance somewhere in your network:
     1.  Change `redis` host/port respectively.
@@ -279,7 +288,7 @@ To be done.
 <a name="connect_local_docker"></a>
 ### Connect local docker daemon:
 
-One of use case of `docker-blah` is to treat your local docker daemon as a separate node and thus to have nice GUI. Any member of your team can connect its local docker to your team's `docker-blah` instance.
+One of use cases of `docker-blah` is to treat your local docker daemon as a separate node and thus to have nice GUI. Any member of your team can connect its local docker to your team's `docker-blah` instance.
 <a name="connect_local_docker_development"></a>
 #### Development:
 

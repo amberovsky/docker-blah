@@ -1,22 +1,37 @@
-# docker-blah development image
+# `docker-blah` development image
 
-## Inside
--   docker-blah-development
--   ssh: www-data & root passwordless
--   redis server
--   nginx
+[Go back to docker structure documentation](../README.md)
 
-## Build (optional)
--   `./bin/build-development` (base image is required)
+## Build
+
+-   `../bin/build_development.sh` will build and tag (version + latest) your image
+
+-   Don't forget to change tag!
+
+## What is inside
+-   [docker-blah-base](../base/README.md)
+
+-   `ssh`: www-data & root passwordless
+
+-   `redis` server
+
+-   `runit` service for redis
+
+-   `sqlite3` client library
 
 ## Usage
--   `docker run -d -it -v /path-to-sources/:/var/www/docker-blah/master -p 81:80 -p 2222:22 --name=docker-blah-development amberovsky/docker-blah-development`
--   `./docker-blah/master/bin/run.sh`
+
+See [main documentation](/README.md#how_to_run_development)
 
 ## History
--   0.0.1
+
+-   `0.0.1`:
 
     Initial release
 
-## Questions?
-Anton Zagorskii aka amberovsky (amberovsky@gmail.com)
+## License
+
+`docker-blah` is [Apache 2.0 licensed](../LICENSE)
+
+Copyright (C) 2016 Anton Zagorskii aka amberovsky.
+All rights reserved. Contacts: <amberovsky@gmail.com> 
