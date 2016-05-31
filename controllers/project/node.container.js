@@ -445,7 +445,10 @@ module.exports.controller = function (application) {
                                 found = true;
                                 application.getExpress().render(
                                     'project/node/containers.list.partial.html.twig',
-                                    { container: containers[index] },
+                                    {
+                                        request: request,
+                                        container: containers[index]
+                                    },
                                     (error, html) => {
                                         if (error === null) {
                                             request.logger.info('Container [' + request.container.id + '] was stopped');
@@ -503,7 +506,10 @@ module.exports.controller = function (application) {
                                 found = true;
                                 application.getExpress().render(
                                     'project/node/containers.list.partial.html.twig',
-                                    { container: containers[index] },
+                                    {
+                                        request: request,
+                                        container: containers[index]
+                                    },
                                     (error, html) => {
                                         if (error === null) {
                                             request.logger.info('Container [' + request.container.id + '] was started');
