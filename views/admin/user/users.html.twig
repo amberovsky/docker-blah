@@ -1,0 +1,101 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-users fa-fw"></span>&nbsp;&nbsp;<a href="/admin/users/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-user-plus fa-lg"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Users : {{ usersCount }}</h1>
+    <form method="post" action="/admin/users/">
+        {% if (error or success) %}
+            <div class="row">
+                <div class="col-sm-12">
+                    {% if (error) %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ success }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm row">
+            <div class="col-md-2 col-sm-4">
+                <label class="control-label" for="role">System role:</label>
+                <select class="form-control" id="role" name="role">
+                    <option value="-1">ALL</option>
+                    {% for role, id in request.userManager.getRoles() %}
+                        <option value="{{ id }}" {% if (selectedRole == id) %}selected{% endif %}>{{ role }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-4">
+                <label class="control-label" for="project">Project:</label>
+                <select class="form-control" id="project" name="project">
+                    <option value="-1">ALL</option>
+                    {% for _, project in allProjects %}
+                        <option value="{{ project.getId() }}" {% if (selectedProject == project.getId()) %}selected{% endif %}>{{ project.getName() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-4">
+                <label class="control-label" for="project_role">Project role:</label>
+                <select class="form-control" id="project_role" name="project_role">
+                    <option value="-1">ALL</option>
+                    {% for role, id in request.projectManager.getRoles() %}
+                        <option value="{{ id }}" {% if (selectedProjectRole == id) %}selected{% endif %}>{{ role }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-12">
+                <div class="col-sm-6">
+                    <label class="control-label" for="filter">&nbsp;</label>
+                    <button type="submit" id="filter" name="filter" class="form-control btn btn-success"><span class="fa fa-filter fa-lg"></span>&nbsp;&nbsp;Filter</button>
+                </div>
+                <div class="col-sm-6">
+                    <label class="control-label" for="reset">&nbsp;</label>
+                    <a href="/admin/users/" id="reset" name="reset" class="btn btn-primary form-control" role="button"><span class="fa fa-undo fa-lg"></span>&nbsp;&nbsp;Reset</a>
+                </div>
+            </div>
+        </div>
+    </form>
+    <br />
+    <table class="table table-striped table-vcenter">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Login</th>
+            <th>System role</th>
+            <th class="text-center">Projects / Role</th>
+            <th class="text-center">Actions</th>
+        </tr>
+        </thead>
+        {% for _, user in users %}
+            <tr>
+                <td>{{ user.getId() }}</td>
+                <td>{{ user.getName() }}</td>
+                <td>{{ user.getLogin() }}</td>
+                <td>{{ request.userManager.getRoleCaption(user) }}</td>
+                <td class="text-center">
+                    {% if projects[user.getId()] %}
+                        {% for _, project in projects[user.getId()] %}
+                            {{ project.getName() }} / {{ request.projectManager.getRoleCaption(roles[user.getId()][project.getId()]) }}<br>
+                        {% endfor %}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if (request.userManager.isUserSuper(request.user) or (not request.userManager.isUserSuper(user))) %}
+                        <a href="/admin/users/{{ user.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil fa-lg"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                        <a href="/admin/users/{{ user.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends '../../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }} / {{ request.node.getIp() }}</strong></a>&nbsp;&nbsp;Container #{{ request.container.id|truncate(12, True, '') }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+
+    <br />
+
+    <div class='run-command-container'>
+        <div class='run-command'>
+            <input type="text" class="form-control input-sm" id="command" placeholder="Command">
+        </div>
+
+        <div class='run-command-buttons text-right'>
+            <button type="button" id="container-run" class="btn btn-success btn-sm"><span class="fa fa-magic fa-lg"></span>&nbsp;&nbsp;Run</button>
+            <button type="button" id="container-run-detached" class="btn btn-primary btn-sm"><span class="fa fa-chain-broken fa-lg"></span>&nbsp;&nbsp;Run detached</button>
+            <button type="button" id="container-detach" class="btn btn-primary btn-sm" style="display: none;"><span class="fa fa-chain-broken fa-lg"></span>&nbsp;&nbsp;Detach</button>
+            <button type="button" id="container-kill" class="btn btn-danger btn-sm" style="display: none;"><span class="fa fa-ban fa-lg"></span>&nbsp;&nbsp;Kill (Ctrl+C)</button>
+
+        </div>
+    </div>
+
+    <div id="terminal" class="form-control terminal"></div>
+
+    <br />
+
+    <script>
+        var
+            socket = null,
+            tab = $('#tab_run');
+            terminal = $('#terminal'),
+            command = $('#command'),
+            containerRun = $('#container-run'),
+            containerRunDetached = $('#container-run-detached'),
+            containerDetach = $('#container-detach'),
+            containerKill = $('#container-kill');
+
+        /**
+         * Handle click on "Kill" button
+         */
+        containerKill.on('click', function () {
+            if (socket !== null) {
+                socket.emit('kill');
+            }
+        });
+
+        /**
+         * Handle click on "Detach" button
+         */
+        containerDetach.on('click', function () {
+            if (socket !== null) {
+                socket.emit('detach');
+            }
+        });
+
+
+        /**
+         * Handle click on "run" (in attached mode) button
+         */
+        containerRun.on('click', function () {
+            var text = command.val().trim();
+
+            terminal.html('');
+
+            if (text.length == 0) {
+                addErrorTextToLogTerminal(terminal, 'Empty command!');
+            } else {
+                tab.removeClass('fa-terminal').addClass('fa-refresh fa-spin');
+
+                command.prop('disabled', true);
+                containerRun.hide();
+                containerRunDetached.hide();
+                containerDetach.show();
+                containerKill.show();
+
+                addSystemEventTextToLogTerminal(terminal, '*** RUNNING IN THE ATTACHED MODE  ***\n');
+                addSystemInfoTextToLogTerminal(terminal, 'COMMAND: ' + text + '\n\n');
+
+                socket = executeAttachedCommand(
+                    terminal, {{ request.node.getId() }}, '{{ request.container.id }}', text, function onDisconnect () {
+                        command.prop('disabled', false);
+                        containerDetach.hide();
+                        containerKill.hide();
+
+                        containerRun.show();
+                        containerRunDetached.show();
+
+                        tab.removeClass('fa-refresh fa-spin').addClass('fa-terminal');
+                        socket = null;
+                    }
+                );
+            }
+        });
+
+        /**
+         * Handle click on "run detached" button
+         */
+        containerRunDetached.on('click', function () {
+            var text = command.val().trim();
+
+            terminal.html('');
+
+            if (text.length == 0) {
+                addErrorTextToLogTerminal(terminal, 'Empty command!');
+            } else {
+                tab.removeClass('fa-terminal').addClass('fa-refresh fa-spin');
+
+                command.prop('disabled', true);
+                containerRun.prop('disabled', true);
+                containerRunDetached.prop('disabled', true);
+
+                addSystemEventTextToLogTerminal(terminal, '*** RUNNING IN THE DETACHED MODE  ***\n');
+                addSystemInfoTextToLogTerminal(terminal, 'COMMAND: ' + text + '\n\n');
+
+                $.ajax({
+                    method: 'POST',
+                    url: '/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/run/',
+                    data: {
+                        nodeId: {{ request.node.getId() }},
+                        containerId: '{{ request.container.id }}',
+                        command: text
+                    }
+                }).done(function (data) {
+                    if (data.error) {
+                        addErrorTextToLogTerminal(terminal, JSON.stringify(data.error));
+                    } else {
+                        addTextToLogTerminal(terminal, data.data);
+                    }
+                }).fail(function (jqXHR) {
+                    addTextToLogTerminal(terminal, jqXHR.responseText);
+                }).always(function () {
+                    command.prop('disabled', false);
+                    containerRun.prop('disabled', false);
+                    containerRunDetached.prop('disabled', false);
+
+                    tab.removeClass('fa-refresh fa-spin').addClass('fa-terminal');
+
+                    addSystemEventTextToLogTerminal(terminal, '\n\n*** DONE ***\n\n');
+                });
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to nodes in <strong>{{ request.project.getName() }}</strong></a>&nbsp;&nbsp;Node #{{ request.node.getId() }} {{ request.node.getName() }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+
+    <br />
+
+    {% if (success) %}
+        <div class="col-sm-12">
+            <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                {{ success }}
+            </div>
+        </div>
+    {% endif %}
+
+    <div id="content-images">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw margin-bottom"></i>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: '/node/{{ request.node.getId() }}/images/list/'
+            }).done(function (data) {
+                $('#content-images').html(data);
+            }).fail(function (jqXHR) {
+                $('#content-images').html(jqXHR.responseText);
+            });
+        });
+    </script>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends '../../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-trash-o fa-fw"></span>&nbsp;&nbsp;Delete image #{{ request.image.name|slice(0, 12) }}</h1>
+    {% if (error) %}
+        <div class="col-sm-12">
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                {{ error }}
+            </div>
+        </div>
+    {% endif %}
+
+    <form class="form-horizontal" method="post" action="/node/{{ request.node.getId() }}/images/{{ request.image.name }}/delete/">
+        <h4>Are you sure you want to delete the image at the node at node {{ request.node.getName() }} / {{ request.node.getIp() }}?</h4>
+        <div class="form-group">
+            <div class="col-sm-3">
+                <button type="submit" name="action" id="action" class="btn btn-success" value="Yes"><span class="fa fa-frown-o fa-lg"></span>&nbsp;&nbsp;Yes</button>&nbsp;&nbsp;
+                <a href="/node/{{ request.node.getId() }}/images/" class="btn btn-danger" role="button"><span class="fa fa-smile-o fa-lg"></span>&nbsp;&nbsp;No</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}

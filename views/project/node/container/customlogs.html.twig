@@ -1,0 +1,89 @@
+{% extends '../../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }} / {{ request.node.getIp() }}</strong></a>&nbsp;&nbsp;Container #{{ request.container.id|truncate(12, True, '') }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+
+    <br />
+
+    {% if (error) %}
+        <div class="col-sm-6">
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                {{ error }}
+            </div>
+        </div>
+    {% endif %}
+
+    <button type="button" class="btn btn-danger" id="stop" disabled><span class="fa fa-ban fa-lg"></span>&nbsp;&nbsp;STOP</button>
+
+    <div class="btn-group" data-toggle="buttons">
+        {% set index = 0 %}
+        {% for log in projectLog.getParsedLogs() %}
+            {% set index = index + 1 %}
+            <label class="btn btn-primary label-log" id="label_log_{{ index }}" data-log="{{ log }}">
+                <input type="radio" id="log_{{ index }}" autocomplete="off">{{ log }}
+            </label>
+        {% endfor %}
+    </div>
+
+
+    <br />
+
+    <div id="terminal" class="form-control terminal"></div>
+
+    <br />
+
+    <script>
+        var
+            socket = null,
+            tab = $('#tab_customlog');
+            terminal = $('#terminal'),
+            stop = $('#stop');
+
+        /**
+         * Handle click on "STOP" button
+         */
+        stop.on('click', function () {
+            if (socket !== null) {
+                socket.disconnect();
+            }
+        });
+
+        /**
+         * Handle click on log radio group
+         */
+        $('.label-log').on('click', function () {
+            if (socket !== null) {
+                socket.disconnect();
+            }
+
+            tab.removeClass('fa-list-alt').addClass('fa-refresh fa-spin');
+            terminal.html('');
+            stop.prop('disabled', false);
+
+            var
+                log = $(this).data('log'),
+                command = 'tail -f ' + log;
+
+            addSystemEventTextToLogTerminal(
+                terminal, '*** REQUESTING ' + log + ' ... ***\n\n'
+            );
+
+            socket = executeAttachedCommand(
+                terminal, {{ request.node.getId() }}, '{{ request.container.id }}', command, function onDisconnect () {
+                    tab.removeClass('fa-refresh fa-spin').addClass('fa-list-alt');
+                    socket = null;
+                    stop.prop('disabled', true);
+                }
+            );
+        });
+    </script>
+{% endblock %}

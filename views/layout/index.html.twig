@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Docker-blah</title>
+    <link rel="stylesheet" href="/public/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/public/css/dashboard.css">
+    <link rel="stylesheet" href="/public/css/docker-blah.css">
+    <link rel="stylesheet" href="/public/font-awesome-4.5.0/css/font-awesome.min.css">
+    <link rel='shortcut icon' href='/public/favicon.ico' type='image/x-icon' />
+    <script src="/public/js/jquery-2.2.2.js"></script>
+    <script src="/public/socket.io-1.4.5.js"></script>
+    <script src="/public/js/docker-blah.js"></script>
+    <script src="/public/js/validator-5.2.0.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><span class="fa fa-ship fa-fw"></span>&nbsp;docker-blah</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="dropdown {% if (action|match('^project\.(.*)')) %}active"{% endif %}">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% if ((request.project) and (action|match('^project\.(.*)'))) %}Project: {{ request.project.getName() }} {% else %}Select a project{% endif %}&nbsp;<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        {% for _, project in allProjects %}
+                            {% if (request.projectsWithAccess[project.getId()] or (not request.userManager.isUserUser(request.user))) %}
+                                <li {% if (request.project and (action|match('^project\.(.*)')) and (request.project.getId() == project.getId())) %}class="active"{% endif %}><a href="/project/{{ project.getId() }}/nodes/">{{ project.getName() }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li role="separator" class="divider"></li>
+                        {% if (request.user.getLocalId() == -1) %}
+                            <li><a href="/profile/local/">Connect local docker</a></li>
+                        {% else %}
+                            <li {% if (request.local and request.project and (request.local.getId() == request.project.getId())) %}class="active"{% endif %}><a href="/project/{{ request.local.getId() }}/nodes/">{{ request.local.getName() }}</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                {% if (not request.userManager.isUserUser(request.user)) %}
+                    <li {% if action|match('admin\.(.*)') %}class="active"{% endif %}><a href="/admin/projects/"><span class="fa fa-rocket fa-fw"></span>&nbsp;Admin</a></li>
+                {% endif %}
+
+                <li {% if action|match('profile\.(.*)') %}class="active"{% endif %}><a href="/profile/personal/"><span class="fa fa-user fa-fw"></span>&nbsp;Profile</a></li>
+                <li {% if action|match('help\.(.*)') %}class="active"{% endif %}><a href="/help/"><span class="fa fa-question-circle fa-fw"></span>&nbsp;Help</a></li>
+                <li><a href="/logout/"><span class="fa fa-sign-out fa-fw"></span>&nbsp;Logout ({{ request.user.getLogin() }})</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="content-container">
+            <div class="content">
+            {% block content %}{% endblock %}
+            </div>
+        </div>
+        <div class="left-sidebar sidebar">
+            {%  block sidebar %}{% endblock %}
+        </div>
+    </div>
+</div>
+<script src="/public/bootstrap/js/bootstrap.min.js"></script>
+<script>
+    $('body').tooltip({
+        selector: '[data-toggle="tooltip"]'
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header">
+        <span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;<a href="/project/{{ request.project.getId() }}/nodes/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;
+        {% if (subaction == 'create') %}
+            Create a new node in project [{{ request.project.getName() }}]
+        {% else %}
+            Edit node #{{ request.node.getId() }} in project [{{ request.project.getName() }}]
+        {% endif %}
+    </h1>
+    <form class="form-horizontal" method="post" action="/project/{{ request.project.getId() }}/nodes/{% if (subaction == 'create') %}create{% else %}{{ request.node.getId() }}{% endif %}/">
+        {% if (error) %}
+            <div class="form-group">
+                <div class="col-sm-6">
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ error }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label">Project</label>
+            <div class="col-sm-3">
+                <p class="form-control-static">{{ request.project.getName() }}</p>
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="name" class="col-sm-1 control-label">Name</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.node.getName() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="ip" class="col-sm-1 control-label">IP</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="ip" name="ip" placeholder="xxx.xxx.xxx.xxx" value="{{ request.node.getIp() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label for="port" class="col-sm-1 control-label">port</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="port" name="port" placeholder="12345" value="{{ request.node.getPort() }}" pattern="\d*" required />
+            </div>
+        </div>
+        <br />
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-sm-3">
+                <button type="submit" name="action" id="action" class="btn btn-success" value="projects">
+                    {% if (subaction == 'create') %}
+                        <span class="fa fa-check-circle-o fa-lg"></span>&nbsp;&nbsp;Create
+                    {% else %}
+                        <span class="fa fa-floppy-o fa-lg"></span>&nbsp;&nbsp;Update
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

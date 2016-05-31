@@ -1,0 +1,28 @@
+<tr>
+    <td>{{ container.Id|truncate(12, True, '') }}</td>
+    <td>{{ container.Image }}</td>
+    <td>
+        {% for name in container.Names %}
+            {{ name|slice(1) }}<br>
+        {% endfor %}
+    </td>
+    <td>{{ container.Status }}</td>
+    <td>{{ container.Created|date }}</td>
+    <td>
+        <div class="container-load" style="display: none;">
+            <i class="fa fa-refresh fa-spin fa-3x fa-fw margin-bottom"></i>
+        </div>
+        {% if ((container.State == 'running') or (container.Status|truncate(6, True, '') != 'Exited')) %}
+            <div class="container-info">
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench fa-lg"></span></a>
+                <button type="button" class="btn btn-success container-action-stop btn-sm" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Stop"><span class="fa fa-stop fa-lg"></span></button>
+            </div>
+        {% else %}
+            <div class="container-info">
+                <a href="/node/{{ request.node.getId() }}/containers/{{ container.Id }}/overview/" class="btn btn-primary btn-sm" role="button" data-toggle="tooltip" data-placement="bottom" title="Inspect"><span class="fa fa-wrench fa-lg"></span></a>
+                <button type="button" class="btn btn-success container-action-run btn-sm" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Run"><span class="fa fa-play fa-lg"></span></button>
+                <button type="button" class="btn btn-danger container-action-delete btn-sm" data-container-info="{{ container.Id }}" data-toggle="tooltip" data-placement="bottom" title="Delete"><span class="fa fa-trash-o fa-lg"></span></button>
+            </div>
+        {% endif %}
+    </td>
+</tr>

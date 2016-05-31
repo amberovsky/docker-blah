@@ -1,0 +1,58 @@
+{% if (error) %}
+    <div class="col-sm-12">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ error }}
+        </div>
+    </div>
+{% else %}
+    <p class="lead">Read date: {{ stats.read }}</p>
+    <h3>Mem/CPU</h3>
+    <table class="table table-bordered table-super-condensed">
+        <tr>
+            <th>Mem usage</th>
+            <th>Mem max usage</th>
+            <th>CPU Usage</th>
+            <th>Block read</th>
+            <th>Block write</th>
+        </tr>
+        <tr>
+            <td>{{ (stats.memory_stats.usage/1024/1024)|round(2) }} MiB / {{ (stats.memory_stats.usage / stats.memory_stats.limit * 100.0)|round(0) }}%</td>
+            <td>{{ (stats.memory_stats.max_usage/1024/1024)|round(2) }} MiB / {{ (stats.memory_stats.max_usage / stats.memory_stats.limit * 100.0)|round(0) }}%</td>
+            <td>{{ cpuPercent|round(2) }}%</td>
+            <td>{{ (blkRead/1024/1024)|round(2) }} MiB</td>
+            <td>{{ (blkWrite/1024/1024)|round(2) }} MiB</td>
+        </tr>
+    </table>
+
+    <input type="hidden" id="cpu_totalusage" value="{{ stats.cpu_stats.cpu_usage.total_usage }}" />
+    <input type="hidden" id="cpu_systemusage" value="{{ stats.cpu_stats.system_cpu_usage }}" />
+
+    <h3>Networks</h3>
+    <table class="table table-bordered table-condensed">
+        <tr>
+            <th>Name</th>
+            <th>RX: MiB</th>
+            <th>RX: packets</th>
+            <th>RX: errors</th>
+            <th>RX: dropped</th>
+            <th>TX: MiB</th>
+            <th>TX: packets</th>
+            <th>TX: errors</th>
+            <th>TX: dropped</th>
+        </tr>
+        {% for name, network in stats.networks %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ (network.rx_bytes/1024/1024)|round(2) }}</td>
+                <td>{{ network.rx_packets }}</td>
+                <td>{{ network.rx_errors }}</td>
+                <td>{{ network.rx_dropped }}</td>
+                <td>{{ (network.tx_bytes/1024/1024)|round(2) }}</td>
+                <td>{{ network.tx_packets }}</td>
+                <td>{{ network.tx_errors }}</td>
+                <td>{{ network.tx_dropped }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}

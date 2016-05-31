@@ -1,0 +1,115 @@
+html, body {
+    font-family: Tahoma;
+    font-size: 15px !important;
+}
+
+@media screen and (max-width: 1280px) {
+    html, body {
+        font-size: 14px !important;
+    }
+
+    .table-tech-condensed {
+        font-size: 12px !important;
+    }
+}
+
+h1 {
+    font-size: 30px;
+}
+
+.lead {
+    font-size: 16px;
+}
+
+.nav-sidebar {
+    font-size: 15px;
+}
+
+@media screen and (max-width: 1280px) {
+    .nav-sidebar {
+        font-size: 13px;
+    }
+}
+
+.left-sidebar {
+    width: 180px;
+    float: left;
+    padding-left: 20px;
+    margin-right: -200px;
+}
+
+.content-container {
+    float: right;
+    width: 100%;
+}
+
+.content-container .content {
+    margin-left: 200px;
+    padding: 0 20px 0 0;
+}
+
+.table-super-condensed > tbody > tr > td,
+.table-super-condensed > tbody > tr > th {
+    padding: 2px 5px;
+}
+
+.table-vcenter td {
+    vertical-align: middle !important;
+}
+
+.checkbox-label-p45 {
+    padding-left: 45px !important;
+}
+
+.terminal {
+    border: 1px inset #ccc;
+    background-color: black;
+    font-family: monospace;
+    font-size: 11pt;
+    resize: both;
+    height: 63vh;
+    overflow-y: scroll;
+    padding-bottom: 25px;
+    color: #c7c7c7;
+}
+
+@media screen and (max-width: 1280px) {
+    .terminal {
+        font-size: 9pt;
+    }
+}
+
+.terminal-system-event {
+    color: yellow;
+}
+
+.terminal-system-info {
+    color: lightgreen;
+}
+
+.terminal-system-error {
+    color: red;
+}
+
+.page-header {
+    margin-top: 15px;
+}
+
+.run-command-container {
+    position: relative;
+    height: 100%;
+    margin-bottom: 50px;
+}
+
+.run-command {
+    position: absolute;
+    left: 0;
+    right: 210px;
+    height: 100%;
+}
+
+.run-command-buttons {
+    width: 200px;
+    height: 100%;
+    float: right;
+}

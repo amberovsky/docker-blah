@@ -1,0 +1,50 @@
+{% extends '../../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }} / {{ request.node.getIp() }}</strong></a>&nbsp;&nbsp;Container #{{ request.container.id|truncate(12, True, '') }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+
+    <br />
+
+    <div id="terminal" class="form-control terminal"></div>
+
+    <br />
+
+    <script>
+        var
+            socket = io.connect('/', {
+                reconnection: false
+            }),
+            terminal = $('#terminal'),
+            tab = $('#tab_containerlog');
+
+        addSystemEventTextToLogTerminal(terminal, '*** CONNECTING TO THE CONTAINER... ***\n\n');
+
+        socket.emit('containerlog', {
+            nodeId: {{ request.node.getId() }},
+            containerId: '{{ request.container.id }}'
+        });
+
+        socket.on('disconnect', function () {
+            tab.removeClass('fa-refresh fa-spin').addClass('fa-list-alt');
+
+            addSystemEventTextToLogTerminal(terminal, '\n\n*** DISCONNECTED ***\n\n');
+        });
+
+        socket.on('data', function (response) {
+            if (!response.error) {
+                addTextToLogTerminal(terminal, response.data);
+            } else {
+                addErrorTextToLogTerminal(terminal, JSON.stringify(response.error));
+                socket.disconnect();
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends '../../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-th fa-fw"></span>&nbsp;&nbsp;<a href="/node/{{ request.node.getId() }}/containers/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back to containers in node <strong>{{ request.node.getName() }} / {{ request.node.getIp() }}</strong></a>&nbsp;&nbsp;Container #{{ request.container.id|truncate(12, True, '') }}</h1>
+
+    {% block tabs %}
+        {% include './partial.tab.html.twig' %}
+    {% endblock %}
+
+    <br/>
+
+    <div id="container-stats">
+
+    </div>
+
+    <script>
+        function loadStats() {
+            $.ajax({
+                url: '/node/{{ request.node.getId() }}/containers/{{ request.container.id }}/stats/',
+                data: {
+                    cpu_totalusage: $('#cpu_totalusage').val(),
+                    cpu_systemusage: $('#cpu_systemusage').val()
+                },
+                method: 'POST'
+            }).done(function (data) {
+                $('#container-stats').html(data);
+                loadStats();
+            }).fail(function (jqXHR) {
+                $('#container-stats').html(jqXHR.responseText);
+            });
+        }
+
+        $(document).ready(function () {
+            loadStats();
+        });
+    </script>
+{% endblock %}

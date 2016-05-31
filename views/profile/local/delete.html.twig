@@ -1,0 +1,18 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-trash-o fa-fw"></span>&nbsp;&nbsp;Delete local docker</h1>
+    <form class="form-horizontal" method="post" action="/profile/local/delete/">
+        <h4>Are you sure you want to delete your local docker?</h4>
+        <div class="form-group">
+            <div class="col-sm-3">
+                <button type="submit" name="action" id="action" class="btn btn-success" value="Yes"><span class="fa fa-frown-o fa-lg"></span>&nbsp;&nbsp;Yes</button>&nbsp;&nbsp;
+                <a href="/profile/local/" class="btn btn-danger" role="button"><span class="fa fa-smile-o fa-lg"></span>&nbsp;&nbsp;No</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}

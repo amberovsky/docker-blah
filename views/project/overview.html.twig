@@ -1,0 +1,25 @@
+{% extends '../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-paragraph fa-fw"></span>&nbsp;&nbsp;Overview</h1>
+
+    <h3>Created: {{ request.project.getCreated()|date }}</h3>
+
+    <h3>Users:</h3>
+    <table class="table table-bordered">
+        <tr>
+            <th>Name</th>
+            <th>Role</th>
+        </tr>
+        {% for id, user in users %}
+            <tr>
+                <td>{{ user.getName() }}</td>
+                <td>{{ request.projectManager.getRoleCaption(roles[user.getId()][request.project.getId()]) }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

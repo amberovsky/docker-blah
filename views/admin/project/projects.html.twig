@@ -1,0 +1,61 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header"><span class="fa fa-cubes fa-fw"></span>&nbsp;&nbsp;<a href="/admin/projects/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus fa-lg"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;Projects : {{ projectsCount }}</h1>
+    {% if (error or success) %}
+        <div class="row">
+            <div class="col-sm-12">
+                {% if (error) %}
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ error }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ success }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    <table class="table table-striped table-vcenter">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        {% for _, project in projects %}
+            <tr>
+                <td>{{ project.getId() }}</td>
+                <td>{{ project.getName() }}</td>
+                <td>
+                    <a href="/admin/projects/{{ project.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil fa-lg"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                    <a class="btn btn-info onClickForViewUsers btn-sm" role="button" data-value="{{ project.getId() }}"><span class="fa fa-external-link fa-lg"></span>&nbsp;&nbsp;Users</a>&nbsp;&nbsp;
+                    <a href="/project/{{ project.getId() }}/nodes/" class="btn btn-info btn-sm" role="button"><span class="fa fa-external-link fa-lg"></span>&nbsp;&nbsp;Nodes</a>&nbsp;&nbsp;
+                    <a href="/project/{{ project.getId() }}/settings/" class="btn btn-info btn-sm" role="button"><span class="fa fa-external-link fa-lg"></span>&nbsp;&nbsp;Settings</a>&nbsp;&nbsp;
+                    <a href="/admin/projects/{{ project.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    <form action="/admin/users" method="post" name="viewUsers" id="viewUsers">
+        <input type="hidden" id="role" name="role" value="-1" />
+        <input type="hidden" id="project" name="project" value="-1" />
+        <input type="hidden" id="project_role" name="project_role" value="-1" />
+    </form>
+    <script>
+        $(document).ready(function() {
+            $(".onClickForViewUsers").on("click", function() {
+                $("#project").val($(this).data('value'));
+                $("#viewUsers").submit();
+            });
+        });
+    </script>
+{% endblock %}

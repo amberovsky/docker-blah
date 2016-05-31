@@ -1,0 +1,61 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header">
+    {% if (request.project.getUserId() == -1) %}
+        <span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;{% if (request.isUserAdminForThisProject) %}<a href="/project/{{ request.project.getId() }}/nodes/create/" class="btn btn-success btn-sm" role="button"><span class="fa fa-plus fa-lg"></span>&nbsp;&nbsp;Create new</a>&nbsp;&nbsp;{% endif %}Nodes : {{ nodesCount }}
+    {% else %}
+        <span class="fa fa-sitemap fa-fw"></span>&nbsp;&nbsp;Nodes : {{ nodesCount }}
+    {% endif %}
+    </h1>
+    {% if (error or success) %}
+        <div class="row">
+            <div class="col-sm-12">
+                {% if (error) %}
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ error }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ success }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>IP</th>
+                {% if (request.isUserAdminForThisProject) %}
+                <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        {% for _, node in nodes %}
+            <tr>
+                <td>{{ node.getId() }}</td>
+                <td>{{ node.getName() }}</td>
+                <td>{{ node.getIp() }}:{{ node.getPort() }}</td>
+                {% if (request.isUserAdminForThisProject) %}
+                <td>
+                    <a href="/node/{{ node.getId() }}/containers/" class="btn btn-success btn-sm" role="button"><span class="fa fa-wrench fa-lg"></span>&nbsp;&nbsp;Inspect</a>&nbsp;&nbsp;
+                    {% if (request.project.getUserId() == -1) %}
+                        <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/" class="btn btn-primary btn-sm" role="button"><span class="fa fa-pencil fa-lg"></span>&nbsp;&nbsp;Edit</a>&nbsp;&nbsp;
+                        <a href="/project/{{ request.project.getId() }}/nodes/{{ node.getId() }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a>
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

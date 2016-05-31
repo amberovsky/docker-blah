@@ -1,0 +1,55 @@
+{% extends '../../layout/index.html.twig' %}
+
+{% block sidebar %}
+    {% include './../partial.sidebar.html.twig' %}
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header">
+        <span class="fa fa-cubes"></span>&nbsp;&nbsp;<a href="/admin/projects/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-hand-o-left fa-lg"></span>&nbsp;&nbsp;Go back</a>&nbsp;&nbsp;Create a project
+    </h1>
+    <form class="form-horizontal" method="post" enctype="multipart/form-data" action="/admin/projects/create/">
+        {% if (error) %}
+            <div class="form-group">
+                <div class="col-sm-6">
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ error }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group form-group-sm">
+            <label for="name" class="col-sm-1 control-label">Name</label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ request.project.getName() }}" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label" for="file_ca">ca.pem</label>
+            <div class="col-sm-3">
+                <input type="file" class="form-control" id="file_ca" name="file_ca" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label" for="file_cert">cert.pem</label>
+            <div class="col-sm-3">
+                <input type="file" class="form-control" id="file_cert" name="file_cert" required />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-1 control-label" for="file_key">key.pem</label>
+            <div class="col-sm-3">
+                <input type="file" class="form-control" id="file_key" name="file_key" required />
+            </div>
+        </div>
+        <br />
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-sm-3">
+                <button type="submit" name="action" id="action" class="btn btn-success" value="projects">
+                    <span class="fa fa-check-circle-o fa-lg"></span>&nbsp;&nbsp;Create
+                </button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

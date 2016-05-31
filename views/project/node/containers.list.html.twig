@@ -1,0 +1,76 @@
+{% if (error) %}
+    <div class="col-sm-12">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ error }}
+        </div>
+    </div>
+{% else %}
+    <div class="for_errors"></div>
+    <table class="table table-striped table-tech-condensed">
+        <tr>
+            <th>ID</th>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+        {% for container in containers %}
+            {% include './containers.list.partial.html.twig' %}
+        {% endfor %}
+    </table>
+    <script>
+        /**
+         * Send request to the server and process results
+         *
+         * @param {jQuery} self - clicked button
+         * @param {string} command - can be either start or stop
+         */
+        function processRequest(self, command) {
+            var
+                containerInfo = self.closest('td').find('.container-info'),
+                containerLoad = self.closest('td').find('.container-load');
+
+            containerInfo.hide();
+            containerLoad.show();
+
+            $.ajax({
+                url: '/node/{{ request.node.getId() }}/containers/' + self.data('container-info') + '/' + command + '/'
+            }).done(function (data) {
+                if (data.success) {
+                    containerLoad.hide();
+                    self.closest('td').parent().replaceWith(data.containerInfo);
+                } else {
+                    addError(data.error);
+                }
+            }).fail(function (jqXHR) {
+                addError(jqXHR.responseText);
+            });
+        }
+
+        $(document).ready(function () {
+            /**
+             * Handle click on "stop" button
+             */
+            $(document).on('click', '.container-action-stop', function () {
+                processRequest($(this), 'stop');
+            });
+
+            /**
+             * Handle click on "start" button
+             */
+            $(document).on('click', '.container-action-run', function () {
+                processRequest($(this), 'start');
+            });
+
+            /**
+             * Handle click on "delete" button
+             */
+            $(document).on('click', '.container-action-delete', function () {
+                processRequest($(this), 'delete');
+            });
+
+        });
+    </script>
+{% endif %}

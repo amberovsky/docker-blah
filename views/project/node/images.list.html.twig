@@ -1,0 +1,33 @@
+{% if (error) %}
+    <div class="col-sm-12">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ error }}
+        </div>
+    </div>
+{% else %}
+    <table class="table table-striped table-tech-condensed">
+        <tr>
+            <th>ID</th>
+            <th>Tags</th>
+            <th>Created</th>
+            <th>Size (MiB)</th>
+            <th>Virtual size (MiB)</th>
+            <th>Actions</th>
+        </tr>
+        {% for image in images %}
+            <tr>
+                <td>{{ image.Id|slice(7, 19) }}</td>
+                <td>
+                    {% for tag in image.RepoTags %}
+                        {{ tag }}<br />
+                    {% endfor %}
+                </td>
+                <td>{{ image.Created|date }}</td>
+                <td>{{ (image.Size/1024/1024)|round(2) }}</td>
+                <td>{{ (image.VirtualSize/1024/1024)|round(2) }}</td>
+                <td><a href="/node/{{ request.node.getId() }}/images/{{ image.Id|slice(7) }}/delete/" class="btn btn-danger btn-sm" role="button"><span class="fa fa-trash-o fa-lg"></span>&nbsp;&nbsp;Delete</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
