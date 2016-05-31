@@ -7,9 +7,6 @@ In this documentation I'll use my local docker as an example. I assume you've al
 **Table of contents**
 
  * [Overview](#overview)
-   * [Personal](#profile_personal)
-   * [Projects](#profile_projects)
-   * [Local docker](#profile_local_docker)   
  * [Containers](#containers)
    * [Overview](#project_overview)
    * [Project: nodes](#project_nodes)   
@@ -24,6 +21,15 @@ Click *Overview* in the tab list
 
 Just a brief info about a docker daemon at the node.
 ![Overview](./inspect-overview.png "Overview")
+
+<a name="containers"></a>
+## Containers
+Click *Containers* in the tab list
+
+
+You will see a list of containers. You can start/stop/delete a container. `docker-blah` will not allow you to delete a running container
+![Containers](./inspect-containers.png "Containers")
+
 
 <a name="images"></a>
 ## Images
