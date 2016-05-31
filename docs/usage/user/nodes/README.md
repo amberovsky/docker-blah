@@ -1,6 +1,6 @@
 # `docker-blah` user guide for node's *Inspect*
 
-[Go back to the main usage guide documentation](/docs/usage/user/README.md#project_nodes)
+[Go back to the main usage guide documentation](/docs/usage/user/README.md#nodes)
 
 In this documentation I'll use my local docker as an example. I assume you've already clicked *Inspect* button on a selected node.
 
