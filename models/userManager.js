@@ -77,13 +77,14 @@ class UserManager {
         var self = this;
 
         this.sqlite3.run(
-            'INSERT INTO user (name, login, password_hash, role, local_id) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO user (name, login, password_hash, role, local_id, salt) VALUES (?, ?, ?, ?, ?, ?)',
             [
                 user.getName(),
                 user.getLogin(),
                 user.getPasswordHash(),
                 user.getRole(),
-                user.getLocalId()
+                user.getLocalId(),
+                user.getSalt()
             ], function (error) {
                 if (error === null) {
                     user.setId(this.lastID);
@@ -249,7 +250,7 @@ class UserManager {
     };
 
     /**
-     * Update user data, also in the database
+     * Update user data
      *
      * @param {User} user - user with new values
      * @param {DatabaseOperationCallback} callback - user operation callback
@@ -257,33 +258,41 @@ class UserManager {
     update(user, callback) {
         var self = this;
 
-        this.sqlite3.run(
-            'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ?, local_id = ? WHERE id = ?',
-            [
-                user.getName(),
-                user.getLogin(),
-                user.getRole(),
-                user.getPasswordHash(),
-                user.getLocalId(),
-                user.getId()
-            ], function (error) {
-                if (error === null) {
-                    if (this.changes === 0) {
-                        self.logger.error('No rows were updated');
-                        callback('No rows were updated');
-                    } else {
-                        callback(null);
-                    }
+        var query = 'UPDATE user SET name = ?, login = ?, role = ?, password_hash = ?, local_id = ?';
+        if (user.getSalt() !== '') {
+            query += ', salt = ?';
+        }
+        query += 'WHERE id = ?';
+
+        var params = [
+            user.getName(),
+            user.getLogin(),
+            user.getRole(),
+            user.getPasswordHash(),
+            user.getLocalId()
+        ];
+        if (user.getSalt() !== '') {
+            params.push(user.getSalt());
+        }
+        params.push(user.getId());
+
+        this.sqlite3.run(query, params, function (error) {
+            if (error === null) {
+                if (this.changes === 0) {
+                    self.logger.error('No rows were updated');
+                    callback('No rows were updated');
                 } else {
-                    self.logger.error(error);
-                    callback(true);
+                    callback(null);
                 }
+            } else {
+                self.logger.error(error);
+                callback(true);
             }
-        );
+        });
     };
 
     /**
-     * Delete user, also in the database
+     * Delete user
      *
      * @param {number} userId - user's id
      * @param {DatabaseOperationCallback} callback - database operations callback
