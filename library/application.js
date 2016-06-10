@@ -448,7 +448,6 @@ class Application {
                     secret:       config.session.secret, // the session_secret to parse the cookie
                     store:        sessionStore, // we NEED to use a sessionstore. no memorystore please
                     success:      function(data, accept) {
-                        console.log('socket-acc');
                         accept();
                     },
                     fail:         function (data, message, error, accept) {

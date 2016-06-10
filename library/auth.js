@@ -37,11 +37,8 @@ class Auth {
             salt = this.crypto.randomBytes(128).toString('hex');
         }
 
-        const hash = this.crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512').toString('hex');
-        console.log(hash);
-
         return {
-            hash: hash,
+            hash: this.crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512').toString('hex'),
             salt: salt
         };
     };
