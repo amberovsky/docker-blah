@@ -3,6 +3,6 @@
 set -e
 
 apt-get update
-apt-get install -y mc man
 
-echo "www-data ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+# Allow su to root for www-data
+sed -i '/auth       sufficient pam_rootok.so/a auth sufficient  pam_succeed_if.so use_uid user = www-data' /etc/pam.d/su

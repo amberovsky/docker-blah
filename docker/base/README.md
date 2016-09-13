@@ -24,6 +24,10 @@ Base image will provide a base layer both for development and production images.
 
 ## History
 
+-   `0.2`:
+
+    Ubuntu 16.04
+
 -   `0.0.1`:
 
     Initial release

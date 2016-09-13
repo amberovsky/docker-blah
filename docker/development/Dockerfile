@@ -1,8 +1,6 @@
-FROM amberovsky/docker-blah-base:0.0.1
+FROM amberovsky/docker-blah-base:0.2
 
 MAINTAINER Anton Zagorskii <amberovsky@gmail.com>
-
-ENV DEBIAN_FRONTEND noninteractive
 
 ADD ./build /build-development
 

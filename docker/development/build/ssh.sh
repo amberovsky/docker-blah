@@ -9,6 +9,7 @@ passwd -d www-data
 passwd -d root
 
 echo 'PermitEmptyPasswords yes' >> /etc/ssh/sshd_config
+echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
 
 # enable sshd
 rm /etc/service/sshd/down

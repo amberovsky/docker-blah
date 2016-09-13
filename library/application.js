@@ -375,7 +375,7 @@ class Application {
             this.userManager = new (require(PROJECT_MODELS + '/userManager.js'))(self, this.systemLogger);
 
             /** @type {ProjectManager} - project manager */
-            this.projectManager = new (require(PROJECT_MODELS + '/projectManager.js'))(self, this.systemLogger);
+            this.projectManager = new (require(PROJECT_MODELS + '/projectManager.js'))(self, this.userManager, this.systemLogger);
 
             /** @type {NodeManager} - node manager */
             this.nodeManager = new (require(PROJECT_MODELS + '/nodeManager.js'))(self, this.systemLogger);
