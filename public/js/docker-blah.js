@@ -25,7 +25,7 @@ function escapeTerminalText(text) {
  * @param {string} text - text to add
  */
 function addTextToLogTerminal(terminal, text) {
-    terminal.html(terminal.html() + escapeTerminalText(text));
+    terminal.append(escapeTerminalText(text));
     terminal.scrollTop(terminal[0].scrollHeight);
 }
 
@@ -36,7 +36,7 @@ function addTextToLogTerminal(terminal, text) {
  * @param {string} text - text to add
  */
 function addErrorTextToLogTerminal(terminal, text) {
-    terminal.html(terminal.html() + '<span class="terminal-system-error">' + escapeTerminalText(text) + '</span>');
+    terminal.append('<span class="terminal-system-error">' + escapeTerminalText(text) + '</span>');
     terminal.scrollTop(terminal[0].scrollHeight);
 }
 
@@ -47,7 +47,7 @@ function addErrorTextToLogTerminal(terminal, text) {
  * @param {string} text - text to add
  */
 function addSystemInfoTextToLogTerminal(terminal, text) {
-    terminal.html(terminal.html() + '<span class="terminal-system-info">' + escapeTerminalText(text) + '</span>');
+    terminal.append('<span class="terminal-system-info">' + escapeTerminalText(text) + '</span>');
     terminal.scrollTop(terminal[0].scrollHeight);
 }
 
@@ -58,7 +58,7 @@ function addSystemInfoTextToLogTerminal(terminal, text) {
  * @param {string} text - text to add
  */
 function addSystemEventTextToLogTerminal(terminal, text) {
-    terminal.html(terminal.html() + '<span class="terminal-system-event">' + escapeTerminalText(text) + '</span>');
+    terminal.append('<span class="terminal-system-event">' + escapeTerminalText(text) + '</span>');
     terminal.scrollTop(terminal[0].scrollHeight);
 }
 

@@ -1,8 +1,6 @@
-FROM phusion/baseimage:0.9.18
+FROM amberovsky/layerzero:0.2
 
 MAINTAINER Anton Zagorskii <amberovsky@gmail.com>
-
-ENV DEBIAN_FRONTEND noninteractive
 
 ADD ./build /build-base
 

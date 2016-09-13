@@ -12,7 +12,7 @@ set -e
 usage() {
 cat <<EOF
 Build production image
-Tag in gihub is needed
+Tag in github is needed
 
 Usage: $0 <TAG>
 

@@ -126,7 +126,7 @@ module.exports.controller = function (application) {
 
                         // check does user have access to this node
                         if (application.getUserManager().isUserUser(user) && (user.getLocalId() !== project.getId())) {
-                            application.getProjectManager().getUserRoleInProjects(user.getId, (error, roles) => {
+                            application.getProjectManager().getUserRoleInProjects(user.getId(), (error, roles) => {
                                 if (error === null) {
                                     if (roles.hasOwnProperty(project.getId())) {
                                         process();
@@ -163,20 +163,25 @@ module.exports.controller = function (application) {
     function streamContainerLog(socket, params, user, websocketLogger) {
         validateRequestAndGetContainer(params, user, (error, container) => {
             if (error === null) {
+                const stream = require('stream');
+                const StringDecoder = require('string_decoder').StringDecoder;
+                const decoder = new StringDecoder('utf8');
+                var logStream = new stream.PassThrough();
+
+                logStream.on('data', (chunk) => {
+                    socket.emit('data', { data: decoder.write(chunk) });
+                });
+
                 container.logs({ follow: true, stdout: true, stderr: true }, (error, stream) => {
                     if (error === null) {
-                        const StringDecoder = require('string_decoder').StringDecoder;
-                        const decoder = new StringDecoder('utf8');
+
+                        container.modem.demuxStream(stream, logStream, logStream);
 
                         stream.on('end', () => {
-                            socket.emit('data', { data: '\n+++ Lost connection. Container was stopped? +++' });
+                            socket.emit('data', { data: '\n+++ Lost connection. Was container stopped? +++' });
+                            logStream.end('!stop!');
                             return socket.disconnect();
                         });
-
-                        stream.on('data', (chunk) => {
-                            socket.emit('data', { data: decoder.write(chunk) });
-                        });
-
                     } else {
                         websocketLogger.error(error);
                         

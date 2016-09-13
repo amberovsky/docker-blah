@@ -2,5 +2,5 @@
 
 set -e
 
-docker build -t amberovsky/docker-blah-base:0.0.1 ./base
-docker tag amberovsky/docker-blah-base:0.0.1 amberovsky/docker-blah-base:latest
+docker build -t amberovsky/docker-blah-base:0.2 ./base
+docker tag amberovsky/docker-blah-base:0.2 amberovsky/docker-blah-base:latest
